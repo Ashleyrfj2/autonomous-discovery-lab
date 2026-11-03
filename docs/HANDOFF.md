@@ -1,15 +1,15 @@
 # Recovery handoff
 PROJECT: Autonomous Discovery Lab
 CURRENT BRANCH: main in /Users/ashley/Code/autonomous-discovery-lab
-LAST VERIFIED COMMIT: phase-3 commit; git log --grep='phase 3' (previous verified a6d99f9eae5d7549f2d93138fe1fa2d38b110713)
-CURRENT PHASE: 4
-CURRENT TASK: P4-VERIFY: harden raw-result schemas and preregistered code identity; reject metric/fixture/claim manipulation; verify replication and uncertainty
-COMPLETED AND VERIFIED: phases 0–3; uv run pytest -q: 35 passed; Ruff passed; Pyright 0 errors; uv build wheel/sdist passed; autodiscover demo completed with technical_success=true, novelty=unknown, commercial level=0, cost USD 0; snapshot export verified; phase_reports/phase-3.md
-IMPLEMENTED BUT UNVERIFIED: Minimum loop restricted to reviewed encoding experiments, not a finished cross-industry discovery system. Phase 4 adversarial evaluator hardening and phases 5–9 remain. Native Seatbelt API is deprecated/private and not a production arbitrary-code sandbox; other OSes fail closed. Darwin RSS polling is a supervisor bound with possible sampling overshoot, not an OS hard memory reservation.
+LAST VERIFIED COMMIT: phase-4 commit; git log --grep='phase 4' (previous verified 7249653478197c5bb3d0e12635a4c7991712a4f5)
+CURRENT PHASE: 5
+CURRENT TASK: P5-RESEARCH: safe bounded real-source retrieval, metadata/provenance, source comparisons, contradictions, knowledge and claim invalidation
+COMPLETED AND VERIFIED: phases 0–4; uv run pytest -q: 55 passed; Ruff passed; Pyright 0 errors; uv build wheel/sdist passed; v2 demo completed locally with no provider spend; phase_reports/phase-4.md
+IMPLEMENTED BUT UNVERIFIED: Evaluator covers the reviewed encoding experiment family and finite synthetic fixtures, not universal scientific verification. Archived phase-3 v1 evidence remains historical; v1 plans cannot execute under v2 code without explicit redesign/reverification. Phases 5–9 remain.
 KNOWN FAILURES: no current local check failures; recorded limitations remain
-BLOCKERS: No local blocker. Live providers/production/arbitrary-code isolation not verified.
-FILES RECENTLY MODIFIED: experiments/{contracts,datasets,worker,runner,evaluator}.py; evidence/{artifacts,chain}.py; hypotheses/engine.py; orchestrator/lab.py; cli.py; security/redaction.py; tests/{unit,integration,adversarial,end_to_end}; docs/phase_reports/phase-3-evidence-snapshot.json
-LAST COMMANDS AND RESULTS: uv run pytest -q: 35 passed; Ruff passed; Pyright 0 errors; uv build wheel/sdist passed; autodiscover demo completed with technical_success=true, novelty=unknown, commercial level=0, cost USD 0; snapshot export verified
-NEXT EXACT ACTION: P4-VERIFY: harden raw-result schemas and preregistered code identity; reject metric/fixture/claim manipulation; verify replication and uncertainty
-RELEVANT DECISIONS: DEC-001 through DEC-007; execution is reviewed code only; native backend verified only on this macOS host
+BLOCKERS: No local blocker. Live providers remain unauthorized/unverified.
+FILES RECENTLY MODIFIED: experiments/{contracts,runner,evaluator}.py; evidence/chain.py; orchestrator/lab.py; tests/adversarial/test_evaluation_manipulation.py; tests/unit/test_hypotheses.py
+LAST COMMANDS AND RESULTS: uv run pytest -q: 55 passed; Ruff passed; Pyright 0 errors; uv build wheel/sdist passed; v2 demo completed locally with no provider spend
+NEXT EXACT ACTION: P5-RESEARCH: safe bounded real-source retrieval, metadata/provenance, source comparisons, contradictions, knowledge and claim invalidation
+RELEVANT DECISIONS: DEC-008: v2 preregistration records code identity and strict result provenance
 BUDGET / RESOURCE STATUS: provider spend USD 0; no billable calls

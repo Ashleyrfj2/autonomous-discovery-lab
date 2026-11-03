@@ -43,8 +43,24 @@ def verify_events(
 
 def verify_chain(store: Store, anchor: dict[str, Any] | None = None) -> dict[str, Any]:
     with store.connection() as db:
+        db.execute("BEGIN")
         events = [dict(r) for r in db.execute("SELECT * FROM events ORDER BY seq")]
-    return verify_events(events, anchor)
+        steps = [dict(r) for r in db.execute("SELECT * FROM steps ORDER BY rowid")]
+    checked = verify_events(events, anchor)
+    by_id = {event["id"]: event for event in events}
+    for step in steps:
+        result = json.loads(step["result_json"])
+        event = by_id.get(result.get("event_id"))
+        if event is None or event["run_id"] != step["run_id"] or event["kind"] != "stage_completed":
+            raise IntegrityError("Step missing authoritative evidence event")
+        payload = json.loads(event["payload_json"])
+        if (
+            payload["output"] != json.loads(step["output_json"])
+            or payload["stage"] != step["stage"]
+            or result["version"] != payload["version"] + 1
+        ):
+            raise IntegrityError("Step projection disagrees with evidence")
+    return checked
 
 
 def export_snapshot(store: Store, destination: Path) -> dict[str, Any]:

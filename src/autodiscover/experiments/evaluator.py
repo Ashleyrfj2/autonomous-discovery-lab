@@ -3,7 +3,9 @@
 import math
 from typing import Any
 
-from autodiscover.experiments.contracts import Plan
+from pydantic import ValidationError
+
+from autodiscover.experiments.contracts import Plan, RawResult, code_digest
 from autodiscover.experiments.datasets import fixtures
 
 
@@ -12,6 +14,16 @@ class EvaluationError(ValueError):
 
 
 def evaluate(plan: Plan, result: dict[str, Any], *, replication: int = 0) -> dict[str, Any]:
+    try:
+        result = RawResult.model_validate(result).model_dump(mode="json")
+    except ValidationError:
+        raise EvaluationError("INVALID_RESULT_SCHEMA_OR_UNSUPPORTED_CLAIM") from None
+    if (
+        plan.evaluator_sha256 != code_digest("evaluator.py")
+        or plan.fixture_sha256 != code_digest("datasets.py")
+        or result["worker_sha256"] != plan.worker_sha256
+    ):
+        raise EvaluationError("PREREGISTERED_CODE_MISMATCH")
     if result.get("plan_digest") != plan.digest or result.get("replication") != replication:
         raise EvaluationError("PLAN_OR_REPLICATION_MISMATCH")
     output = result.get("output", {})
@@ -52,8 +64,14 @@ def evaluate(plan: Plan, result: dict[str, Any], *, replication: int = 0) -> dic
     # Require every held-out case to meet the preregistered threshold, not only mean gain.
     passed = min(heldout) >= plan.minimum_savings
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "plan_digest": plan.digest,
+        "protocol_version": plan.protocol_version,
+        "code_identity": {
+            "worker": plan.worker_sha256,
+            "fixture": plan.fixture_sha256,
+            "evaluator": plan.evaluator_sha256,
+        },
         "replication": replication,
         "passed": passed,
         "metric": "encoded-byte-savings-vs-raw",

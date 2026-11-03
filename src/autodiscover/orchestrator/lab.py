@@ -63,6 +63,7 @@ class Lab:
         demo_algorithm: str = "rle",
         router: Router | None = None,
     ) -> None:
+        verify_chain(self.store)
         row = self.store.get_run(run_id)
         if row["status"] == RunStatus.COMPLETED:
             self.report(run_id)

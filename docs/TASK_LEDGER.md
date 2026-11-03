@@ -98,12 +98,12 @@ Task ID: P4-VERIFY
 Phase: 4
 Description: Independent held-out evaluator/replication/uncertainty; acceptance: falsified results rejected
 Dependencies: P3-LOOP
-Status: NOT_STARTED
-Files: pending
-Tests: pending
-Verification: pending
+Status: VERIFIED
+Files: experiments/{contracts,runner,evaluator}.py; evidence/chain.py; orchestrator/lab.py; tests/adversarial/test_evaluation_manipulation.py; tests/unit/test_hypotheses.py
+Tests: uv run pytest -q: 55 passed; Ruff passed; Pyright 0 errors; uv build wheel/sdist passed; v2 demo completed locally with no provider spend
+Verification: phase_reports/phase-4.md
 Blockers: none
-Next action: implement after dependencies verify
+Next action: P5-RESEARCH: safe bounded real-source retrieval, metadata/provenance, source comparisons, contradictions, knowledge and claim invalidation
 
 
 ## P5-RESEARCH

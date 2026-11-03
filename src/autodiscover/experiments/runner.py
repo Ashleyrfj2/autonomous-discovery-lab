@@ -15,7 +15,7 @@ from typing import Any
 import psutil
 
 from autodiscover.config import Limits
-from autodiscover.experiments.contracts import Plan
+from autodiscover.experiments.contracts import Plan, code_digest
 from autodiscover.experiments.datasets import fixtures
 from autodiscover.orchestrator.durability import canonical
 
@@ -52,6 +52,10 @@ def sandbox_command(script: Path, *, python: Path | None = None) -> list[str]:
 def preflight(plan: Plan, limits: Limits) -> dict[str, Any]:
     if plan.seconds > limits.max_experiment_seconds:
         raise ExecutionError("TIME_AUTHORITY_EXCEEDED")
+    if plan.worker_sha256 != code_digest("worker.py") or plan.fixture_sha256 != code_digest(
+        "datasets.py"
+    ):
+        raise ExecutionError("PREREGISTERED_CODE_CHANGED")
     script = Path(__file__).with_name("worker.py")
     sandbox_command(script)
     if not hasattr(signal, "SIGKILL"):
