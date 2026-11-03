@@ -113,3 +113,5 @@ Then run the three separate CLI fresh-root demonstrations above; review raw resu
 3. Calibrated cost/utility policies and real provider comparisons; do not trust self-estimated information gains.
 4. Additional genuinely varied task families with independently reviewed evaluators; avoid fake diversity from changing domain names.
 5. Full Phase 9 12ui export and browser acceptance; separately authorized live-provider runs, extended soak, production security and external commercial validation.
+
+Critique packet persistence: successful opt-in team investigations now write one sanitized, content-addressed, explicitly **unverified** packet and an append-only `research_team_reviewed` event. Repeating the same stable key uses the router's cached responses and does not add a second identical event. The source-validity check is repeated under the event writer lock after inference. This adds durable research memory without granting model recommendations evaluation or market-approval authority.
