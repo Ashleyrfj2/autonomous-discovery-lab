@@ -9,6 +9,7 @@ from autodiscover.models.contracts import GenerationRequest
 from autodiscover.models.router import Router
 from autodiscover.orchestrator.durability import canonical
 from autodiscover.research.catalog import Catalog
+from autodiscover.security.redaction import contains_credential
 
 
 class CriticalReview(BaseModel):
@@ -94,8 +95,12 @@ class ResearchTeam:
         catalog = Catalog(self.router.store)
         sources = catalog.sources(run_id)[:5]
         for identifier in sources:
-            catalog.source(identifier)  # Deny invalidated or corrupted research.
+            source, _text = catalog.source(identifier)
+            if source.retrieval_provenance != "live_https":
+                raise ValueError("Private, mock or unverified sources require separate sharing policy")
         context = catalog.context(run_id) if sources else "No external research sources"
+        if contains_credential(canonical({"topic": topic, "domains": domains, "context": context})):
+            raise ValueError("Refusing to send recognizable credentials to model roles")
         candidates = []
         for role in ("RESEARCH_PROPOSALS", "EXPLORATORY"):
             proposal = propose(
