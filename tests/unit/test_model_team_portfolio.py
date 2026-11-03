@@ -164,3 +164,79 @@ def test_portfolio_rejects_duplicate_or_unaudited_calibration():
         )
     with pytest.raises(ValidationError):
         estimate("notcalibrated", "allocation-v1", "0", 0.9, 0, "independent_calibration")
+
+
+def test_model_team_rejects_unverified_or_private_sources_before_inference(tmp_path):
+    from autodiscover.research.catalog import Catalog
+    from autodiscover.research.retrieval import Fetched
+
+    store = Store(tmp_path)
+    run = store.create_run("private source review", {})
+    catalog = Catalog(store)
+    private_text = "Private inspection findings must not be sent to external providers."
+    fetched = Fetched(
+        "https://example.org/private",
+        "https://example.org/private",
+        private_text.encode(),
+        "text/plain",
+        "2026-11-03T00:00:00+00:00",
+        provenance="operator_document",
+    )
+    catalog.add(
+        run, fetched, title="Private operator document", text=private_text,
+        source_kind="primary_document"
+    )
+    proposer = Proposer([proposal()])
+    team = ResearchTeam(
+        Router(
+            store,
+            {
+                "RESEARCH_PROPOSALS": [proposer],
+                "EXPLORATORY": [Explorer([proposal()])],
+                "CRITIQUE": [Critic([critique(), critique()])],
+            },
+        )
+    )
+    with pytest.raises(ValueError, match="Private"):
+        team.investigate(run, topic="privacy", domains=["operations"], key="private")
+    assert len(proposer.responses) == 1
+
+
+def test_model_critic_cannot_invent_source_ids(tmp_path):
+    store = Store(tmp_path)
+    run = store.create_run("citation errors", {})
+    invalid = critique() | {"source_ids": ["source-invented"]}
+    team = ResearchTeam(
+        Router(
+            store,
+            {
+                "RESEARCH_PROPOSALS": [Proposer([proposal()])],
+                "EXPLORATORY": [Explorer([proposal()])],
+                "CRITIQUE": [Critic([invalid])],
+            },
+        )
+    )
+    with pytest.raises(ValueError, match="unavailable sources"):
+        team.investigate(run, topic="evidence", domains=["logistics"], key="fake-source")
+
+
+def test_model_team_rejects_token_bearing_prompt(tmp_path):
+    store = Store(tmp_path)
+    run = store.create_run("unsafe prompt", {})
+    proposer = Proposer([proposal()])
+    team = ResearchTeam(
+        Router(
+            store,
+            {
+                "RESEARCH_PROPOSALS": [proposer],
+                "EXPLORATORY": [Explorer([proposal()])],
+                "CRITIQUE": [Critic([critique()])],
+            },
+        )
+    )
+    with pytest.raises(ValueError, match="credentials"):
+        team.investigate(
+            run, topic="api_key=sk-test-secret-123456789012345",
+            domains=["logistics"], key="secret",
+        )
+    assert len(proposer.responses) == 1
