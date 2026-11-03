@@ -15,7 +15,7 @@ Status: **IMPLEMENTED_UNVERIFIED (ChatGPT GitHub branch)**. Implementation and t
 
 The new family solves **bounded 0/1 allocation** with a capacity constraint, comparing a reviewed dynamic-programming candidate against a ratio-greedy baseline. Each input is a seeded set of at most 12 items (integer weight/value) and capacity at most 100. The selected indices must be sorted/unique and the total weight within capacity.
 
-Independent validation enumerates all possible subsets using separate code (not the worker's DP). It rejects malformed indices, duplicate selections, overweight allocations, plan/digest/replication changes, impossible results and mismatches between preregistered source hashes and the current reviewed source.
+Independent validation enumerates all possible subsets using separate code (not the worker's DP). It rejects malformed indices, duplicate selections, overweight allocations, out-of-plan replications, inconsistent greedy selections, and preregistered source hash mismatches. Durable allocation verdicts require the matching completed job in the same run.
 
 Train/held-out allocation traps (default six train, twelve heldout per replication) are generated with deterministic shuffling, and the exact dynamic optimum is compared against the ratio-greedy baseline. The preregistered default success criterion requires all held-out cases optimal and each held-out normalized improvement at least 15%. Two independently seeded replications follow. This is a *deliberately simple known-problem proof* of the family registry/evaluator; it does not establish generalized scheduling skill, new discoveries, frontier search or applicability to real buyers.
 
@@ -50,13 +50,13 @@ Do not run these against an existing user's persisted runtime root before testin
 - `EXPLORATORY`: a distinct candidate model and its own typed proposal.
 - `CRITIQUE`: a different model critiques assumptions, methods and alternative explanations for each candidate, and proposes a disconfirming experiment.
 
-The result is not an experimental conclusion. The schema requires `novelty_verified=false`, `technical_verified=false`, and `commercial_validated=false`; source IDs must be among valid run-owned records. Private/operator-imported, mock and legacy-unverified text is blocked from automatic model sharing; recognizable tokens in the input block routing. No model can approve payment evidence or turn a critique into scientific acceptance.
+The router checks returned provider/model identities against the configured route and rejects mismatches while retaining usage accounting. The result is not an experimental conclusion. The schema requires `novelty_verified=false`, `technical_verified=false`, and `commercial_validated=false`; source IDs must be among valid run-owned records. Private/operator-imported, mock and legacy-unverified text is blocked from automatic model sharing; recognizable tokens in the input block routing. No model can approve payment evidence or turn a critique into scientific acceptance.
 
 **Do not instantiate a live ResearchTeam until the operator separately configures/authorizes its providers, trusted source-sharing rules, current capabilities/rates and spending limits.** No live provider runs were executed by this branch.
 
 ## Cost-aware planning
 
-`src/autodiscover/hypotheses/portfolio.py` is a read-only budget-aware planner that accepts bounded *predictions* of cost, time, information gain, uncertainty and estimate provenance. Independently calibrated estimates require a digest; weaker operator/model estimates are discounted. Outputs include budget usage estimates, selected/excluded candidates and an explicit `execution_authorized: false`.
+`src/autodiscover/hypotheses/portfolio.py` is a read-only budget-aware planner that accepts bounded *predictions* of cost, time, information gain, uncertainty and estimate provenance. Independently calibrated estimates require a digest; weaker operator/model estimates are discounted. Money fields accept up to nine whole and nine fractional digits in USD. Time admission uses the decimal representation of input seconds. Outputs include budget usage estimates, selected/excluded candidates and an explicit `execution_authorized: false`.
 
 ```sh
 uv run autodiscover portfolio-plan portfolio-request.json

@@ -1,6 +1,7 @@
 """Cost-aware advisory selection; estimates cannot grant execution or novelty authority."""
 
-from decimal import Decimal
+from decimal import Decimal, localcontext
+from fractions import Fraction
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -10,7 +11,9 @@ class CandidateEstimate(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     candidate_id: str = Field(min_length=1, max_length=120)
     family: Literal["encoding-v1", "allocation-v1", "theoretical"]
-    estimated_max_cost_usd: Decimal = Field(ge=0, allow_inf_nan=False)
+    estimated_max_cost_usd: Decimal = Field(
+        ge=0, allow_inf_nan=False, max_digits=18, decimal_places=9
+    )
     estimated_seconds: float = Field(gt=0, le=3600, allow_inf_nan=False)
     expected_information_gain: float = Field(ge=0, le=1, allow_inf_nan=False)
     uncertainty: float = Field(ge=0, le=1, allow_inf_nan=False)
@@ -28,7 +31,7 @@ class CandidateEstimate(BaseModel):
 
 class PortfolioRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
-    budget_usd: Decimal = Field(gt=0, allow_inf_nan=False)
+    budget_usd: Decimal = Field(gt=0, allow_inf_nan=False, max_digits=18, decimal_places=9)
     seconds_budget: float = Field(gt=0, le=86400, allow_inf_nan=False)
     max_experiments: int = Field(ge=1, le=100)
     candidates: list[CandidateEstimate] = Field(min_length=1, max_length=100)
@@ -48,7 +51,7 @@ def rank_portfolio(request: PortfolioRequest) -> dict[str, object]:
     and avoid rewarding repeated exploration of one family by default.
     """
     remaining_cost = request.budget_usd
-    remaining_seconds = request.seconds_budget
+    remaining_seconds = Fraction(str(request.seconds_budget))
     selected: list[dict[str, object]] = []
     family_counts: dict[str, int] = {}
     available = list(request.candidates)
@@ -59,7 +62,7 @@ def rank_portfolio(request: PortfolioRequest) -> dict[str, object]:
             candidate
             for candidate in available
             if candidate.estimated_max_cost_usd <= remaining_cost
-            and candidate.estimated_seconds <= remaining_seconds
+            and Fraction(str(candidate.estimated_seconds)) <= remaining_seconds
         ]
         if not affordable:
             break
@@ -90,23 +93,26 @@ def rank_portfolio(request: PortfolioRequest) -> dict[str, object]:
                 "estimated_seconds": choice.estimated_seconds,
             }
         )
-        remaining_cost -= choice.estimated_max_cost_usd
-        remaining_seconds -= choice.estimated_seconds
+        with localcontext(prec=18):
+            remaining_cost -= choice.estimated_max_cost_usd
+        remaining_seconds -= Fraction(str(choice.estimated_seconds))
         family_counts[choice.family] = family_counts.get(choice.family, 0) + 1
         available.remove(choice)
 
-    for item in available:
+    for item in sorted(available, key=lambda candidate: candidate.candidate_id):
         excluded.append(
             {
                 "candidate_id": item.candidate_id,
                 "reason": (
                     "estimate exceeds remaining cost/time"
                     if item.estimated_max_cost_usd > remaining_cost
-                    or item.estimated_seconds > remaining_seconds
+                    or Fraction(str(item.estimated_seconds)) > remaining_seconds
                     else "maximum planned experiment count reached"
                 ),
             }
         )
+    with localcontext(prec=18):
+        estimated_reserved = request.budget_usd - remaining_cost
     return {
         "schema_version": 1,
         "advisory_only": True,
@@ -116,9 +122,9 @@ def rank_portfolio(request: PortfolioRequest) -> dict[str, object]:
         "commercial_validation": "unvalidated",
         "selected": selected,
         "excluded": excluded,
-        "estimated_reserved_cost_usd": str(request.budget_usd - remaining_cost),
+        "estimated_reserved_cost_usd": str(estimated_reserved),
         "remaining_estimated_budget_usd": str(remaining_cost),
-        "remaining_seconds_budget": remaining_seconds,
+        "remaining_seconds_budget": float(remaining_seconds),
         "limitations": (
             "Uncalibrated information gain and time/cost predictions are guesses; "
             "actual authorization, spending reservations and independent tests are separate"

@@ -317,6 +317,12 @@ class Director:
                 raise IntegrityError("Evaluation belongs to a different hypothesis")
             if plan.digest != report["plan_digest"] or not report.get("raw_artifact_digest"):
                 raise IntegrityError("Evaluation missing preregistration or raw evidence")
+            if expected_kind == "allocation" and not db.execute(
+                "SELECT 1 FROM experiment_jobs WHERE run_id=? AND plan_digest=? "
+                "AND replication=? AND artifact_digest=? AND status='COMPLETED'",
+                (run_id, plan.digest, report["replication"], report["raw_artifact_digest"]),
+            ).fetchone():
+                raise IntegrityError("Evaluation missing completed allocation job in this run")
             raw = self.artifacts.get_json(report["raw_artifact_digest"])
             independent = evaluate_registered(plan, raw, replication=report["replication"])
             if any(report.get(k) != value for k, value in independent.items()):

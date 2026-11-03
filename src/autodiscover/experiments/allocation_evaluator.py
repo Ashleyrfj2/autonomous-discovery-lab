@@ -29,22 +29,24 @@ def optimal_value(items: list[dict[str, int]], capacity: int) -> int:
     return best
 
 
-def greedy_baseline(items: list[dict[str, int]], capacity: int) -> int:
+def greedy_selection(items: list[dict[str, int]], capacity: int) -> list[int]:
     order = sorted(
         range(len(items)),
         key=lambda i: (-items[i]["value"] / items[i]["weight"], i),
     )
-    total, remaining = 0, capacity
+    selected = []
     for index in order:
-        if items[index]["weight"] <= remaining:
-            total += items[index]["value"]
-            remaining -= items[index]["weight"]
-    return total
+        if items[index]["weight"] <= capacity:
+            selected.append(index)
+            capacity -= items[index]["weight"]
+    return sorted(selected)
 
 
 def evaluate_allocation(
     plan: AllocationPlan, raw: dict[str, Any], *, replication: int = 0
 ) -> dict[str, Any]:
+    if type(replication) is not int or not 0 <= replication <= plan.replications:
+        raise AllocationEvaluationError("REPLICATION_OUTSIDE_PLAN")
     try:
         result = AllocationRawResult.model_validate(raw).model_dump(mode="json")
     except ValidationError:
@@ -76,7 +78,10 @@ def evaluate_allocation(
             raise AllocationEvaluationError("OVERWEIGHT_ALLOCATION")
         value = sum(actual["items"][i]["value"] for i in indices)
         reference = optimal_value(actual["items"], actual["capacity"])
-        baseline = greedy_baseline(actual["items"], actual["capacity"])
+        greedy = greedy_selection(actual["items"], actual["capacity"])
+        if plan.algorithm == "greedy" and indices != greedy:
+            raise AllocationEvaluationError("GREEDY_SELECTION_MISMATCH")
+        baseline = sum(actual["items"][i]["value"] for i in greedy)
         if value > reference:
             raise AllocationEvaluationError("IMPOSSIBLE_ALLOCATION_SCORE")
         if actual["split"] == "heldout":

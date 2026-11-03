@@ -54,12 +54,12 @@ def sandbox_command(script: Path, *, python: Path | None = None) -> list[str]:
 
 
 def preflight(plan: RegisteredPlan, limits: Limits) -> dict[str, Any]:
-    if plan.seconds > limits.max_experiment_seconds:
-        raise ExecutionError("TIME_AUTHORITY_EXCEEDED")
     try:
         script, _rows = execution_spec(plan)
     except ValueError:
         raise ExecutionError("PREREGISTERED_CODE_CHANGED") from None
+    if plan.seconds > limits.max_experiment_seconds:
+        raise ExecutionError("TIME_AUTHORITY_EXCEEDED")
     sandbox_command(script)
     if not hasattr(signal, "SIGKILL"):
         raise ExecutionError("RESOURCE_CONTROLS_UNAVAILABLE")
@@ -82,6 +82,8 @@ def run(
     on_started: Callable[[int, float], None] | None = None,
 ) -> dict[str, Any]:
     preflight(plan, limits)
+    if type(replication) is not int or not 0 <= replication <= plan.replications:
+        raise ExecutionError("REPLICATION_OUTSIDE_PLAN")
     if guard:
         guard()
     try:

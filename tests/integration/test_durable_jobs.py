@@ -9,7 +9,9 @@ import pytest
 from autodiscover.config import Limits
 from autodiscover.evidence.chain import verify_chain
 from autodiscover.experiments import runner
+from autodiscover.experiments.allocation_contracts import AllocationPlan
 from autodiscover.experiments.contracts import Plan
+from autodiscover.hypotheses.allocation import allocation_demo_proposal
 from autodiscover.orchestrator.jobs import Jobs, ResourceBusy
 from autodiscover.orchestrator.lab import Lab
 from autodiscover.orchestrator.store import Store
@@ -62,8 +64,9 @@ def test_global_admission_respects_lowest_active_policy(tmp_path):
 
 
 @pytest.mark.parametrize("action", ["pause", "cancel"])
+@pytest.mark.parametrize("plan_type", [Plan, AllocationPlan])
 def test_controls_terminate_active_worker_without_recording_false_failure(
-    tmp_path, monkeypatch, action
+    tmp_path, monkeypatch, action, plan_type
 ):
     store = Store(tmp_path)
     run, fence = owned(store)
@@ -89,7 +92,7 @@ def test_controls_terminate_active_worker_without_recording_false_failure(
             owner="job",
             run_fence=fence,
             stage_version=0,
-            plan=Plan(hypothesis_id="control"),
+            plan=plan_type(hypothesis_id="control"),
             limits=Limits(),
         )
     assert seen and not psutil.pid_exists(seen[0])
@@ -132,9 +135,17 @@ lab.resume(sys.argv[2])
     assert [r["attempts"] for r in recovered.jobs.status(run)] == [1, 1, 1]
 
 
-def test_worker_start_crash_is_reconciled_and_retried_explicitly(tmp_path):
+@pytest.mark.parametrize("family", ["encoding-v1", "allocation-v1"])
+def test_worker_start_crash_is_reconciled_and_retried_explicitly(tmp_path, family):
     lab = Lab(tmp_path)
-    run = lab.demo(stop_after=6)
+    if family == "allocation-v1":
+        policy = Limits(explore_existing_candidates=True)
+        run = lab.store.create_run("allocation recovery", policy.model_dump(mode="json"))
+        lab.director.configure(run)
+        lab.director.register(run, allocation_demo_proposal())
+        lab.resume(run, stop_after=6)
+    else:
+        run = lab.demo(stop_after=6)
     script = """
 import os,sys
 from pathlib import Path
@@ -159,6 +170,9 @@ lab.resume(sys.argv[2])
     recovered = Lab(tmp_path)
     recovered.resume(run)
     assert recovered.report(run)["status"] == "COMPLETED"
+    assert recovered.report(run)["assessment"]["technical_success"] is True
+    assert recovered.plan(run).implementation == family
+    assert verify_chain(recovered.store)["verified_events"] > 12
     first = recovered.jobs.status(run)[0]
     assert first["attempts"] == 2 and first["error_count"] == 1
     assert first["status"] == "COMPLETED"

@@ -283,10 +283,21 @@ class Catalog:
         record["content"] = json.loads(self.artifacts.get(row["artifact_digest"]))
         return record
 
-    def context(self, run_id: str, *, max_characters: int = 10000) -> str:
+    def context(
+        self,
+        run_id: str,
+        *,
+        max_characters: int = 10000,
+        public_source_ids: list[str] | None = None,
+    ) -> str:
         items = []
-        for identifier in self.sources(run_id)[:5]:
+        selected = self.sources(run_id)[:5] if public_source_ids is None else public_source_ids
+        for identifier in selected:
             source, text = self.source(identifier)
+            if public_source_ids is not None and source.retrieval_provenance != "live_https":
+                raise ValueError(
+                    "Private, mock or unverified sources require separate sharing policy"
+                )
             items.append(
                 {
                     "source_id": identifier,

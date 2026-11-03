@@ -2,6 +2,7 @@ import pytest
 from pydantic import ValidationError
 
 from autodiscover.config import Limits
+from autodiscover.experiments.allocation_contracts import AllocationPlan
 from autodiscover.experiments.contracts import Plan
 from autodiscover.experiments.evaluator import evaluate
 from autodiscover.experiments.runner import ExecutionError, preflight, run
@@ -39,7 +40,8 @@ def test_limits_and_unknown_code_fail_closed():
         run(Plan(hypothesis_id="output", max_output_bytes=1000), Limits())
 
 
-def test_rss_supervisor_rejects_over_limit_observation_and_cleans_worker(monkeypatch):
+@pytest.mark.parametrize("plan_type", [Plan, AllocationPlan])
+def test_rss_supervisor_rejects_over_limit_observation_and_cleans_worker(monkeypatch, plan_type):
     from types import SimpleNamespace
 
     import psutil
@@ -56,5 +58,12 @@ def test_rss_supervisor_rejects_over_limit_observation_and_cleans_worker(monkeyp
 
     monkeypatch.setattr(runner.psutil, "Process", monitor)
     with pytest.raises(ExecutionError, match="WORKER_MEMORY_LIMIT"):
-        run(Plan(hypothesis_id="simulated-rss-observation"), Limits())
+        run(plan_type(hypothesis_id="simulated-rss-observation"), Limits())
     assert workers and all(not process.is_running() for process in workers)
+
+
+def test_allocation_worker_applies_wall_time_and_output_limits():
+    with pytest.raises(ExecutionError, match="WORKER_TIMEOUT"):
+        run(AllocationPlan(hypothesis_id="timeout", seconds=0.000001), Limits())
+    with pytest.raises(ExecutionError, match="OUTPUT_LIMIT"):
+        run(AllocationPlan(hypothesis_id="output", samples=30, max_output_bytes=1000), Limits())

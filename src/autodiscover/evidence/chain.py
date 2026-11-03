@@ -88,10 +88,13 @@ def verify_chain(store: Store, anchor: dict[str, Any] | None = None) -> dict[str
     authoritative_steps = {event["id"] for event in events if event["kind"] == "stage_completed"}
     if authoritative_steps != {json.loads(step["result_json"])["event_id"] for step in steps}:
         raise IntegrityError("Completed step projection missing evidence")
+    artifacts = Artifacts(store.root / "artifacts", read_only=True)
     validity: dict[str, bool] = {}
     for event in events:
         payload = json.loads(event["payload_json"])
-        if event["kind"] == "source_registered":
+        if event["kind"] == "research_team_reviewed":
+            artifacts.get(payload["artifact_digest"])
+        elif event["kind"] == "source_registered":
             validity.setdefault(payload["source_id"], True)
         elif event["kind"] == "claim_registered":
             validity[payload["claim_id"]] = True

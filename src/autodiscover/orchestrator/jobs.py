@@ -112,6 +112,8 @@ class Jobs:
     ) -> tuple[str, int, dict[str, Any] | None]:
         from autodiscover.evidence.chain import verify_chain
 
+        if type(replication) is not int or not 0 <= replication <= plan.replications:
+            raise runner.ExecutionError("REPLICATION_OUTSIDE_PLAN")
         verify_chain(self.store)
         self.reconcile()
         if self.artifacts.put_json(plan.model_dump(mode="json")) != plan.digest:

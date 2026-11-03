@@ -72,7 +72,10 @@ class Router:
         )
         cached = self.budget.cached(run_id, key, fingerprint)
         if cached is not None:
-            return Generation.model_validate(cached)
+            result = Generation.model_validate(cached)
+            if (result.provider, result.model) not in {(p.name, p.model) for p in providers}:
+                raise ProviderError("PROVIDER_IDENTITY_MISMATCH")
+            return result
         row = self.store.get_run(run_id)
         policy = Limits.model_validate_json(row["policy_json"])
         last_error = ProviderError("NO_AVAILABLE_PROVIDER")
@@ -132,12 +135,25 @@ class Router:
                     break
                 # No prompt/auth/error bodies are persisted. Redact recognizable secrets in output.
                 result = result.model_copy(update={"text": sanitize(result.text)})
+                identity_matches = (result.provider, result.model) == (
+                    provider.name, provider.model
+                )
+                within_bound = result.cost_usd <= amount
                 self.budget.settle(
                     reservation,
                     result.cost_usd,
                     usage=result.usage.model_dump(),
-                    result=result.model_dump(mode="json"),
+                    result=(
+                        result.model_dump(mode="json")
+                        if identity_matches and within_bound
+                        else None
+                    ),
                 )
+                if not within_bound:
+                    raise ProviderError("RESERVATION_BOUND_EXCEEDED", uncertain=True)
+                if not identity_matches:
+                    self._circuit(provider, "PROVIDER_IDENTITY_MISMATCH")
+                    raise ProviderError("PROVIDER_IDENTITY_MISMATCH")
                 self._circuit(provider, None)
                 with self.store.connection(write=True) as db:
                     self.store._event(
@@ -153,8 +169,6 @@ class Router:
                             "request_fingerprint": fingerprint,
                         },
                     )
-                if result.cost_usd > amount:
-                    raise ProviderError("RESERVATION_BOUND_EXCEEDED", uncertain=True)
                 return result
             if attempts > policy.max_retries_per_step:
                 break

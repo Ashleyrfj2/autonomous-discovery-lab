@@ -46,6 +46,14 @@ def test_allocation_metric_tampering_is_recomputed_from_selected_items():
     extra["output"]["rows"][0]["selected"] = [0, 0]
     with pytest.raises(AllocationEvaluationError, match="INVALID_ALLOCATION_SELECTION"):
         evaluate_allocation(plan, extra)
+    overweight = deepcopy(raw)
+    overweight["output"]["rows"][0]["selected"] = [0, 1, 2]
+    with pytest.raises(AllocationEvaluationError, match="OVERWEIGHT_ALLOCATION"):
+        evaluate_allocation(plan, overweight)
+    injected = deepcopy(raw)
+    injected["output"]["technical_success"] = True
+    with pytest.raises(AllocationEvaluationError, match="INVALID_ALLOCATION_RESULT_SCHEMA"):
+        evaluate_allocation(plan, injected)
     swapped = deepcopy(raw)
     swapped["plan_digest"] = "0" * 64
     with pytest.raises(AllocationEvaluationError, match="PLAN_OR_REPLICATION"):
@@ -122,3 +130,42 @@ def test_two_genuinely_different_reviewed_families_can_share_search(tmp_path):
     assert report["assessment"]["novelty"] == "unknown"
     assert report["commercial"]["level"] == 0
     assert verify_chain(lab.store)["verified_events"] > 20
+
+
+def test_preflight_rejects_changed_evaluator_and_malformed_typed_plan():
+    plan = AllocationPlan(hypothesis_id="changed")
+    for update in (
+        {"evaluator_sha256": "0" * 64},
+        {"implementation": "encoding-v1"},
+        {"memory_mb": 1000},
+    ):
+        with pytest.raises(ExecutionError, match="PREREGISTERED_CODE_CHANGED"):
+            preflight(plan.model_copy(update=update), Limits())
+    with pytest.raises(ValidationError):
+        parse_plan(plan.model_dump() | {"worker_file": "../unreviewed.py"})
+
+
+def test_replications_and_greedy_control_reject_substituted_evidence():
+    plan = AllocationPlan(hypothesis_id="replica")
+    with pytest.raises(ExecutionError, match="REPLICATION_OUTSIDE_PLAN"):
+        run(plan, Limits(), replication=3)
+    raw = run(plan, Limits())
+    with pytest.raises(AllocationEvaluationError, match="REPLICATION_OUTSIDE_PLAN"):
+        evaluate_allocation(plan, raw | {"replication": 3}, replication=3)
+    greedy = plan.model_copy(update={"algorithm": "greedy"})
+    with pytest.raises(AllocationEvaluationError, match="GREEDY_SELECTION_MISMATCH"):
+        evaluate_allocation(greedy, raw | {"plan_digest": greedy.digest})
+
+
+def test_allocation_result_requires_completed_job_in_same_run(tmp_path):
+    from autodiscover.evidence.artifacts import IntegrityError
+    from autodiscover.orchestrator.contracts import Stage
+
+    lab = Lab(tmp_path)
+    proposal = allocation_demo_proposal()
+    original = lab.explore("same allocation proposal", [proposal])
+    other = lab.store.create_run("different run", {})
+    candidate = lab.director.register(other, proposal)
+    digest = lab.latest(original, Stage.VERIFY)["report_digest"]
+    with pytest.raises(IntegrityError, match="completed allocation job"):
+        lab.director.record(other, candidate, digest)

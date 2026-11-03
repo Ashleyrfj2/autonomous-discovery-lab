@@ -2,15 +2,16 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal, TypeAlias
+from typing import Any, Literal
+
+from pydantic import ValidationError
 
 from autodiscover.experiments.allocation_contracts import AllocationPlan
 from autodiscover.experiments.allocation_fixtures import allocation_fixtures
 from autodiscover.experiments.contracts import Plan, code_digest
 from autodiscover.experiments.datasets import fixtures
 
-
-RegisteredPlan: TypeAlias = Plan | AllocationPlan
+type RegisteredPlan = Plan | AllocationPlan
 
 
 @dataclass(frozen=True)
@@ -50,6 +51,8 @@ def parse_plan(data: dict[str, Any]) -> RegisteredPlan:
     if not isinstance(data, dict):
         raise ValueError("INVALID_PREREGISTERED_PLAN")
     name = data.get("implementation")
+    if not isinstance(name, str):
+        raise ValueError("INVALID_PREREGISTERED_PLAN")
     family(name)
     if name == "encoding-v1":
         return Plan.model_validate(data)
@@ -60,25 +63,23 @@ def execution_spec(
     plan: RegisteredPlan, *, replication: int = 0
 ) -> tuple[Path, list[dict[str, Any]]]:
     selected = family(plan.implementation)
-    if isinstance(plan, Plan):
-        if (
-            plan.worker_sha256 != code_digest(selected.worker_file)
-            or plan.fixture_sha256 != code_digest(selected.fixture_file)
-        ):
-            raise ValueError("REVIEWED_WORKER_IDENTITY_CHANGED")
-        return Path(__file__).with_name(selected.worker_file), fixtures(
-            plan, replication=replication
-        )
-    from autodiscover.experiments.allocation_contracts import allocation_digest
-
+    schema = Plan if selected.name == "encoding-v1" else AllocationPlan
+    if not isinstance(plan, schema):
+        raise ValueError("INVALID_PREREGISTERED_PLAN")
+    try:
+        validated = schema.model_validate(plan.model_dump(warnings=False), strict=True)
+    except ValidationError:
+        raise ValueError("INVALID_PREREGISTERED_PLAN") from None
     if (
-        plan.worker_sha256 != allocation_digest(selected.worker_file)
-        or plan.fixture_sha256 != allocation_digest(selected.fixture_file)
+        validated.worker_sha256 != code_digest(selected.worker_file)
+        or validated.fixture_sha256 != code_digest(selected.fixture_file)
+        or validated.evaluator_sha256 != code_digest(selected.evaluator_file)
     ):
-        raise ValueError("REVIEWED_WORKER_IDENTITY_CHANGED")
-    return Path(__file__).with_name(selected.worker_file), allocation_fixtures(
-        plan, replication=replication
-    )
+        raise ValueError("REVIEWED_EXPERIMENT_IDENTITY_CHANGED")
+    script = Path(__file__).with_name(selected.worker_file)
+    if isinstance(validated, Plan):
+        return script, fixtures(validated, replication=replication)
+    return script, allocation_fixtures(validated, replication=replication)
 
 
 def evaluate_registered(

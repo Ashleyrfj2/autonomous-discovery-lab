@@ -10,7 +10,7 @@ from autodiscover.models.contracts import GenerationRequest
 from autodiscover.models.router import Router
 from autodiscover.orchestrator.durability import canonical
 from autodiscover.research.catalog import Catalog
-from autodiscover.security.redaction import contains_credential
+from autodiscover.security.redaction import contains_credential, sanitize
 
 
 class CriticalReview(BaseModel):
@@ -76,6 +76,8 @@ class ResearchTeam:
                 }
             )
         )
+        if contains_credential(request.prompt):
+            raise ValueError("Refusing to send recognizable credentials to model roles")
         review, _ = self.router.generate_structured(
             run_id, "CRITIQUE", request, CriticalReview, key=key
         )
@@ -95,13 +97,11 @@ class ResearchTeam:
             raise ValueError("Bounded stable research key required")
         catalog = Catalog(self.router.store)
         sources = catalog.sources(run_id)[:5]
-        for identifier in sources:
-            source, _text = catalog.source(identifier)
-            if source.retrieval_provenance != "live_https":
-                raise ValueError(
-                    "Private, mock or unverified sources require separate sharing policy"
-                )
-        context = catalog.context(run_id) if sources else "No external research sources"
+        context = (
+            catalog.context(run_id, public_source_ids=sources)
+            if sources
+            else "No external research sources"
+        )
         if contains_credential(canonical({"topic": topic, "domains": domains, "context": context})):
             raise ValueError("Refusing to send recognizable credentials to model roles")
         candidates = []
@@ -143,12 +143,14 @@ class ResearchTeam:
         }
         # Persist a content-addressed, non-authoritative research packet. Recheck
         # sources under the event writer lock after all potentially slow model calls.
+        packet = sanitize(packet)
         digest = Artifacts(self.router.store.root / "artifacts").put_json(packet)
         with self.router.store.connection(write=True) as db:
             for identifier in sources:
                 row = db.execute(
-                    "SELECT valid FROM research_nodes WHERE id=? AND kind='source'",
-                    (identifier,),
+                    "SELECT n.valid FROM research_nodes n JOIN run_sources r ON n.id=r.source_id "
+                    "WHERE r.run_id=? AND n.id=? AND n.kind='source'",
+                    (run_id, identifier),
                 ).fetchone()
                 if row is None or not row["valid"]:
                     raise ValueError("Research source invalidated during model review")

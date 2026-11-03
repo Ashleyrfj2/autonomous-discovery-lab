@@ -1,11 +1,12 @@
 """Multi-model roles and cost-aware *advisory* experiment selection."""
 
 from decimal import Decimal
+from typing import Literal
 
 import pytest
 from pydantic import ValidationError
 
-from autodiscover.evidence.artifacts import Artifacts
+from autodiscover.evidence.artifacts import Artifacts, IntegrityError
 from autodiscover.evidence.chain import verify_chain
 from autodiscover.hypotheses.portfolio import (
     CandidateEstimate,
@@ -74,15 +75,18 @@ def test_three_separate_model_roles_are_not_scientific_authority(tmp_path):
     report = team.investigate(
         run, topic="resource allocation research", domains=["logistics"], key="team1"
     )
-    assert len(report["candidate_reviews"]) == 2
+    reviews = report["candidate_reviews"]
+    assert isinstance(reviews, list) and len(reviews) == 2
     assert report["novelty"] == "unknown"
     assert report["commercial_validation"] == "unvalidated"
     assert all(
-        item["critic" if "critic" in item else "critique"]["novelty_verified"] is False
-        for item in report["candidate_reviews"]
+        item["critique"]["novelty_verified"] is False
+        for item in reviews
     )
     assert report["models_not_independent_scientific_oracles"] is True
-    saved = Artifacts(tmp_path / "artifacts").get_json(report["artifact_digest"])
+    digest = report["artifact_digest"]
+    assert isinstance(digest, str)
+    saved = Artifacts(tmp_path / "artifacts").get_json(digest)
     assert saved["candidate_reviews"] == report["candidate_reviews"]
     cursor = verify_chain(store)["seq"]
     repeated = team.investigate(
@@ -90,6 +94,19 @@ def test_three_separate_model_roles_are_not_scientific_authority(tmp_path):
     )
     assert repeated["artifact_digest"] == report["artifact_digest"]
     assert verify_chain(store)["seq"] == cursor
+    assert store.outputs(run) == []
+    with store.connection() as db:
+        assert db.execute("SELECT COUNT(*) FROM experiment_jobs").fetchone()[0] == 0
+        assert db.execute(
+            "SELECT COUNT(*) FROM events WHERE kind='research_team_reviewed'"
+        ).fetchone()[0] == 1
+    assert router.budget.totals(run)["requests"] == 4
+    assert router.budget.totals(run)["charged_usd"] == "0"
+
+    # A disposable copy of the review packet has to match its event's content address.
+    Artifacts(tmp_path / "artifacts").path(digest).write_text("{}")
+    with pytest.raises(IntegrityError, match="Artifact digest"):
+        verify_chain(store)
 
 
 def test_role_identity_overlap_rejected(tmp_path):
@@ -157,10 +174,15 @@ def test_portfolio_is_budget_bounded_and_non_authorizing():
     assert result["execution_authorized"] is False
     assert result["scientific_validity"] == "not_assessed"
     assert result["novelty"] == "unknown"
-    assert result["selected"][0]["candidate_id"] == "calibrated"
-    assert Decimal(result["estimated_reserved_cost_usd"]) <= request.budget_usd
-    assert result["remaining_seconds_budget"] >= 0
-    assert any(item["candidate_id"] == "overspend" for item in result["excluded"])
+    selected = result["selected"]
+    assert isinstance(selected, list) and selected[0]["candidate_id"] == "calibrated"
+    reserved = result["estimated_reserved_cost_usd"]
+    assert isinstance(reserved, str) and Decimal(reserved) <= request.budget_usd
+    remaining = result["remaining_seconds_budget"]
+    assert isinstance(remaining, float) and remaining >= 0
+    excluded = result["excluded"]
+    assert isinstance(excluded, list)
+    assert any(item["candidate_id"] == "overspend" for item in excluded)
 
 
 def test_portfolio_rejects_duplicate_or_unaudited_calibration():
@@ -250,3 +272,83 @@ def test_model_team_rejects_token_bearing_prompt(tmp_path):
             domains=["logistics"], key="secret",
         )
     assert len(proposer.responses) == 1
+
+
+def test_reported_model_identity_must_match_route(tmp_path):
+    class Impostor(Proposer):
+        def generate(self, request):
+            return super().generate(request).model_copy(update={"model": Explorer.model})
+
+    store = Store(tmp_path)
+    run = store.create_run("routing identity", {})
+    router = Router(
+        store,
+        {
+            "RESEARCH_PROPOSALS": [Impostor([proposal()])],
+            "EXPLORATORY": [Explorer([proposal()])],
+            "CRITIQUE": [Critic([critique()])],
+        },
+    )
+    with pytest.raises(ProviderError, match="PROVIDER_IDENTITY_MISMATCH"):
+        ResearchTeam(router).investigate(run, topic="allocation", domains=["logistics"], key="id")
+    assert router.budget.totals(run)["requests"] == 1
+
+
+def test_source_context_uses_only_the_checked_source_selection(tmp_path, monkeypatch):
+    from autodiscover.research.catalog import Catalog
+    from autodiscover.research.retrieval import Fetched
+
+    store = Store(tmp_path)
+    run = store.create_run("source race", {})
+    catalog = Catalog(store)
+    ids = []
+    kinds: tuple[Literal["live_https"], Literal["operator_document"]] = (
+        "live_https", "operator_document"
+    )
+    for kind in kinds:
+        url = "https://example.org/" + kind
+        ids.append(
+            catalog.add(
+                run, Fetched(url, url, kind.encode(), "text/plain", "2026-11-03", kind),
+                title=kind, text=kind, source_kind="primary_document",
+            )
+        )
+    selections = iter([[ids[0]], [ids[1]]])
+    monkeypatch.setattr(Catalog, "sources", lambda self, run_id: next(selections))
+
+    class ObservingProposer(Proposer):
+        def generate(self, request):
+            assert "operator_document" not in request.prompt
+            assert "live_https" in request.prompt
+            return super().generate(request)
+
+    router = Router(
+        store,
+        {
+            "RESEARCH_PROPOSALS": [ObservingProposer([proposal()])],
+            "EXPLORATORY": [Explorer([proposal()])],
+            "CRITIQUE": [Critic([critique(), critique()])],
+        },
+    )
+    ResearchTeam(router).investigate(run, topic="allocation", domains=["logistics"], key="sources")
+
+
+def test_portfolio_fractional_time_budget_and_order():
+    first = estimate("A", "encoding-v1", "0.1", 0.4, 0.3, "operator_estimate")
+    second = first.model_copy(update={"candidate_id": "B"})
+    first = first.model_copy(update={"estimated_seconds": 0.1})
+    second = second.model_copy(update={"estimated_seconds": 0.2})
+    request = PortfolioRequest(
+        budget_usd=Decimal("0.2"), seconds_budget=0.3, max_experiments=2,
+        candidates=[second, first],
+    )
+    result = rank_portfolio(request)
+    assert result["remaining_seconds_budget"] == 0
+    assert result["selected"] == rank_portfolio(
+        request.model_copy(update={"candidates": [first, second]})
+    )["selected"]
+
+
+def test_portfolio_rejects_cost_precision_beyond_ledger_units():
+    with pytest.raises(ValidationError, match="estimated_max_cost_usd"):
+        estimate("tiny", "encoding-v1", "1e-29", 0.4, 0.3, "operator_estimate")

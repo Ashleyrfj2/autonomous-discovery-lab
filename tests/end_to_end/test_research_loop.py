@@ -3,6 +3,7 @@ import subprocess
 import sys
 
 from autodiscover.evidence.chain import verify_chain
+from autodiscover.experiments.contracts import Plan
 from autodiscover.orchestrator.contracts import Stage
 from autodiscover.orchestrator.lab import Lab
 
@@ -19,6 +20,7 @@ def test_complete_offline_loop_with_replicated_evidence(tmp_path):
     assert report["commercial"]["validated"] is False
     assert report["usage"]["charged_usd"] == "0"
     plan = lab.plan(run)
+    assert isinstance(plan, Plan)
     result = lab.artifacts.get_json(lab.latest(run, Stage.VERIFY)["report_digest"])
     assert result["heldout_cases"] == 48
     assert result["heldout_min_savings"] >= plan.minimum_savings
