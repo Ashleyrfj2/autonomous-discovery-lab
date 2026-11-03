@@ -98,7 +98,9 @@ class ResearchTeam:
         for identifier in sources:
             source, _text = catalog.source(identifier)
             if source.retrieval_provenance != "live_https":
-                raise ValueError("Private, mock or unverified sources require separate sharing policy")
+                raise ValueError(
+                    "Private, mock or unverified sources require separate sharing policy"
+                )
         context = catalog.context(run_id) if sources else "No external research sources"
         if contains_credential(canonical({"topic": topic, "domains": domains, "context": context})):
             raise ValueError("Refusing to send recognizable credentials to model roles")
