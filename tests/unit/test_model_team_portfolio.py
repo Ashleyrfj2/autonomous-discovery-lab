@@ -5,6 +5,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from autodiscover.evidence.artifacts import Artifacts
+from autodiscover.evidence.chain import verify_chain
 from autodiscover.hypotheses.portfolio import (
     CandidateEstimate,
     PortfolioRequest,
@@ -80,6 +82,14 @@ def test_three_separate_model_roles_are_not_scientific_authority(tmp_path):
         for item in report["candidate_reviews"]
     )
     assert report["models_not_independent_scientific_oracles"] is True
+    saved = Artifacts(tmp_path / "artifacts").get_json(report["artifact_digest"])
+    assert saved["candidate_reviews"] == report["candidate_reviews"]
+    cursor = verify_chain(store)["seq"]
+    repeated = team.investigate(
+        run, topic="resource allocation research", domains=["logistics"], key="team1"
+    )
+    assert repeated["artifact_digest"] == report["artifact_digest"]
+    assert verify_chain(store)["seq"] == cursor
 
 
 def test_role_identity_overlap_rejected(tmp_path):
