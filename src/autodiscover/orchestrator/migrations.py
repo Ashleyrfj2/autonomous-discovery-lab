@@ -36,4 +36,18 @@ CREATE TABLE circuits(provider TEXT NOT NULL,model TEXT NOT NULL,
  failures INTEGER NOT NULL DEFAULT 0,
  open_until REAL NOT NULL DEFAULT 0,last_error TEXT,PRIMARY KEY(provider,model));
 """,
+    """
+CREATE TABLE research_nodes(id TEXT PRIMARY KEY,kind TEXT NOT NULL,artifact_digest TEXT NOT NULL,
+ valid INTEGER NOT NULL DEFAULT 1,summary TEXT NOT NULL);
+CREATE TABLE run_sources(run_id TEXT NOT NULL REFERENCES runs(id),
+ source_id TEXT NOT NULL REFERENCES research_nodes(id),PRIMARY KEY(run_id,source_id));
+CREATE TABLE research_edges(parent TEXT NOT NULL REFERENCES research_nodes(id),
+ child TEXT NOT NULL REFERENCES research_nodes(id),PRIMARY KEY(parent,child));
+""",
+    """
+CREATE TABLE source_locations(url TEXT NOT NULL,
+ source_id TEXT PRIMARY KEY REFERENCES research_nodes(id),
+ raw_digest TEXT NOT NULL,retrieved_at TEXT NOT NULL);
+CREATE INDEX source_location_url ON source_locations(url);
+""",
 )

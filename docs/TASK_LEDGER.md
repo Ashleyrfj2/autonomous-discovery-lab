@@ -111,12 +111,12 @@ Task ID: P5-RESEARCH
 Phase: 5
 Description: Safe retrieval/provenance/comparison/claim invalidation; acceptance: actual sources traced + adversarial tests
 Dependencies: P4-VERIFY
-Status: NOT_STARTED
-Files: pending
-Tests: pending
-Verification: pending
+Status: VERIFIED
+Files: research/{retrieval,catalog,intelligence}.py; hypotheses/engine.py; orchestrator/{lab,migrations}.py; evidence/chain.py; cli.py; test_research_intelligence.py; test_retrieval_security.py; phase-5-live-retrieval.json; phase-5-evidence-snapshot.json; selected public acceptance CAS archives
+Tests: uv run pytest -q: 72 passed; Ruff passed; Pyright 0 errors; uv build passed; actual HTTPS retrieval and full CLI research/resume passed separately from mock tests
+Verification: phase_reports/phase-5.md
 Blockers: none
-Next action: implement after dependencies verify
+Next action: P6-BRANCH: persistent hypothesis trees/revisions, diversity-aware bounded allocation, duplicate and loop detection, justified failure-driven replanning
 
 
 ## P6-BRANCH

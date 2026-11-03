@@ -46,6 +46,7 @@ def verify_chain(store: Store, anchor: dict[str, Any] | None = None) -> dict[str
         db.execute("BEGIN")
         events = [dict(r) for r in db.execute("SELECT * FROM events ORDER BY seq")]
         steps = [dict(r) for r in db.execute("SELECT * FROM steps ORDER BY rowid")]
+        nodes = [dict(r) for r in db.execute("SELECT * FROM research_nodes")]
     checked = verify_events(events, anchor)
     by_id = {event["id"]: event for event in events}
     for step in steps:
@@ -60,6 +61,21 @@ def verify_chain(store: Store, anchor: dict[str, Any] | None = None) -> dict[str
             or result["version"] != payload["version"] + 1
         ):
             raise IntegrityError("Step projection disagrees with evidence")
+    validity: dict[str, bool] = {}
+    for event in events:
+        payload = json.loads(event["payload_json"])
+        if event["kind"] == "source_registered":
+            validity.setdefault(payload["source_id"], True)
+        elif event["kind"] == "claim_registered":
+            validity[payload["claim_id"]] = True
+        elif event["kind"] in ("evidence_invalidated", "source_updated"):
+            for identifier in payload["affected"]:
+                validity[identifier] = False
+    for node in nodes:
+        if node["id"] != node["kind"] + "-" + node["artifact_digest"] or bool(
+            node["valid"]
+        ) != validity.get(node["id"]):
+            raise IntegrityError("Research validity projection disagrees with evidence")
     return checked
 
 

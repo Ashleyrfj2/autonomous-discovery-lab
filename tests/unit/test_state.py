@@ -57,7 +57,7 @@ def test_full_lifecycle_schema_and_idempotency(tmp_path):
     assert len(store.outputs(run)) == 12
     with store.connection() as db:
         assert db.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
-        assert db.execute("PRAGMA user_version").fetchone()[0] == 2
+        assert db.execute("PRAGMA user_version").fetchone()[0] == 4
     assert (
         json.loads((tmp_path / "checkpoints" / f"{run}.json").read_text())["run"]["version"] == 12
     )

@@ -21,6 +21,11 @@ def main() -> None:
     demo.add_argument("--topic", default="consumer, gaming and telemetry data")
     demo.add_argument("--config", type=Path, default=Path("config/default.json"))
     demo.add_argument("--stop-after", type=int)
+    research = sub.add_parser(
+        "research", help="Retrieve public prior-art metadata, then stop for inspection"
+    )
+    research.add_argument("query")
+    research.add_argument("--allow-network", action="store_true")
     resume = sub.add_parser("resume", help="Continue an active run from committed state")
     resume.add_argument("run_id")
     resume.add_argument("--stop-after", type=int)
@@ -41,6 +46,11 @@ def main() -> None:
         lab = Lab(args.root)
         if args.command == "demo":
             run = lab.demo(args.topic, limits=Limits.load(args.config), stop_after=args.stop_after)
+            result = lab.report(run)
+        elif args.command == "research":
+            if not args.allow_network:
+                parser.error("research requires --allow-network")
+            run = lab.demo(args.query, limits=Limits(allow_retrieval=True), stop_after=2)
             result = lab.report(run)
         elif args.command == "resume":
             lab.resume(args.run_id, stop_after=args.stop_after)

@@ -18,6 +18,9 @@ from autodiscover.models.router import Router
 from autodiscover.orchestrator.contracts import RunStatus, Stage
 from autodiscover.orchestrator.durability import atomic_json
 from autodiscover.orchestrator.store import Store
+from autodiscover.research.catalog import Catalog
+from autodiscover.research.intelligence import retrieve_publications, synthesize
+from autodiscover.research.retrieval import Fetcher
 from autodiscover.security.budget import Budget, BudgetError
 
 
@@ -135,17 +138,36 @@ class Lab:
                 "questions": [f"Can lossless encoding improve repeated data storage in {topic}?"]
             }
         elif stage == Stage.RESEARCH:
-            output = {
-                "source_ids": [],
-                "coverage_limitations": "Offline deterministic demo; "
-                "prior art is not retrieved. Novelty remains unknown.",
-            }
+            if limits.allow_retrieval:
+                catalog = Catalog(self.store)
+                ids = catalog.sources(run_id)
+                if not ids:
+                    ids = retrieve_publications(
+                        catalog, run_id, Fetcher(authorized=True), topic[:300]
+                    )
+                synthesis = synthesize(catalog, ids, topic)
+                self.artifacts.put_json(synthesis)
+                output = {"source_ids": ids, "coverage_limitations": synthesis["limitations"]}
+            else:
+                output = {
+                    "source_ids": [],
+                    "coverage_limitations": "Offline deterministic demo; "
+                    "prior art is not retrieved. Novelty remains unknown.",
+                }
         elif stage == Stage.HYPOTHESIZE:
-            router = router or Router(
-                self.store,
-                {"HYPOTHESIZE": [MockProvider([demo_proposal(topic, algorithm=demo_algorithm)])]},
+            source_ids = self.latest(run_id, Stage.RESEARCH)["source_ids"]
+            context = (
+                Catalog(self.store).context(run_id)
+                if source_ids
+                else "Offline; no external sources"
             )
-            h = generate(router, run_id, topic, key=f"hypothesis:{version}")
+            if router is None:
+                proposal = demo_proposal(topic, algorithm=demo_algorithm)
+                proposal["source_ids"] = source_ids
+                router = Router(self.store, {"HYPOTHESIZE": [MockProvider([proposal])]})
+            h = generate(router, run_id, topic, key=f"hypothesis:{version}", source_context=context)
+            if not set(h.source_ids).issubset(set(source_ids)):
+                raise ValueError("Hypothesis cites unavailable sources")
             digest = self.artifacts.put_json(h.model_dump(mode="json"))
             output = {"hypothesis_ids": [digest]}
         elif stage == Stage.PRIORITIZE:
@@ -234,7 +256,12 @@ class Lab:
             "commercial": market,
             "usage": Budget(self.store).totals(run_id),
             "evidence": verify_chain(self.store),
-            "mode": "offline trusted encoding demo; sources/live providers unverified",
+            "research": {
+                "source_ids": Catalog(self.store).sources(run_id),
+                "novelty": "unknown",
+                "coverage_exhaustive": False,
+            },
+            "mode": "trusted encoding loop; source retrieval opt-in; live providers unverified",
         }
         atomic_json(self.store.root / "reports" / f"{run_id}.json", report)
         return report
