@@ -11,7 +11,7 @@ import threading
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Literal, Protocol
 from urllib.parse import urlencode, urljoin, urlsplit
 
 from autodiscover.orchestrator.durability import now
@@ -29,6 +29,7 @@ class Fetched:
     body: bytes
     content_type: str
     retrieved_at: str
+    provenance: Literal["live_https", "operator_document", "fixture"] = "fixture"
 
     @property
     def digest(self) -> str:
@@ -166,7 +167,9 @@ class Fetcher:
                     continue
                 if status != 200:
                     raise RetrievalError(f"SOURCE_HTTP_{status}")
-                return Fetched(requested, url, body, headers.get("content-type", ""), now())
+                return Fetched(
+                    requested, url, body, headers.get("content-type", ""), now(), "live_https"
+                )
         except (OSError, http.client.HTTPException, ValueError):
             raise RetrievalError("SOURCE_TRANSPORT_FAILURE") from None
         raise RetrievalError("REDIRECT_LIMIT")

@@ -25,6 +25,9 @@ class Source(BaseModel):
     text_digest: str = Field(pattern=r"^[a-f0-9]{64}$")
     content_type: str
     retrieval_url: str
+    retrieval_provenance: Literal[
+        "live_https", "operator_document", "fixture", "legacy_unverified"
+    ] = "legacy_unverified"
     limitations: str
 
 
@@ -73,6 +76,7 @@ class Catalog:
             text_digest=extracted,
             content_type=fetched.content_type,
             retrieval_url=fetched.final_url,
+            retrieval_provenance=fetched.provenance,
             limitations=(
                 "Untrusted source content; metadata/quoted statements are not independent proof"
             ),

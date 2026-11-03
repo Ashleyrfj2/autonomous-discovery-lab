@@ -2,14 +2,20 @@
 
 import argparse
 import json
+import sys
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from autodiscover import __version__
+from autodiscover.commercial.contracts import HumanReview, MarketEvidence, Opportunity
+from autodiscover.commercial.service import Market
 from autodiscover.config import Limits
 from autodiscover.evidence.chain import export_snapshot, verify_chain
 from autodiscover.hypotheses.engine import Hypothesis, demo_proposal
 from autodiscover.hypotheses.proposals import ResearchProposal
 from autodiscover.orchestrator.lab import Lab
+from autodiscover.research.retrieval import Fetcher
+from autodiscover.security.redaction import sanitize
 
 
 def main() -> None:
@@ -47,6 +53,36 @@ def main() -> None:
     )
     add.add_argument("run_id")
     add.add_argument("candidate", type=Path)
+    market_profile = sub.add_parser(
+        "market-opportunity", help="Import user/buyer/problem/competition hypotheses"
+    )
+    market_profile.add_argument("run_id")
+    market_profile.add_argument("document", type=Path)
+    market_document = sub.add_parser(
+        "market-document", help="Import an operator-supplied UTF-8 evidence document"
+    )
+    market_document.add_argument("run_id")
+    market_document.add_argument("document", type=Path)
+    market_document.add_argument("--title", required=True)
+    market_source = sub.add_parser(
+        "market-source", help="Collect an explicitly authorized public HTTPS source"
+    )
+    market_source.add_argument("run_id")
+    market_source.add_argument("url")
+    market_source.add_argument("--title", required=True)
+    market_source.add_argument("--allow-network", action="store_true")
+    market_evidence = sub.add_parser(
+        "market-evidence", help="Import source-bound market evidence for review"
+    )
+    market_evidence.add_argument("opportunity_id")
+    market_evidence.add_argument("document", type=Path)
+    market_review = sub.add_parser(
+        "market-review", help="Interactive human attestation; never automatic model approval"
+    )
+    market_review.add_argument("evidence_id")
+    market_review.add_argument("document", type=Path)
+    market_show = sub.add_parser("market-show", help="Recompute current commercial evidence level")
+    market_show.add_argument("opportunity_id")
     status = sub.add_parser("status", help="Inspect persisted state and verified reports")
     status.add_argument("run_id", nargs="?")
     for command in ("pause", "unpause", "cancel"):
@@ -103,6 +139,59 @@ def main() -> None:
             )
             identifier = lab.director.register(args.run_id, schema.model_validate(data))
             result = {"hypothesis_id": identifier, "search": lab.director.tree(args.run_id)}
+        elif args.command.startswith("market-"):
+            market = Market(lab.store)
+            if args.command == "market-show":
+                verify_chain(lab.store)
+                result = market.assess(args.opportunity_id)
+            elif args.command == "market-source":
+                host = urlsplit(args.url).hostname
+                if not args.allow_network or not host:
+                    parser.error("market-source requires an explicit HTTPS URL and --allow-network")
+                result = {
+                    "source_id": market.collect_source(
+                        args.run_id,
+                        args.url,
+                        title=args.title,
+                        fetcher=Fetcher(authorized=True, allowed_hosts=(host,)),
+                    )
+                }
+            elif args.command == "market-document":
+                result = {
+                    "source_id": market.add_document(args.run_id, args.document, title=args.title)
+                }
+            else:
+                if args.document.stat().st_size > 65536:
+                    parser.error("Market JSON exceeds 64 KiB")
+                data = args.document.read_text()
+                if args.command == "market-opportunity":
+                    result = {
+                        "opportunity_id": market.save(
+                            args.run_id, Opportunity.model_validate_json(data)
+                        )
+                    }
+                elif args.command == "market-evidence":
+                    result = {
+                        "evidence_id": market.add_evidence(
+                            args.opportunity_id, MarketEvidence.model_validate_json(data)
+                        )
+                    }
+                else:
+                    if not sys.stdin.isatty():
+                        parser.error("Commercial review requires an interactive human terminal")
+                    review = HumanReview.model_validate_json(data)
+                    _opportunity_id, evidence = market.evidence(args.evidence_id)
+                    print(json.dumps(sanitize(evidence.model_dump(mode="json")), indent=2))
+                    phrase = (
+                        "APPROVE EXTERNAL EVIDENCE"
+                        if review.accepted
+                        else "REJECT EXTERNAL EVIDENCE"
+                    )
+                    if input(f"Review the original source, then type {phrase}: ") != phrase:
+                        parser.error("Human review was not confirmed")
+                    result = {
+                        "review_id": market.review(args.evidence_id, review, actor_kind="human")
+                    }
         elif args.command == "status":
             result = (
                 lab.report(args.run_id)

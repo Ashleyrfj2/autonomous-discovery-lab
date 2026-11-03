@@ -33,3 +33,8 @@ def sanitize(value: Any) -> Any:
     if value is None or isinstance(value, (int, float, bool)):
         return value
     return "[UNSUPPORTED]"
+
+
+def contains_credential(value: str) -> bool:
+    """Detect recognizable credential material without returning or logging it."""
+    return any(pattern.search(value) for pattern in _PATTERNS[:-1])

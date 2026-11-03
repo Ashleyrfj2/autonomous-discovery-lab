@@ -1,0 +1,111 @@
+{
+  "run_report": {
+    "schema_version": 1,
+    "run_id": "dc333124-6654-42dc-9ae1-57a72997f822",
+    "status": "COMPLETED",
+    "stage": "DECIDE",
+    "completed_steps": 12,
+    "search": {
+      "nodes": [
+        {
+          "id": "ab905456f1caf858178cea63742257d23cad8ddf502d44f37bb85f08692d6e55",
+          "run_id": "dc333124-6654-42dc-9ae1-57a72997f822",
+          "identity": "496689a57796db202e944ddcb94eed12aab694c7710a7070dc39b09b6d065102",
+          "parent_id": null,
+          "depth": 0,
+          "domain": "consumer, gaming and telemetry data",
+          "kind": "encoding",
+          "status": "PROMISING",
+          "revision_evidence": null,
+          "score": 0.8203125
+        }
+      ],
+      "allocations": [
+        {
+          "run_id": "dc333124-6654-42dc-9ae1-57a72997f822",
+          "step_key": "prioritize:3",
+          "hypothesis_id": "ab905456f1caf858178cea63742257d23cad8ddf502d44f37bb85f08692d6e55",
+          "mode": "explore",
+          "ordinal": 1
+        }
+      ],
+      "policy": {
+        "exploration_fraction": 0.5,
+        "max_branch_experiments": 2,
+        "max_candidates": 5,
+        "max_depth": 3,
+        "max_experiments": 5
+      },
+      "stopped_reason": null,
+      "novelty": "unknown",
+      "commercial_validation": "unvalidated"
+    },
+    "assessment": {
+      "hypothesis_id": "ab905456f1caf858178cea63742257d23cad8ddf502d44f37bb85f08692d6e55",
+      "limitations": "Synthetic fixture benchmark of known encoding; no novelty assessment",
+      "novelty": "unknown",
+      "novelty_source_ids": [],
+      "schema_version": 1,
+      "technical_success": true
+    },
+    "assessment_scope": "Last completed hypothesis assessment; see per-branch results",
+    "commercial": {
+      "assessment_digest": "f33c56956fae8d54369043c7962095c7bcc8e893e4f4ee6fa8454aac73c3d51a",
+      "evidence_ids": [],
+      "level": 0,
+      "opportunity_id": "opportunity-c196efe02edef72c3336bedae1f0bdc2c574a1ad8fc94ed823c0ec2571148329",
+      "schema_version": 1,
+      "validated": false,
+      "recorded_opportunity_id": "opportunity-c196efe02edef72c3336bedae1f0bdc2c574a1ad8fc94ed823c0ec2571148329",
+      "recorded_level": 0,
+      "recorded_validated": false,
+      "classification": "commercial opportunity unvalidated",
+      "missing_information": [
+        "target_user",
+        "economic_buyer",
+        "buyer_reachability"
+      ],
+      "limitations": "Levels reflect source-bound human-attested evidence; document authenticity and real payment are not automatically verified. No revenue forecast, novelty or technical result is inferred."
+    },
+    "usage": {
+      "charged_usd": "0",
+      "requests": 1,
+      "uncertain": 0,
+      "input_tokens": 354,
+      "output_tokens": 356
+    },
+    "evidence": {
+      "seq": 25,
+      "hash": "f6a31011c829e529cb4a4da2a1f372956cdfb3443362a3ec9b42e4b751b6372c",
+      "verified_events": 25,
+      "trust_limit": "Tamper-evident relative to retained anchor; not immutable"
+    },
+    "research": {
+      "source_ids": [],
+      "novelty": "unknown",
+      "coverage_exhaustive": false
+    },
+    "mode": "trusted encoding loop; source retrieval opt-in; live providers unverified"
+  },
+  "market_assessment": {
+    "schema_version": 1,
+    "run_id": "dc333124-6654-42dc-9ae1-57a72997f822",
+    "opportunity_id": "opportunity-c196efe02edef72c3336bedae1f0bdc2c574a1ad8fc94ed823c0ec2571148329",
+    "candidate_id": "ab905456f1caf858178cea63742257d23cad8ddf502d44f37bb85f08692d6e55",
+    "level": 0,
+    "validated": false,
+    "evidence_ids": [],
+    "rejected_evidence": [],
+    "missing_information": [
+      "target_user",
+      "economic_buyer",
+      "buyer_reachability"
+    ],
+    "competition": [],
+    "problem_severity": "unknown",
+    "adoption_constraints": [],
+    "classification": "commercial opportunity unvalidated",
+    "limitations": "Levels reflect source-bound human-attested evidence; document authenticity and real payment are not automatically verified. No revenue forecast, novelty or technical result is inferred."
+  },
+  "qualification": "Actual local technical experiment and commercial gate; no customer, pilot, payment or live inference has been verified"
+}

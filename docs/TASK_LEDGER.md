@@ -137,12 +137,12 @@ Task ID: P7-MARKET
 Phase: 7
 Description: External market import/models/gates; acceptance: technical success cannot assert commercial success
 Dependencies: P6-BRANCH
-Status: NOT_STARTED
-Files: pending
-Tests: pending
-Verification: pending
+Status: VERIFIED
+Files: commercial/{contracts,service}.py; evidence/{markets,chain}.py; research/{catalog,retrieval}.py; orchestrator/{lab,contracts,migrations}.py; security/redaction.py; cli.py; test_commercial_validation.py; test_commercial_evidence.py; COMMERCIAL_VALIDATION.md; phase-7 acceptance artifacts
+Tests: uv run pytest -q: 110 passed; Ruff passed; Pyright 0 errors; uv build wheel/sdist passed; full demo classified technical=true, novelty=unknown, commercial level0, cost USD0; public demo artifacts and retained snapshot saved
+Verification: phase_reports/phase-7.md
 Blockers: none
-Next action: implement after dependencies verify
+Next action: P8-OPERATE: durable scheduler/sub-jobs, bounded concurrency, interruption reconciliation, resource monitoring and active-worker pause/cancel/shutdown controls
 
 
 ## P8-OPERATE

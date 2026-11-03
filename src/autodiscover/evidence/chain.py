@@ -6,8 +6,9 @@ import os
 from pathlib import Path
 from typing import Any
 
-from autodiscover.evidence.artifacts import IntegrityError
+from autodiscover.evidence.artifacts import Artifacts, IntegrityError
 from autodiscover.evidence.branches import verify_branch_projections
+from autodiscover.evidence.markets import verify_market_projections
 from autodiscover.orchestrator.durability import canonical, now
 from autodiscover.orchestrator.store import Store
 
@@ -54,6 +55,10 @@ def verify_chain(store: Store, anchor: dict[str, Any] | None = None) -> dict[str
             "branch_allocations": "SELECT * FROM branch_allocations",
             "branch_results": "SELECT * FROM branch_results",
             "progress_guards": "SELECT * FROM progress_guards",
+            "market_opportunities": "SELECT * FROM market_opportunities",
+            "market_current": "SELECT * FROM market_current",
+            "market_evidence": "SELECT * FROM market_evidence",
+            "market_reviews": "SELECT * FROM market_reviews",
         }
         branch_tables = {
             name: [dict(r) for r in db.execute(query)] for name, query in queries.items()
@@ -93,6 +98,7 @@ def verify_chain(store: Store, anchor: dict[str, Any] | None = None) -> dict[str
     if set(validity) != {node["id"] for node in nodes}:
         raise IntegrityError("Research node projection missing evidence")
     verify_branch_projections(events, branch_tables)
+    verify_market_projections(events, branch_tables, Artifacts(store.root / "artifacts"))
     return checked
 
 

@@ -69,4 +69,15 @@ CREATE TABLE branch_results(run_id TEXT NOT NULL,hypothesis_id TEXT NOT NULL,
 CREATE TABLE progress_guards(run_id TEXT NOT NULL REFERENCES runs(id),task_id TEXT NOT NULL,
  state_json TEXT NOT NULL,PRIMARY KEY(run_id,task_id));
 """,
+    """
+CREATE TABLE market_opportunities(id TEXT PRIMARY KEY,run_id TEXT NOT NULL REFERENCES runs(id),
+ candidate_id TEXT NOT NULL,artifact_digest TEXT NOT NULL);
+CREATE TABLE market_current(run_id TEXT NOT NULL REFERENCES runs(id),candidate_id TEXT NOT NULL,
+ opportunity_id TEXT NOT NULL REFERENCES market_opportunities(id),PRIMARY KEY(run_id,candidate_id));
+CREATE TABLE market_evidence(id TEXT PRIMARY KEY,
+ opportunity_id TEXT NOT NULL REFERENCES market_opportunities(id),artifact_digest TEXT NOT NULL,
+ origin TEXT NOT NULL);
+CREATE TABLE market_reviews(seq INTEGER PRIMARY KEY AUTOINCREMENT,id TEXT NOT NULL UNIQUE,
+ evidence_id TEXT NOT NULL REFERENCES market_evidence(id),artifact_digest TEXT NOT NULL);
+""",
 )

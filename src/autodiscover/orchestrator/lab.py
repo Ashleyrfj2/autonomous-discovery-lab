@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+from autodiscover.commercial.contracts import Opportunity
+from autodiscover.commercial.service import Market
 from autodiscover.config import Limits
 from autodiscover.evidence.artifacts import Artifacts
 from autodiscover.evidence.chain import verify_chain
@@ -356,7 +358,26 @@ class Lab:
                 ),
             }
         elif stage == Stage.VALIDATE_MARKET:
-            output = {"level": 0, "evidence_ids": [], "validated": False}
+            candidate_id, hypothesis = self.selected_hypothesis(run_id)
+            market = Market(self.store)
+            opportunity_id = market.current(run_id, candidate_id)
+            if opportunity_id is None:
+                opportunity_id = market.save(
+                    run_id,
+                    Opportunity(
+                        candidate_id=candidate_id,
+                        problem=hypothesis.question,
+                        assumptions=["Potential application; no buyer evidence supplied"],
+                    ),
+                )
+            assessment = market.assess(opportunity_id)
+            output = {
+                "level": assessment["level"],
+                "evidence_ids": assessment["evidence_ids"],
+                "validated": assessment["validated"],
+                "opportunity_id": opportunity_id,
+                "assessment_digest": self.artifacts.put_json(assessment),
+            }
         else:
             if limits.explore_existing_candidates and self.director.has_work(run_id):
                 return (
@@ -380,6 +401,24 @@ class Lab:
                 assessment = json.loads(step["output_json"])
             if step["stage"] == Stage.VALIDATE_MARKET:
                 market = json.loads(step["output_json"])
+        if market and market.get("opportunity_id"):
+            service = Market(self.store)
+            _run, profile = service.opportunity(market["opportunity_id"])
+            current_id = service.current(run_id, profile.candidate_id) or market["opportunity_id"]
+            current = service.assess(current_id)
+            market = {
+                **market,
+                "recorded_opportunity_id": market["opportunity_id"],
+                "opportunity_id": current_id,
+                "recorded_level": market["level"],
+                "recorded_validated": market["validated"],
+                "level": current["level"],
+                "validated": current["validated"],
+                "evidence_ids": current["evidence_ids"],
+                "classification": current["classification"],
+                "missing_information": current["missing_information"],
+                "limitations": current["limitations"],
+            }
         report = {
             "schema_version": 1,
             "run_id": run_id,

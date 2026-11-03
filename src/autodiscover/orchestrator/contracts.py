@@ -91,6 +91,8 @@ class AssessResult(Contract):
 
 
 class MarketResult(Contract):
+    opportunity_id: str | None = None
+    assessment_digest: str | None = None
     level: int = Field(ge=0, le=4)
     evidence_ids: list[str]
     validated: bool
