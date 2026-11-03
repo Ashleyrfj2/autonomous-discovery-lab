@@ -10,7 +10,7 @@ import psutil
 from autodiscover.config import Limits
 from autodiscover.evidence.artifacts import Artifacts, IntegrityError
 from autodiscover.experiments import runner
-from autodiscover.experiments.contracts import Plan
+from autodiscover.experiments.registry import RegisteredPlan
 from autodiscover.orchestrator.durability import canonical
 from autodiscover.orchestrator.store import StateError, Store
 from autodiscover.security.processes import coordinator_alive
@@ -107,7 +107,7 @@ class Jobs:
         owner: str,
         run_fence: int,
         stage_version: int,
-        plan: Plan,
+        plan: RegisteredPlan,
         replication: int,
     ) -> tuple[str, int, dict[str, Any] | None]:
         from autodiscover.evidence.chain import verify_chain
@@ -208,7 +208,7 @@ class Jobs:
         owner: str,
         run_fence: int,
         stage_version: int,
-        plan: Plan,
+        plan: RegisteredPlan,
         limits: Limits,
         replication: int = 0,
         stop_requested: Callable[[], bool] | None = None,
