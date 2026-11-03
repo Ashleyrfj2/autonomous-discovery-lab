@@ -86,6 +86,11 @@ def main() -> None:
     market_review.add_argument("document", type=Path)
     market_show = sub.add_parser("market-show", help="Recompute current commercial evidence level")
     market_show.add_argument("opportunity_id")
+    prior_art = sub.add_parser(
+        "prior-art-dossier", help="Read-only source-bound prior-art review; novelty stays unknown"
+    )
+    prior_art.add_argument("run_id")
+    prior_art.add_argument("document", type=Path)
     status = sub.add_parser("status", help="Inspect persisted state and verified reports")
     status.add_argument("run_id", nargs="?")
     for command in ("pause", "unpause", "cancel"):
@@ -134,6 +139,20 @@ def main() -> None:
             access_log=False,
             log_level="warning",
         )
+        return
+    if args.command == "prior-art-dossier":
+        from autodiscover.orchestrator.store import SnapshotStore
+        from autodiscover.research.catalog import Catalog
+        from autodiscover.research.prior_art import PriorArtRequest, compile_prior_art_dossier
+
+        if args.document.stat().st_size > 65536:
+            parser.error("Prior-art request exceeds 64 KiB")
+        request = PriorArtRequest.model_validate_json(args.document.read_text(encoding="utf-8"))
+        with SnapshotStore(args.root) as store:
+            cursor = verify_chain(store)
+            result = compile_prior_art_dossier(Catalog(store), args.run_id, request)
+            result["evidence_cursor"] = {"seq": cursor["seq"], "hash": cursor["hash"]}
+        print(json.dumps(sanitize(result), indent=2))
         return
     if args.command == "check":
         result = {"valid": True, "limits": Limits.load(args.config).model_dump(mode="json")}
