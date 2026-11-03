@@ -13,7 +13,10 @@ from autodiscover.config import Limits
 from autodiscover.evidence.artifacts import Artifacts
 from autodiscover.evidence.chain import verify_chain
 from autodiscover.experiments import evaluator, runner
+from autodiscover.experiments.allocation_contracts import AllocationPlan
 from autodiscover.experiments.contracts import Plan
+from autodiscover.experiments.registry import RegisteredPlan, evaluate_registered, parse_plan
+from autodiscover.hypotheses.allocation import AllocationHypothesis
 from autodiscover.hypotheses.director import Director, DuplicateHypothesis, SearchStopped
 from autodiscover.hypotheses.engine import Hypothesis, demo_proposal, generate
 from autodiscover.hypotheses.proposals import ResearchProposal
@@ -55,7 +58,7 @@ class Lab:
     def explore(
         self,
         topic: str,
-        candidates: Sequence[Hypothesis | ResearchProposal],
+        candidates: Sequence[Hypothesis | AllocationHypothesis | ResearchProposal],
         *,
         limits: Limits | None = None,
     ) -> str:
@@ -77,7 +80,9 @@ class Lab:
         digest = self.latest(run_id, Stage.HYPOTHESIZE)["hypothesis_ids"][0]
         return Hypothesis.model_validate(self.artifacts.get_json(digest))
 
-    def selected_hypothesis(self, run_id: str) -> tuple[str, Hypothesis]:
+    def selected_hypothesis(
+        self, run_id: str
+    ) -> tuple[str, Hypothesis | AllocationHypothesis]:
         identifier = self.latest(run_id, Stage.PRIORITIZE)["selected_ids"][0]
         try:
             hypothesis = self.director.get(run_id, identifier)
@@ -92,13 +97,13 @@ class Lab:
             if adopted != registered:
                 raise SearchStopped("LEGACY_SELECTION_REQUIRES_REVIEW") from None
             identifier = registered
-        if not isinstance(hypothesis, Hypothesis):
+        if not isinstance(hypothesis, (Hypothesis, AllocationHypothesis)):
             raise SearchStopped("NO_REVIEWED_EXECUTION_ADAPTER")
         return identifier, hypothesis
 
-    def plan(self, run_id: str) -> Plan:
+    def plan(self, run_id: str) -> RegisteredPlan:
         digest = self.latest(run_id, Stage.DESIGN)["plan_digest"]
-        plan = Plan.model_validate(self.artifacts.get_json(digest))
+        plan = parse_plan(self.artifacts.get_json(digest))
         if plan.digest != digest:
             raise ValueError("Preregistered plan integrity mismatch")
         return plan
@@ -244,7 +249,7 @@ class Lab:
         output: dict[str, Any]
         if stage == Stage.DISCOVER:
             output = {
-                "questions": [f"Can lossless encoding improve repeated data storage in {topic}?"]
+                "questions": [f"Which reviewed experiment can measurably improve results in {topic}?"]
             }
         elif stage == Stage.RESEARCH:
             if limits.allow_retrieval:
@@ -332,14 +337,25 @@ class Lab:
             output = {"selected_ids": [identifier]}
         elif stage == Stage.DESIGN:
             _identifier, h = self.selected_hypothesis(run_id)
-            plan = Plan(
-                hypothesis_id=h.identity,
-                algorithm=h.algorithm,
-                minimum_savings=h.threshold,
-                data_profile=h.data_profile,
-                seconds=min(10, limits.max_experiment_seconds),
-                seed=42 + 9973 * (self.director.tree(run_id)["allocations"][-1]["ordinal"] - 1),
-            )
+            seed = 42 + 9973 * (self.director.tree(run_id)["allocations"][-1]["ordinal"] - 1)
+            if isinstance(h, AllocationHypothesis):
+                plan: RegisteredPlan = AllocationPlan(
+                    hypothesis_id=h.identity,
+                    algorithm=h.algorithm,
+                    minimum_gain=h.threshold,
+                    data_profile=h.data_profile,
+                    seconds=min(10, limits.max_experiment_seconds),
+                    seed=seed,
+                )
+            else:
+                plan = Plan(
+                    hypothesis_id=h.identity,
+                    algorithm=h.algorithm,
+                    minimum_savings=h.threshold,
+                    data_profile=h.data_profile,
+                    seconds=min(10, limits.max_experiment_seconds),
+                    seed=seed,
+                )
             digest = self.artifacts.put_json(plan.model_dump(mode="json"))
             output = {"plan_id": h.identity, "plan_digest": digest}
         elif stage == Stage.PREFLIGHT:
@@ -365,7 +381,7 @@ class Lab:
         elif stage == Stage.VERIFY:
             plan = self.plan(run_id)
             raw = self.artifacts.get_json(self.latest(run_id, Stage.EXECUTE)["artifact_digest"])
-            report = evaluator.evaluate(plan, raw)
+            report = evaluate_registered(plan, raw)
             report["raw_artifact_digest"] = self.latest(run_id, Stage.EXECUTE)["artifact_digest"]
             digest = self.artifacts.put_json(report)
             selected_id, _h = self.selected_hypothesis(run_id)
@@ -374,7 +390,9 @@ class Lab:
             if not report["passed"]:
                 if (
                     limits.explore_existing_candidates
-                    and _h.algorithm != "identity"
+                    and (
+                        isinstance(_h, AllocationHypothesis) or _h.algorithm != "identity"
+                    )
                     and not self.director.has_work(run_id)
                 ):
                     return (
@@ -399,7 +417,7 @@ class Lab:
                     stop_requested=stop_requested,
                 )
                 raw_digest = self.artifacts.put_json(raw)
-                report = evaluator.evaluate(plan, raw, replication=index)
+                report = evaluate_registered(plan, raw, replication=index)
                 report["raw_artifact_digest"] = raw_digest
                 report_digest = self.artifacts.put_json(report)
                 results.append(report_digest)
@@ -423,7 +441,8 @@ class Lab:
                 "technical_success": verified and replicated,
                 "novelty": "unknown",
                 "limitations": (
-                    "Synthetic fixture benchmark of known encoding; no novelty assessment"
+                    "Seeded synthetic reviewed experiment; known methods, no novelty "
+                    "or commercial assessment"
                 ),
             }
         elif stage == Stage.VALIDATE_MARKET:
