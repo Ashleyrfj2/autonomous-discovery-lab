@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "max_cost_per_run_usd": "2",
+  "max_cost_per_day_usd": "10",
+  "max_experiment_seconds": 120,
+  "max_retries_per_step": 2,
+  "max_hypotheses_per_cycle": 5,
+  "max_concurrent_experiments": 1,
+  "allow_live_inference": false,
+  "allow_retrieval": false
+}

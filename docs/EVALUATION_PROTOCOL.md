@@ -1,0 +1,7 @@
+# Evaluation protocol
+
+Preregister baseline, dataset generation/seed/version, independent reference metric, held-out cases, success direction/threshold, invalid-output criteria, replications, expected artifacts and resource limits before execution. No success assertion from the generator is authoritative. Evaluator recomputes outcomes from independently generated fixtures and raw outputs; rejects missing, nonfinite, altered or inconsistent metrics and unsupported claims. Replication must preserve plan identity and record seeds and code version. Report limitations and uncertainty without implying universal validity from a bounded fixture.
+
+Technical success, novelty assessment and commercial evidence levels are independent fields. Literature coverage and limitations accompany novelty; absence of retrieved matches yields unknown novelty. External demand evidence gates never accept benchmark gains or simulations.
+
+Mandatory local validation: unit schemas/transitions/costs/providers/duplicates/hash/budget/permission; integration routing/persistence/artifacts/worker/evaluation/checkpoints/failures; adversarial injection/false success/limits/files/secrets/loops/evidence/benchmark manipulation; end-to-end deterministic loop/interruption/failed revision/unvalidated market/budget exhaustion. Store actual commands/counts/commit in phase reports. No mocked outcome establishes live integration or production readiness.
