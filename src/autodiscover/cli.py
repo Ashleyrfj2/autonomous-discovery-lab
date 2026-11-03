@@ -109,7 +109,32 @@ def main() -> None:
         "snapshot", help="Export no-overwrite evidence snapshot for separate retention"
     )
     snapshot.add_argument("destination", type=Path)
+    serve = sub.add_parser(
+        "serve", help="Foreground loopback operator read API; no background service"
+    )
+    serve.add_argument("--port", type=int, default=8765)
     args = parser.parse_args()
+    if args.command == "serve":
+        import getpass
+
+        import uvicorn
+        from pydantic import SecretStr
+
+        from autodiscover.reporting.web import create_app
+
+        if not sys.stdin.isatty():
+            parser.error("Operator startup requires an interactive terminal")
+        password = SecretStr(getpass.getpass("Temporary operator passphrase (12–200 characters): "))
+        app = create_app(args.root, password, port=args.port)
+        uvicorn.run(
+            app,
+            host="127.0.0.1",
+            port=args.port,
+            proxy_headers=False,
+            access_log=False,
+            log_level="warning",
+        )
+        return
     if args.command == "check":
         result = {"valid": True, "limits": Limits.load(args.config).model_dump(mode="json")}
     else:

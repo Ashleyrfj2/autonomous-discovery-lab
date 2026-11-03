@@ -234,3 +234,16 @@ Tests: 150 full tests; seven read-view regressions;78 focused Phase8 tests; Ruff
 Verification: phase_reports/phase-9-read.md; phase-9-read-regression/
 Blockers: none for local read service
 Next action: P9-AUTH local authenticated adapter; full Phase9 remains in progress
+
+
+## P9-AUTH
+Task ID: P9-AUTH
+Phase: 9
+Description: Local authenticated read adapter/session/CSRF/Host/Origin boundary for REQ-031/016/038; no dashboard mutations yet.
+Dependencies: P9-READ
+Status: VERIFIED
+Files: reporting/web.py; cli.py; pyproject.toml; uv.lock; tests/integration/test_operator_api.py
+Tests:163 full tests pass;13 operator tests including real loopback HTTP; Ruff/Pyright/build pass; one upstream TestClient deprecation warning
+Verification: phase_reports/phase-9-auth.md; phase-9-auth/ evidence
+Blockers: none for local read API; paid12ui dashboard generation needs spending authorization
+Next action: P9-CONTROL backend while design authorization is pending; no paid calls
