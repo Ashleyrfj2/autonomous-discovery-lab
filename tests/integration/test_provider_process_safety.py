@@ -75,7 +75,11 @@ def test_reservations_fence_competing_processes(tmp_path, same_request):
         outcomes = dict(reports.get(timeout=10) for _ in workers)
         assert set(outcomes) == {"dispatch", "denied"}
         if same_request:
-            assert "reconcile" in outcomes["denied"]
+            # The losing process can see the hold during the cache read or at reservation.
+            assert outcomes["denied"] in {
+                "Prior request incomplete or failed; explicit reconciliation required",
+                "Request already reserved; reconcile rather than replay",
+            }
         else:
             assert outcomes["denied"] == "DAY_BUDGET_EXHAUSTED"
         release.set()

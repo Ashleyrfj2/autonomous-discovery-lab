@@ -34,3 +34,7 @@ Resume on `chat/registered-experiments-20261103` in the linked PR #2 worktree. R
 ## Final stabilization handoff
 
 The existing repair and safety follow-up are committed locally. The [final qualification section](phase_reports/hackathon-model-qualification.md#final-stabilization-and-approval-boundary) records the exact source commits, verified ledger, provider billing actions and four-call plan. Resume with account-owner read-only reconciliation and entitlement evidence. Live testing, overnight operation and PR #2 merge are NO-GO.
+
+## Provider reconciliation handoff — 2026-11-03
+
+See the [dated reconciliation and PR audit](phase_reports/hackathon-model-qualification.md#2026-11-03-provider-reconciliation-and-draft-pr-readiness) and [account-owner checklist](ACCOUNT_OWNER_ACTION_CHECKLIST.md). The six local records reconcile against their retained events. Provider billing and restricted Baseten entitlement still require account evidence. The full live cycle remains blocked under the original cap.

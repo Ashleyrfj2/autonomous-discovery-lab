@@ -318,3 +318,7 @@ Phase 9 provider gate on the existing PR #2 branch. Local adapter, structured ou
 ## FINAL-STABILIZATION
 
 Committed the existing qualification repair and follow-up dispatch, accounting, cancellation and credential safeguards on PR #2's local branch. Local acceptance passed. The next exact action is account-owner read-only billing and entitlement reconciliation using the [final qualification report](phase_reports/hackathon-model-qualification.md#final-stabilization-and-approval-boundary). Keep the $0.05 cap and all unresolved holds.
+
+## PROVIDER-RECONCILIATION
+
+Read-only local ledger reconstruction, current documentation review, offline budget calculation, and draft PR synchronization audit. The account-level charge and exact restricted model entitlement remain blocked. See the [phase report](phase_reports/hackathon-model-qualification.md#2026-11-03-provider-reconciliation-and-draft-pr-readiness) and [owner actions](ACCOUNT_OWNER_ACTION_CHECKLIST.md).
