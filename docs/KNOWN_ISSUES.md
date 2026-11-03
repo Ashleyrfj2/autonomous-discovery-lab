@@ -8,3 +8,5 @@
 - Phase 8 preserves committed sub-jobs and completed replications; unfinished pure computation can be explicitly retried within persisted bounds. Unknown external inference outcomes retain reservations and require reconciliation; local cancellation cannot prove server cancellation or zero billing.
 
 - Phase 8 accepted evidence is a short 3.76-second mock-provider operation, not a long-duration soak. Transport daemon threads (at most eight per process) may outlive a caller deadline. Local OS permissions/signals and SQLite writer waits can extend graceful cleanup; no hard kernel/provider return-time guarantee. Legacy runs without topic/release anchors retain explicit audit limitations.
+
+- Chat-mode remote branch `chat/prior-art-qualification-20261103` adds a source-bound prior-art dossier but has not been locally linted, typechecked, tested or integrated against the user's persisted runtime. Do not merge or mark verified based on this branch's drafted tests alone. It does not execute a comprehensive literature search or establish novelty.
