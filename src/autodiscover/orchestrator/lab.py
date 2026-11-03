@@ -14,6 +14,7 @@ from autodiscover.evidence.artifacts import Artifacts
 from autodiscover.evidence.chain import verify_chain
 from autodiscover.experiments import evaluator, runner
 from autodiscover.experiments.allocation_contracts import AllocationPlan
+from autodiscover.experiments.allocation_evaluator import AllocationEvaluationError
 from autodiscover.experiments.contracts import Plan
 from autodiscover.experiments.registry import RegisteredPlan, evaluate_registered, parse_plan
 from autodiscover.hypotheses.allocation import AllocationHypothesis
@@ -225,7 +226,11 @@ class Lab:
                 ):
                     self.store.fail_step(run_id, owner, fence, error.code)
                 raise
-        except (runner.ExecutionError, evaluator.EvaluationError) as error:
+        except (
+            runner.ExecutionError,
+            evaluator.EvaluationError,
+            AllocationEvaluationError,
+        ) as error:
             self.store.fail_step(run_id, owner, fence, str(error))
             raise
         finally:
