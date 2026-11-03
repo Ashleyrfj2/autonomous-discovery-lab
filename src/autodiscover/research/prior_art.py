@@ -56,14 +56,15 @@ def compile_prior_art_dossier(
         raise ValueError("Dossier contains recognizable credential material")
 
     owned_sources = set(catalog.sources(run_id))
-    seen: set[tuple[str, str, str]] = set()
+    seen: set[tuple[str, str]] = set()
     comparisons: list[dict[str, Any]] = []
     warnings: list[str] = []
     primary_count = 0
     overlap_candidates = 0
 
     for item in request.comparisons:
-        key = (item.source_id, item.quote, item.relationship)
+        # One passage is a single observation even with multiple proposed labels.
+        key = (item.source_id, item.quote)
         if key in seen:
             raise ValueError("Duplicate comparison is not independent evidence")
         seen.add(key)
@@ -75,6 +76,8 @@ def compile_prior_art_dossier(
             raise IntegrityError("Prior-art quote not present in source content")
         if source.source_kind == "publication_metadata":
             warnings.append("Publication metadata is not a full-text method comparison")
+        elif source.retrieval_provenance not in ("live_https", "operator_document"):
+            warnings.append("Fixture or unverified provenance is not external prior-art evidence")
         else:
             primary_count += 1
         if item.relationship == "possible_functional_overlap":
