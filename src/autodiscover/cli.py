@@ -13,6 +13,7 @@ from autodiscover.commercial.contracts import HumanReview, MarketEvidence, Oppor
 from autodiscover.commercial.service import Market
 from autodiscover.config import Limits
 from autodiscover.evidence.chain import export_snapshot, verify_chain
+from autodiscover.hypotheses.allocation import AllocationHypothesis, allocation_demo_proposal
 from autodiscover.hypotheses.engine import Hypothesis, demo_proposal
 from autodiscover.hypotheses.proposals import ResearchProposal
 from autodiscover.orchestrator.lab import Lab
@@ -39,6 +40,12 @@ def main() -> None:
     explore.add_argument(
         "--topic", default="lossless storage across repeated and alternating datasets"
     )
+    allocation_demo = sub.add_parser(
+        "allocation-demo", help="Run a reviewed resource-allocation family end to end"
+    )
+    allocation_demo.add_argument("--topic", default="resource scheduling")
+    allocation_demo.add_argument("--algorithm", choices=["dynamic", "greedy"], default="dynamic")
+    allocation_demo.add_argument("--config", type=Path, default=Path("config/default.json"))
     research = sub.add_parser(
         "research", help="Retrieve public prior-art metadata, then stop for inspection"
     )
@@ -147,6 +154,15 @@ def main() -> None:
                 algorithm=args.algorithm,
             )
             result = lab.report(run)
+        elif args.command == "allocation-demo":
+            hypothesis = allocation_demo_proposal(args.topic)
+            hypothesis = hypothesis.model_copy(update={"algorithm": args.algorithm})
+            run = lab.explore(
+                args.topic,
+                [hypothesis],
+                limits=Limits.load(args.config),
+            )
+            result = lab.report(run)
         elif args.command == "explore":
             candidates = [
                 Hypothesis.model_validate(
@@ -175,9 +191,14 @@ def main() -> None:
             if args.candidate.stat().st_size > 65536:
                 parser.error("Candidate JSON exceeds 64 KiB")
             data = json.loads(args.candidate.read_text())
-            schema = (
-                ResearchProposal if data.get("experiment_family") == "theoretical" else Hypothesis
-            )
+            family = data.get("experiment_family", "encoding-v1")
+            schema = {
+                "encoding-v1": Hypothesis,
+                "allocation-v1": AllocationHypothesis,
+                "theoretical": ResearchProposal,
+            }.get(family)
+            if schema is None:
+                parser.error("Unknown or unreviewed experiment family")
             identifier = lab.director.register(args.run_id, schema.model_validate(data))
             result = {"hypothesis_id": identifier, "search": lab.director.tree(args.run_id)}
         elif args.command.startswith("market-"):
