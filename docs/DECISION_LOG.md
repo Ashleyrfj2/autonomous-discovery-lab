@@ -8,3 +8,6 @@ Problem: arbitrary generated code requires stronger isolation than ordinary proc
 
 ## DEC-003 — 2026-11-03 — Local deterministic acceptance
 Problem: no live provider authorization or current credentials established. Selected: mock development and HTTP contract tests, explicit configuration for live use, no live calls. Technical/source novelty/market gates stay distinct. Tradeoff: cannot claim live provider acceptance. Revisit with authorized credential and budget configuration.
+
+## DEC-004 — 2026-11-03 — Transactional state and fenced leases
+Problem: crash between committed step and filesystem checkpoint can leave stale recovery metadata. Alternatives: authoritative files, multi-resource atomicity, database authority plus derived files. Selected: one SQLite transaction for state/output/evidence, immutable idempotency mapping, conditional expiring lease/fence checks on all commits. Atomic checkpoint/log follows commit and is reconstructed if stale. Evidence: test_recovery deliberately terminates after commit before checkpoint and recovers without duplicate step. Tradeoff: lease expiry delay; filesystem projection can lag. Affected: orchestrator. Revisit for external side effects requiring provider idempotency/reconciliation; no claim of exactly-once arbitrary external calls.

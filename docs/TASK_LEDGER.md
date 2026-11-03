@@ -33,12 +33,12 @@ Task ID: P1-STATE
 Phase: 1
 Description: Versioned WAL DB/migrations/transitions; acceptance: invalid/valid transitions tested
 Dependencies: P0-ENV
-Status: NOT_STARTED
-Files: pending
-Tests: pending
-Verification: pending
+Status: VERIFIED
+Files: src/autodiscover/orchestrator/{contracts,store}.py
+Tests: tests/unit/test_state.py; tests/integration/test_recovery.py
+Verification: docs/phase_reports/phase-1.md; 11 tests total passed
 Blockers: none
-Next action: implement after dependencies verify
+Next action: P2-PROVIDERS
 
 
 ## P1-RECOVERY
@@ -46,12 +46,12 @@ Task ID: P1-RECOVERY
 Phase: 1
 Description: Leases/fencing/idempotency and pause/cancel/resume; acceptance: killed process recovery no duplicate commits
 Dependencies: P1-STATE
-Status: NOT_STARTED
-Files: pending
-Tests: pending
-Verification: pending
+Status: VERIFIED
+Files: src/autodiscover/orchestrator/{contracts,store}.py
+Tests: tests/unit/test_state.py; tests/integration/test_recovery.py
+Verification: docs/phase_reports/phase-1.md; 11 tests total passed
 Blockers: none
-Next action: implement after dependencies verify
+Next action: P2-PROVIDERS
 
 
 ## P2-PROVIDERS

@@ -1,3 +1,3 @@
 # Release readiness
 
-Phase 0 LOCALLY_VERIFIED: 4 tests, lint/types/build/config smoke passed. See phase_reports/phase-0.md. Core phases 1–9 unfinished; no live integration or production readiness, merges/deployments or hackathon submission.
+Phases 0–1 LOCALLY_VERIFIED. 11 tests, lint, types, package build pass. Phase-1 report records deliberate process interruption recovery. Phases 2–9 unfinished. No live integration/production readiness or deployment/merge/hackathon claim.

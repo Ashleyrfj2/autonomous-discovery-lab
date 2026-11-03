@@ -4,7 +4,7 @@ Origin: MASTER_REQUIREMENTS.md section numbers. No requirement is removed by sum
 
 | ID | Requirement | Origin sections | Phase / owner | Priority | Status | Sources | Tests | Evidence | Remaining gaps |
 |---|---|---|---|---|---|---|---|---|---|
-| REQ-001 | Persistent versioned research state and WAL migrations | 2,4,6,8 | 1 / orchestrator | P0 | NOT_STARTED | — | — | — | Implementation and acceptance |
+| REQ-001 | Persistent versioned research state and WAL migrations | 2,4,6,8 | 1 / orchestrator | P0 | VERIFIED (phase 1 scope) | orchestrator/contracts.py; store.py | test_state.py; test_recovery.py | phase_reports/phase-1.md | Downstream scientific gates remain phases 3–7 |
 | REQ-002 | Independent deterministic evaluation and false-success rejection | 1,7,8,12 | 4 / experiments | P0 | NOT_STARTED | — | — | — | Implementation and acceptance |
 | REQ-003 | Source and experiment provenance; no fabricated citations | 1,7,13 | 5 / research/evidence | P1 | NOT_STARTED | — | — | — | Implementation and acceptance |
 | REQ-004 | Meta/Baseten/mock provider-independent common contracts | 5 | 2 / models | P0 | NOT_STARTED | — | — | — | Implementation and acceptance |
@@ -14,9 +14,9 @@ Origin: MASTER_REQUIREMENTS.md section numbers. No requirement is removed by sum
 | REQ-008 | Hypothesis trees, revision, controlled mutation and duplicates | 7,8 | 6 / hypotheses | P1 | NOT_STARTED | — | — | — | Implementation and acceptance |
 | REQ-009 | Separate technical/discovery/commercial gates and levels 0–4 | 1,7 | 7 / commercial | P1 | NOT_STARTED | — | — | — | Implementation and acceptance |
 | REQ-010 | Preregistered reproducible baselines/controls/artifacts/metadata | 7,12 | 3 / experiments | P0 | NOT_STARTED | — | — | — | Implementation and acceptance |
-| REQ-011 | All lifecycle transitions with schemas/preconditions/errors/retries | 6 | 1 / orchestrator | P0 | NOT_STARTED | — | — | — | Implementation and acceptance |
-| REQ-012 | Safe cancel/pause/resume and deliberate crash recovery | 3,8 | 1 / orchestrator | P0 | NOT_STARTED | — | — | — | Implementation and acceptance |
-| REQ-013 | Idempotency, fenced worker claims, stale recovery | 8 | 1 / orchestrator | P0 | NOT_STARTED | — | — | — | Implementation and acceptance |
+| REQ-011 | All lifecycle transitions with schemas/preconditions/errors/retries | 6 | 1 / orchestrator | P0 | VERIFIED (phase 1 scope) | orchestrator/contracts.py; store.py | test_state.py; test_recovery.py | phase_reports/phase-1.md | Downstream scientific gates remain phases 3–7 |
+| REQ-012 | Safe cancel/pause/resume and deliberate crash recovery | 3,8 | 1 / orchestrator | P0 | VERIFIED (phase 1 scope) | orchestrator/contracts.py; store.py | test_state.py; test_recovery.py | phase_reports/phase-1.md | Downstream scientific gates remain phases 3–7 |
+| REQ-013 | Idempotency, fenced worker claims, stale recovery | 8 | 1 / orchestrator | P0 | VERIFIED (phase 1 scope) | orchestrator/contracts.py; store.py | test_state.py; test_recovery.py | phase_reports/phase-1.md | Downstream scientific gates remain phases 3–7 |
 | REQ-014 | Response/schema validation, capability and structured errors | 5 | 2 / models | P0 | NOT_STARTED | — | — | — | Implementation and acceptance |
 | REQ-015 | Timeout/rate/retry/fallback and recorded provider identity | 5 | 2 / models | P0 | NOT_STARTED | — | — | — | Implementation and acceptance |
 | REQ-016 | No secrets; sanitized locked append-only execution JSONL | 2,3,5,14 | 0 / security/orchestrator | P0 | VERIFIED (phase 0 scope) | config.py; durability.py; redaction.py; docs/* | test_foundation.py | phase_reports/phase-0.md | Later phase regression/audits remain |
