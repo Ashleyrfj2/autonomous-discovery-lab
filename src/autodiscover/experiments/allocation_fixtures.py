@@ -20,7 +20,7 @@ def allocation_fixtures(
             # combination of two weight-5 items. Extra items distract but cannot win.
             bonus = rng.randrange(3)
             items = [
-                {"weight": 6, "value": 12 + bonus},
+                {"weight": 6, "value": 13 + bonus},
                 {"weight": 5, "value": 10},
                 {"weight": 5, "value": 10},
                 {"weight": 9, "value": 2},
