@@ -285,3 +285,16 @@ Tests: four generated candidates inspected; strongestA selected; no completed HT
 Verification: phase_reports/phase-9-backend.md; design provenance
 Blockers: authorized three-minute design window exhausted; conversion terminated at177.07s; extending it requires user direction
 Next action: resume existing conversion under an extended allowance, integrate with verified APIs and run browser/visual qualification; do not repurchase draft
+
+
+## P9-VIEW-CONTINUE
+Task ID: P9-VIEW-CONTINUE
+Phase: 9
+Description: Continue saved12ui conversion under existing three-minute cap, without repurchasing draft.
+Dependencies: P9-VIEW
+Status: IN_PROGRESS
+Files: docs/design/phase-9-design-provenance.json; runtime/phase9-design/resume-current.json; continuation-1.json
+Tests: design-only continuation; no source changes or fresh backend tests. Existing resume refuses needs-reconciliation; isolated same-image local attempt returns no HTML before cutoff.
+Verification: phase_reports/phase-9-design-continuation.md
+Blockers: overall window exhausted without planner result; pending user response for one uninterrupted10-minute local attempt
+Next action: await explicit longer allowance; no new draft/API fallback and no removal of interrupted ledgers
