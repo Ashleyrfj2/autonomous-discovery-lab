@@ -67,3 +67,7 @@ Also manually compare `prior-art-dossier` output against the same registered sou
 ## Further work
 
 The next higher-value capability is **actual method-level retrieval and search-log preservation**, followed by independent candidate/evaluator review and tests against contamination-resistant real scientific tasks. The command here is deliberately a safe, small prerequisite; it must not be misreported as Phase 9 dashboard completion or cross-industry scientific discovery.
+
+## External-source integrity
+
+`primary_document_comparisons` counts only currently valid full-text sources with `live_https` or `operator_document` provenance. Metadata, fixtures, and legacy-unverified records are still shown as quotations for debugging but do not count as eligible external method comparisons. Re-labeling the same passage as two different relationships is rejected as duplicate evidence. A qualifying external document still does not establish the scientific truth of a quote or certify novelty.
