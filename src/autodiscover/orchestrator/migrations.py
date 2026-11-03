@@ -80,4 +80,17 @@ CREATE TABLE market_evidence(id TEXT PRIMARY KEY,
 CREATE TABLE market_reviews(seq INTEGER PRIMARY KEY AUTOINCREMENT,id TEXT NOT NULL UNIQUE,
  evidence_id TEXT NOT NULL REFERENCES market_evidence(id),artifact_digest TEXT NOT NULL);
 """,
+    """
+CREATE TABLE experiment_jobs(id TEXT PRIMARY KEY,run_id TEXT NOT NULL REFERENCES runs(id),
+ stage_version INTEGER NOT NULL,replication INTEGER NOT NULL,plan_digest TEXT NOT NULL,
+ status TEXT NOT NULL,owner TEXT,fence INTEGER NOT NULL,lease_until REAL,
+ attempts INTEGER NOT NULL,error_count INTEGER NOT NULL,worker_pid INTEGER,worker_created_at REAL,
+ artifact_digest TEXT,last_error TEXT,UNIQUE(run_id,stage_version,replication));
+""",
+    """
+CREATE TABLE work_queue(run_id TEXT PRIMARY KEY REFERENCES runs(id),status TEXT NOT NULL,
+ owner TEXT,fence INTEGER NOT NULL,lease_until REAL,available_at REAL NOT NULL,
+ attempts INTEGER NOT NULL,completed_steps INTEGER NOT NULL,
+ last_error TEXT,updated_at TEXT NOT NULL);
+""",
 )

@@ -37,3 +37,24 @@ def test_limits_and_unknown_code_fail_closed():
         run(Plan(hypothesis_id="timeout", seconds=0.000001), Limits())
     with pytest.raises(ExecutionError, match="OUTPUT_LIMIT"):
         run(Plan(hypothesis_id="output", max_output_bytes=1000), Limits())
+
+
+def test_rss_supervisor_rejects_over_limit_observation_and_cleans_worker(monkeypatch):
+    from types import SimpleNamespace
+
+    import psutil
+
+    from autodiscover.experiments import runner
+
+    original = psutil.Process
+    workers = []
+
+    def monitor(pid):
+        process = original(pid)
+        workers.append(process)
+        return SimpleNamespace(memory_info=lambda: SimpleNamespace(rss=300 * 1024 * 1024))
+
+    monkeypatch.setattr(runner.psutil, "Process", monitor)
+    with pytest.raises(ExecutionError, match="WORKER_MEMORY_LIMIT"):
+        run(Plan(hypothesis_id="simulated-rss-observation"), Limits())
+    assert workers and all(not process.is_running() for process in workers)

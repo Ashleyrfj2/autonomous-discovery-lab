@@ -1,87 +1,86 @@
 # Autonomous Discovery Lab — project status report
 
-**As of:** November 3, 2026  
-**Repository:** `/Users/ashley/Code/autonomous-discovery-lab`  
-**Verified implementation commit:** `e5338eae56bc303f5be27a59a6dc3849e777d785`  
-**Current milestone:** local phase gates 0–5 have passed; Phase 6 is next.  
-**Overall status:** working research-loop foundation; full project remains incomplete.
+**As of:** November 3, 2026
+**Repository:** `/Users/ashley/Code/autonomous-discovery-lab`
+**Milestone:** Phase 8 locally accepted; exact milestone commit recorded in [HANDOFF.md](HANDOFF.md) after commit. Previous milestone: `8a182e712ea042b8379672936153bcbd281f4e87`.
+**Source identity:** `58aba75623694c0fbf86b227d7a5a6f95f8e2b054057cad2bb84b2f66bb4fb21` (source/tests/config/scripts/dependency manifest).
+**Overall status:** working local research prototype; phases 0–8 have recorded local acceptance. Phase 9 implementation has not started. The full project is incomplete.
 
 ## Goal overview
 
-Build an autonomous research and experimental discovery platform that can investigate problems across industries, retrieve existing knowledge, identify gaps and contradictions, generate falsifiable hypotheses, design and execute authorized experiments, independently evaluate and replicate results, preserve evidence, and use findings to direct subsequent research. Promising discoveries should also receive a separate investigation of their commercial potential.
+Build an autonomous research and experimental discovery platform that investigates scientific, technical, creative, consumer and commercial problems across industries. It should retrieve prior knowledge, identify gaps and contradictions, generate falsifiable hypotheses, design and execute authorized isolated experiments, independently evaluate and replicate results, preserve evidence, and use findings to select subsequent research. Candidate applications should receive a separate investigation of commercial potential.
 
-The intended product must operate for extended periods within explicit limits, recover from interruptions, and remain understandable to a replacement coding agent using the repository's documents, code, logs and checkpoints.
+The platform must operate within explicit spending and resource limits, recover from interruptions, support human intervention, and preserve enough context for a replacement agent to resume from the repository alone.
 
-Three outcomes must stay separate:
-
-| Outcome | Evidence required |
-|---|---|
-| Technical success | A measurable experimental result against predefined criteria and a baseline. |
-| Discovery success | A meaningful insight or improvement, with novelty assessed against actual prior work. |
-| Commercial success | External evidence of a real problem, an identifiable economic buyer, and credible willingness or ability to pay. |
-
-The current demonstration establishes a bounded technical result. It does not establish scientific novelty or commercial demand. The authoritative scope remains [MASTER_REQUIREMENTS.md](MASTER_REQUIREMENTS.md), with stable requirements in [REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md).
-
-## What has been completed
-
-| Phase | Implemented and locally verified | Evidence |
+| Outcome | Required evidence | Current demonstration |
 |---|---|---|
-| **0 — Persistent context and environment** | Original brief preserved; charter, architecture, requirements, task ledger, decisions, handoff and operating documents; 42 stable requirement IDs; Python 3.12/uv package; typed default limits; atomic checkpoints and sanitized, locked JSONL logging. | [Phase 0 report](phase_reports/phase-0.md) |
-| **1 — Durable orchestration** | Versioned lifecycle contracts; SQLite WAL and migrations; transactional state/evidence writes; idempotency; expiring worker claims and stale-worker fencing; bounded failures; pause, resume and cancellation. A deliberately terminated process recovered its committed step without duplicating it. | [Phase 1 report](phase_reports/phase-1.md) |
-| **2 — Provider and spending foundation** | Common inference interface; Meta, Baseten and deterministic mock adapters; structured-response validation; stage routing; explicit fallback records; usage accounting; persistent request caching; cost reservations; run/day budget checks; bounded rate retries and persistent circuit breakers. Provider HTTP behavior was tested with mock transports. | [Phase 2 report](phase_reports/phase-2.md) |
-| **3 — Minimum working loop** | CLI command runs all twelve stages, stores hypotheses and preregistered plans, executes a reviewed worker, evaluates held-out cases, replicates twice, saves content-addressed artifacts and produces a report. Committed work survives resumption. Native confinement tests reject host-file reads/writes and network access. | [Phase 3 report](phase_reports/phase-3.md) |
-| **4 — Independent verification** | Independent metric and roundtrip recomputation; baseline comparison; held-out cases; strict raw-result schemas; preregistered worker/fixture/evaluator hashes; replication; uncertainty and failure reporting. Adversarial tests reject false success claims, model approvals, altered bytes, missing cases, invalid metrics and changed provenance. | [Phase 4 report](phase_reports/phase-4.md) |
-| **5 — External research foundation** | Authorized, bounded HTTPS retrieval with DNS/address and redirect controls; Crossref metadata and primary-document ingestion; source provenance; quote-backed claims; basic source synthesis, method mentions and possible-conflict detection; knowledge search; cascading claim invalidation when supporting content changes; retrieved source IDs included in hypothesis provenance. | [Phase 5 report](phase_reports/phase-5.md) |
+| Technical success | Measured experimental performance against preregistered criteria and a baseline | Demonstrated for a bounded encoding benchmark |
+| Discovery success | Meaningful insight or improvement with novelty assessed against actual prior work | Novelty remains unknown |
+| Commercial success | External problem evidence, an identifiable economic buyer, and credible willingness or ability to pay | Unvalidated; actual demo remains level 0 |
+
+The authoritative scope is [MASTER_REQUIREMENTS.md](MASTER_REQUIREMENTS.md). All 42 stable requirements remain tracked in [REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md). A successful benchmark alone satisfies neither novelty nor commercial demand.
+
+## Completed and locally verified
+
+| Phase | Completed capability | Recorded acceptance evidence |
+|---|---|---|
+| 0 — Persistent context | Original brief, charter, architecture, requirement registry, decisions, ledger, handoff, security/operating documents; Python 3.12/uv package; sanitized logs and atomic checkpoints | [Phase 0](phase_reports/phase-0.md) |
+| 1 — Durable orchestration | SQLite WAL and migrations; persisted lifecycle; transactional transitions; leases, fencing and idempotency; pause/cancel/resume; interrupted-workflow recovery | [Phase 1](phase_reports/phase-1.md) |
+| 2 — Model integration and budgets | Common Meta/Baseten/mock contracts; structured validation and stage routing; explicit fallback; usage accounting, request caching, conservative reservations, run/day limits and provider circuits | [Phase 2](phase_reports/phase-2.md); HTTP contracts tested with mock transports |
+| 3 — Minimum research loop | One-command twelve-stage workflow; preregistered plans; reviewed isolated worker; held-out evaluation, two replications, evidence artifacts and reports | [Phase 3](phase_reports/phase-3.md) |
+| 4 — Independent verification | Metric/reconstruction recomputation; baselines; worker/fixture/evaluator hashes; strict result schemas; rejection of fabricated success, altered measurements and provenance manipulation | [Phase 4](phase_reports/phase-4.md) |
+| 5 — External research | Bounded authorized HTTPS retrieval; Crossref/public-document provenance; source comparison and conservative synthesis; exact quotations; dependent-claim invalidation when evidence changes | [Phase 5](phase_reports/phase-5.md), [actual retrieval record](phase_reports/phase-5-live-retrieval.json) |
+| 6 — Branching discovery | Persistent hypothesis trees, parent/child history, duplicates, diversity-aware allocation, exploration/exploitation controls, bounded stopping and justified failure-driven revision | [Phase 6](phase_reports/phase-6.md) |
+| 7 — Commercial validation gates | Separate user/buyer/opportunity models; alternatives, competition and adoption information; source-bound evidence with human review; levels 0–4; synthetic demand excluded; withdrawal/invalidation lowers current classification | [Phase 7](phase_reports/phase-7.md); positive commercial levels tested with local fixtures only |
 
 The persisted lifecycle is:
 
 `DISCOVER → RESEARCH → HYPOTHESIZE → PRIORITIZE → DESIGN → PREFLIGHT → EXECUTE → VERIFY → REPLICATE → ASSESS → VALIDATE_MARKET → DECIDE`
 
-Having all twelve states implemented does not mean every stage has its full final capability. Prioritization is currently minimal, commercial assessment returns an unvalidated result, and extended research scheduling remains unfinished.
+The default executable experiment compares reviewed run-length encoding with identity encoding on synthetic data, including 48 held-out cases and two replications. A failed identity candidate can produce an evidence-backed revision without relaxing its comparator, data or success threshold. Generic quantitative proposals can be retained across domains, but execution remains limited to the reviewed encoding family.
 
-## What currently works end to end
+Real public-source retrieval has been exercised through the application, including Crossref publication records and RFC 1951. This is distinct from live model inference, which has not been verified.
 
-The default offline experiment compares reviewed run-length encoding against raw bytes on seeded synthetic data. It uses 24 training cases, 48 held-out cases and two additional replication runs. The evaluator checks exact reconstruction and a predefined savings threshold. An identity baseline and an adverse alternating-data profile correctly fail their savings criteria.
+## Phase 8 — completed local acceptance
 
-The default report distinguishes `technical_success=true`, `novelty=unknown`, and commercial `level=0` / `validated=false`.
+Durable experiment sub-jobs and a fair persistent queue now support bounded foreground scheduling, concurrency admission, cached completed results, interrupted replication recovery, local coordinator/worker identity checks, fenced ownership, active-worker pause/cancel, deadline interruption, signal shutdown and resumption. Provider callers have absolute deadlines and cooperative cancellation/backoff; uncertain remote outcomes retain conservative reservations. Run, stage, job and queue projections are audited against evidence.
 
-Live source retrieval has also been exercised through the application: two Crossref publication records and RFC 1951 were retrieved, hashed and recorded, with an exact source-attributed quote. A separate CLI research-and-resume run retrieved three publication records and completed the technical loop with actual source IDs. These were real public-source requests, separate from mocked inference tests.
+The B023 callback binding defect was repaired with a regression covering multiple stage versions and pause/resume. The audit also repaired a lease-renewal reconciliation race and prevented queue mutation from covering inconsistent state. See [Phase 8 report](phase_reports/phase-8.md) and [fresh acceptance record](phase_reports/phase-8-acceptance/acceptance.json).
 
-Evidence is preserved in [the live retrieval record](phase_reports/phase-5-live-retrieval.json), [its retained evidence snapshot](phase_reports/phase-5-evidence-snapshot.json), and the selected public artifacts under [phase_reports/artifacts](phase_reports/artifacts).
+Fresh qualification completed **8 workflows, 96 committed stages and 24 experiment jobs**, using two stage workers with a peak of one experiment, in **3.757361 seconds**, with **$0 provider spend**. The coordinator was restarted after 16 dispatches; all runs had progressed and no completed job reran. All 24 results were independently recomputed. A 712-event snapshot and 73 content-addressed artifacts were retained and hash-verified.
 
-## Verification performed for this report
+This is a short bounded local mock-provider qualification, not a long-duration soak. Earlier phase-8-bounded-operation.json and phase-8-evidence-snapshot.json remain historical; the final source is qualified by phase-8-acceptance/.
 
-The following checks were rerun against the implementation commit above:
+## Verification against final Phase 8 source
 
-| Check | Result |
+| Check | Actual result |
 |---|---|
-| `uv run pytest -q` | **72 passed** across unit, integration, adversarial and end-to-end tests. |
-| `uv run ruff check .` | Passed. |
-| `uv run pyright` | Zero errors, warnings or informational findings. |
-| `uv build` | Wheel and source distribution built successfully. |
-| Archived content-addressed evidence | All 16 retained Phase 4/5 artifact hashes verified. |
-| Retained Phase 5 snapshot | All five evidence events and the retained anchor verified. |
+| `uv run ruff check .` | Passed |
+| `uv run pyright` | 0 errors, warnings or informational findings |
+| `uv run pytest -q` | **143 passed in 9.49 seconds** |
+| `uv build` | Wheel and source distribution succeeded |
+| Focused recovery/concurrency/control/provider/budget/evidence tests | **78 passed in 6.06 seconds**; exact selection and results retained |
+| Source, artifacts and retained anchors | Exact manifest unchanged through qualification; 73 fresh artifact hashes and six current/historical snapshots verified |
 
-Recorded provider spend is **$0**. No live Meta or Baseten inference call has been verified. Local tests, real source retrieval, live inference acceptance and production readiness are separate qualifications.
+Exact commands, UTC start/end times, results, source manifest, focused case names and runtime observations are recorded in [phase-8-acceptance](phase_reports/phase-8-acceptance/acceptance.json). Technical success remains distinct from unknown novelty and commercial level 0. No live Meta/Baseten inference, real buyer/payment validation, hosted deployment or production qualification is established.
 
-## What still needs to be done
+## Remaining work, in priority order
 
-| Priority / phase | Remaining implementation | Required acceptance evidence |
+| Priority | Work still needed | Evidence required before acceptance |
 |---|---|---|
-| **Next: Phase 6 — Branching discovery** | Persistent hypothesis trees, parent/child history, evidence-driven revision, controlled mutation, candidate ranking, diversity-aware allocation, exploration/exploitation controls, duplicate enforcement and loop/stopping rules. | Explore multiple directions within limits; reject repetitive work; demonstrate a failed hypothesis followed by a justified revision. |
-| **Phase 7 — Commercial validation** | Target-user and buyer models, problem severity, alternatives and competition, adoption constraints, buyer reachability, external demand/payment evidence, and enforced evidence levels 0–4. | A technically successful candidate remains commercially unvalidated without qualifying external evidence; synthetic customers cannot raise its level. |
-| **Phase 8 — Extended operation** | Durable scheduling and sub-jobs, bounded concurrency, resource/status monitoring, interruption reconciliation, graceful shutdown, and pause/cancel behavior during active work. Existing provider circuits and workflow controls need integration into sustained operation. | Extended bounded runs survive interruptions and respect limits; budget exhaustion stops gracefully; unfinished work is reconciled without silent duplication. |
-| **Phase 9 — Monitoring and human controls** | Research monitoring dashboard; active task/discovery views; hypothesis trees; evidence and evaluation status; spend/resource views; human approval interfaces. Evaluate optional remote workers and specialized execution separately. | Operators can inspect and control real persisted research through the interface, including approvals, without relying on raw logs. |
-| **Across remaining phases** | Generalize hypothesis and experiment contracts beyond the current encoding family; add reviewed experiment implementations and evaluators for additional research questions while retaining isolation and provenance. | Demonstrate substantive research and experimental capability across different problem types; changing the demo's topic label is insufficient. |
-| **Qualification and final audit** | Authorized live-provider tests with current model/pricing/capability configuration; remaining required end-to-end scenarios; fresh-agent recovery audit; complete requirement-by-requirement release review. Confirm hackathon rules only if submission is pursued. | Explicit evidence for every non-deferred requirement, with local, live-integration and production readiness reported separately. |
+| 1 — Phase 9 interface | Monitoring dashboard for active work, discoveries, hypothesis trees, evidence, evaluation, spend and resource usage; human approval and research controls | Operators inspect and control real persisted research without relying on raw logs; interface and control flows verified |
+| 2 — Broader research execution | Add reviewed experiment implementations, plans and independent evaluators for additional problem types; deepen source interpretation and prior-work assessment | Substantive research/experiments across different problem types; changing topic labels does not demonstrate this |
+| 3 — Live integration qualification | Authorized provider configuration with current model capabilities/prices and explicit spending limits; small bounded integration tests | Actual provider responses, usage, failure and budget evidence, separate from mock HTTP tests |
+| 4 — Final requirements audit | Reconcile all requirements and phase gates; test fresh-agent recovery; review security/operations and release readiness; document justified optional deferrals | Evidence for every non-deferred acceptance criterion, with local, live-integration and production status kept separate |
 
-## Current limitations
+Actual novelty and commercial success depend on future research and external evidence. They cannot be manufactured to close a software milestone. Commercial levels 1–4 require qualifying real evidence and truthful human review; current tests establish enforcement behavior only. No buyer outreach or paid service usage is implied by this report.
 
-- **Experiment scope:** execution and executable hypothesis contracts currently support only reviewed `encoding-v1` experiments. The full cross-industry research mission has not yet been demonstrated.
-- **Research depth:** metadata search is bounded; synthesis and conflict detection are basic. Method mentions and title matches do not establish experimental findings, exhaustive prior-art coverage or novelty.
-- **Commercial capability:** lifecycle schemas prevent some unsupported assertions, but the full commercial module and evidence collection workflow are still pending.
-- **Execution backend:** native confinement was verified on this macOS host. It uses deprecated/private Seatbelt facilities; other platforms fail closed. It is not a production arbitrary-code sandbox. Memory enforcement uses RSS polling and can observe brief sampling overshoot.
-- **Recovery scope:** completed committed stages are preserved. Interruptions during unfinished computation can require recomputation; durable sub-job reconciliation belongs to Phase 8.
-- **Release status:** no live inference acceptance, production deployment, commercial validation, or hackathon eligibility is established. No merge or deployment has been performed.
+## Material limitations
 
-There is no current blocker to the next local implementation task. The next action is Phase 6: implement persistent, bounded branching and failure-driven revision, verify it, then proceed through the remaining phase gates. Detailed work remains tracked in [TASK_LEDGER.md](TASK_LEDGER.md); recovery instructions are in [HANDOFF.md](HANDOFF.md).
+- Execution and automated experimental revision cover one reviewed encoding family. The full cross-industry discovery mission remains undemonstrated.
+- Retrieval and synthesis are bounded and conservative. Metadata matches, method mentions and possible conflicts do not establish findings or exhaustive prior-art coverage.
+- Worker confinement is locally tested on macOS using deprecated/private Seatbelt facilities; unsupported platforms fail closed. RSS monitoring permits possible sampling overshoot. This is not a production arbitrary-code sandbox.
+- Interrupted unfinished computation may be explicitly retried; committed completed results are preserved. A caller timeout/cancellation does not prove provider-side cancellation or zero billing, so uncertain reservations remain.
+- Optional remote/distributed workers and physical experimentation remain deferred pending need and authorization. Hackathon eligibility is unconfirmed.
+
+There is no known local blocker. After the required Phase 8 milestone commit, this run prepares a Phase 9 implementation plan only. Phase 9 dashboard/backend implementation is outside this run's scope. Detailed task state remains in [TASK_LEDGER.md](TASK_LEDGER.md), with recovery instructions in [HANDOFF.md](HANDOFF.md).

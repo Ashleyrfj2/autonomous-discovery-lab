@@ -122,3 +122,57 @@ def test_tampered_branch_score_and_deleted_allocations_are_detected(tmp_path):
         db.execute("DELETE FROM branch_allocations WHERE run_id=?", (run,))
     with pytest.raises(IntegrityError, match="Branch"):
         verify_chain(lab.store)
+
+
+@pytest.mark.parametrize(
+    "column,value",
+    [
+        ("topic", "changed research mission"),
+        ("status", "COMPLETED"),
+        ("stage", "EXECUTE"),
+        ("version", 99),
+        ("policy_json", '{"allow_live_inference":true}'),
+    ],
+)
+def test_run_state_and_authority_tampering_are_detected_before_execution(tmp_path, column, value):
+    from autodiscover.evidence.artifacts import IntegrityError
+    from autodiscover.orchestrator.lab import Lab
+
+    lab = Lab(tmp_path)
+    run = lab.demo(stop_after=2)
+    queries = {
+        "topic": "UPDATE runs SET topic=? WHERE id=?",
+        "status": "UPDATE runs SET status=? WHERE id=?",
+        "stage": "UPDATE runs SET stage=? WHERE id=?",
+        "version": "UPDATE runs SET version=? WHERE id=?",
+        "policy_json": "UPDATE runs SET policy_json=? WHERE id=?",
+    }
+    with lab.store.connection(write=True) as db:
+        db.execute(queries[column], (value, run))
+    with pytest.raises(IntegrityError):
+        lab.resume(run)
+    assert not lab.jobs.status(run)
+
+
+@pytest.mark.parametrize(
+    "field,value", [("status", "COMPLETED"), ("fence", 999), ("completed_steps", 99)]
+)
+def test_scheduler_rejects_tampering_before_overwriting_projection(tmp_path, field, value):
+    from autodiscover.evidence.artifacts import IntegrityError
+    from autodiscover.orchestrator.lab import Lab
+    from autodiscover.orchestrator.scheduler import Scheduler
+
+    lab = Lab(tmp_path)
+    run_id = lab.store.create_run("queue evidence", {})
+    queue = Scheduler(lab.store)
+    queue.enqueue(run_id)
+    with lab.store.connection(write=True) as db:
+        queries = {
+            "status": "UPDATE work_queue SET status=? WHERE run_id=?",
+            "fence": "UPDATE work_queue SET fence=? WHERE run_id=?",
+            "completed_steps": "UPDATE work_queue SET completed_steps=? WHERE run_id=?",
+        }
+        db.execute(queries[field], (value, run_id))
+    with pytest.raises(IntegrityError, match="queue projection"):
+        queue.run(max_steps=1, max_seconds=1)
+    assert lab.store.get_run(run_id)["version"] == 0

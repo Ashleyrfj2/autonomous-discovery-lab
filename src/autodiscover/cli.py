@@ -2,7 +2,9 @@
 
 import argparse
 import json
+import signal
 import sys
+import threading
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -14,6 +16,7 @@ from autodiscover.evidence.chain import export_snapshot, verify_chain
 from autodiscover.hypotheses.engine import Hypothesis, demo_proposal
 from autodiscover.hypotheses.proposals import ResearchProposal
 from autodiscover.orchestrator.lab import Lab
+from autodiscover.orchestrator.scheduler import Scheduler
 from autodiscover.research.retrieval import Fetcher
 from autodiscover.security.redaction import sanitize
 
@@ -87,6 +90,19 @@ def main() -> None:
     status.add_argument("run_id", nargs="?")
     for command in ("pause", "unpause", "cancel"):
         sub.add_parser(command).add_argument("run_id")
+    enqueue = sub.add_parser("enqueue", help="Persist an active run or a new bounded research task")
+    enqueue.add_argument("run_id", nargs="?")
+    enqueue.add_argument("--topic")
+    enqueue.add_argument("--config", type=Path, default=Path("config/default.json"))
+    workers = sub.add_parser(
+        "workers", help="Run bounded foreground workers; no background service"
+    )
+    workers.add_argument("--max-steps", type=int, default=100)
+    workers.add_argument("--max-seconds", type=float, default=60)
+    workers.add_argument("--concurrency", type=int, default=1)
+    sub.add_parser("queue", help="Inspect persisted scheduling state")
+    jobs = sub.add_parser("jobs", help="Inspect trusted-worker resources/results/recovery state")
+    jobs.add_argument("run_id", nargs="?")
     integrity = sub.add_parser("integrity", help="Verify chain against optional retained anchor")
     integrity.add_argument("--anchor", type=Path)
     snapshot = sub.add_parser(
@@ -207,6 +223,41 @@ def main() -> None:
                     for r in lab.store.list_runs()
                 ]
             )
+        elif args.command == "enqueue":
+            if args.run_id and args.topic:
+                parser.error("Use an existing run ID or a new --topic")
+            run_id = args.run_id or lab.store.create_run(
+                args.topic or "cross-domain research task",
+                Limits.load(args.config).model_dump(mode="json"),
+            )
+            scheduler = Scheduler(lab.store)
+            scheduler.enqueue(run_id)
+            result = {"run_id": run_id, "queue": scheduler.status()}
+        elif args.command == "workers":
+            stop = threading.Event()
+
+            def shutdown(_signal, _frame):
+                stop.set()
+
+            previous = {
+                sig: signal.signal(sig, shutdown) for sig in (signal.SIGINT, signal.SIGTERM)
+            }
+            try:
+                result = Scheduler(lab.store).run(
+                    max_steps=args.max_steps,
+                    max_seconds=args.max_seconds,
+                    concurrency=args.concurrency,
+                    stop=stop,
+                )
+            finally:
+                for sig, handler in previous.items():
+                    signal.signal(sig, handler)
+        elif args.command == "queue":
+            verify_chain(lab.store)
+            result = Scheduler(lab.store).status()
+        elif args.command == "jobs":
+            verify_chain(lab.store)
+            result = lab.jobs.status(args.run_id)
         elif args.command == "integrity":
             anchor = json.loads(args.anchor.read_text()) if args.anchor else None
             result = verify_chain(lab.store, anchor.get("anchor", anchor) if anchor else None)

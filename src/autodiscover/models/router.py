@@ -2,6 +2,7 @@
 
 import time
 from collections.abc import Callable
+from decimal import Decimal
 
 from pydantic import ValidationError
 
@@ -9,6 +10,7 @@ from autodiscover.config import Limits
 from autodiscover.models.contracts import Generation, GenerationRequest, Provider, ProviderError, T
 from autodiscover.orchestrator.store import Store
 from autodiscover.security.budget import Budget, request_fingerprint
+from autodiscover.security.cancellation import cancellable_wait
 from autodiscover.security.redaction import sanitize
 
 
@@ -96,7 +98,7 @@ class Router:
                 try:
                     result = provider.generate(request)
                 except ProviderError as error:
-                    self.budget.settle(reservation, None)
+                    self.budget.settle(reservation, Decimal(0) if error.known_zero_cost else None)
                     self._circuit(provider, error.code)
                     with self.store.connection(write=True) as db:
                         self.store._event(
@@ -112,6 +114,8 @@ class Router:
                             },
                         )
                     last_error = error
+                    if error.code == "PROVIDER_CANCEL_REQUESTED":
+                        raise error
                     # A timeout/ambiguous server result is never replayed automatically.
                     if (
                         error.retryable
@@ -119,7 +123,11 @@ class Router:
                         and attempts <= policy.max_retries_per_step
                         and self._available(provider)
                     ):
-                        self.sleeper(min(max(error.retry_after, 0.25 * 2 ** (attempts - 1)), 30))
+                        delay = min(max(error.retry_after, 0.25 * 2 ** (attempts - 1)), 30)
+                        if not cancellable_wait(delay, self.sleeper):
+                            raise ProviderError(
+                                "PROVIDER_CANCEL_REQUESTED", known_zero_cost=True
+                            ) from None
                         continue
                     break
                 # No prompt/auth/error bodies are persisted. Redact recognizable secrets in output.

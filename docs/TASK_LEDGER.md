@@ -139,7 +139,7 @@ Description: External market import/models/gates; acceptance: technical success 
 Dependencies: P6-BRANCH
 Status: VERIFIED
 Files: commercial/{contracts,service}.py; evidence/{markets,chain}.py; research/{catalog,retrieval}.py; orchestrator/{lab,contracts,migrations}.py; security/redaction.py; cli.py; test_commercial_validation.py; test_commercial_evidence.py; COMMERCIAL_VALIDATION.md; phase-7 acceptance artifacts
-Tests: uv run pytest -q: 110 passed; Ruff passed; Pyright 0 errors; uv build wheel/sdist passed; full demo classified technical=true, novelty=unknown, commercial level0, cost USD0; public demo artifacts and retained snapshot saved
+Tests: uv run pytest -q: 110 passed; Ruff passed; Pyright 0 errors; uv build wheel/sdist passed; full demo classified technical=true, novelty=unknown, commercial level 0, cost USD0; public demo artifacts and retained snapshot saved
 Verification: phase_reports/phase-7.md
 Blockers: none
 Next action: P8-OPERATE: durable scheduler/sub-jobs, bounded concurrency, interruption reconciliation, resource monitoring and active-worker pause/cancel/shutdown controls
@@ -148,14 +148,14 @@ Next action: P8-OPERATE: durable scheduler/sub-jobs, bounded concurrency, interr
 ## P8-OPERATE
 Task ID: P8-OPERATE
 Phase: 8
-Description: Durable workers/concurrency/circuits/resource/status; acceptance: interruption/long bounded loops/controls
+Description: Durable jobs/scheduler, bounded concurrency, circuits/resources/status and interrupted recovery/controls. Acceptance: all Phase 8 checks and fresh exact-source qualification.
 Dependencies: P7-MARKET
-Status: NOT_STARTED
-Files: pending
-Tests: pending
-Verification: pending
-Blockers: none
-Next action: implement after dependencies verify
+Status: VERIFIED
+Files: orchestrator/{jobs,scheduler,lab,store,migrations}.py; experiments/runner.py; security/{processes,cancellation,budget}.py; evidence/{jobs,runs,scheduling,chain}.py; models/{providers,router,contracts}.py; cli.py; scripts/qualify_phase8.py; associated tests/docs/evidence
+Tests: 143 full tests; 78 focused tests; Ruff passes; Pyright clean; wheel/sdist builds
+Verification: phase_reports/phase-8.md; phase_reports/phase-8-acceptance/; fresh eight workflows/96 stages/24 jobs, peak 1 experiment, zero provider spend, 712-event snapshot and 73 artifacts verified; exact source manifest recorded
+Blockers: none in local Phase 8 scope; no live/distributed/production acceptance
+Next action: create required feat: complete and verify phase 8 durable execution commit, verify contents, then Phase 9 planning only
 
 
 ## P9-INSPECT
@@ -182,3 +182,16 @@ Tests: Existing implementation reverified: 72 tests; lint/types/build; 16 artifa
 Verification: docs/PROJECT_STATUS_REPORT.md
 Blockers: none
 Next action: P6-BRANCH; full implementation goal remains active
+
+
+## STATUS-REPORT-REFRESH
+Task ID: STATUS-REPORT-REFRESH
+Phase: 8
+Description: User-requested goal, completed-work and remaining-work report refreshed against current source, ledger, phase evidence and actual verification commands.
+Dependencies: existing phases 0–7 records and Phase 8 worktree
+Status: VERIFIED
+Files: docs/PROJECT_STATUS_REPORT.md; HANDOFF.md; RELEASE_READINESS.md; TASK_LEDGER.md; DEVELOPMENT_HISTORY.md
+Tests: Report records 134 passing tests, clean types/build and the open Ruff B023 failure; no implementation edited.
+Verification: docs/PROJECT_STATUS_REPORT.md
+Blockers: none for historical report refresh; Phase 8 subsequently accepted, see P8-OPERATE
+Next action: historical report refresh superseded by Phase 8 acceptance; follow current handoff

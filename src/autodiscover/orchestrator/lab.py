@@ -2,11 +2,10 @@
 
 import json
 import time
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
-from uuid import uuid4
 
 from autodiscover.commercial.contracts import Opportunity
 from autodiscover.commercial.service import Market
@@ -23,12 +22,15 @@ from autodiscover.models.providers import MockProvider
 from autodiscover.models.router import Router
 from autodiscover.orchestrator.contracts import RunStatus, Stage
 from autodiscover.orchestrator.durability import atomic_json
+from autodiscover.orchestrator.jobs import Jobs, ResourceBusy
 from autodiscover.orchestrator.loops import ProgressGuard
-from autodiscover.orchestrator.store import Store
+from autodiscover.orchestrator.store import StateError, Store
 from autodiscover.research.catalog import Catalog
 from autodiscover.research.intelligence import retrieve_publications, synthesize
 from autodiscover.research.retrieval import Fetcher
 from autodiscover.security.budget import Budget, BudgetError
+from autodiscover.security.cancellation import cancellation_scope
+from autodiscover.security.processes import local_owner
 
 
 class Lab:
@@ -36,6 +38,7 @@ class Lab:
         self.store = Store(root)
         self.artifacts = Artifacts(root / "artifacts")
         self.director = Director(self.store)
+        self.jobs = Jobs(self.store)
 
     def demo(
         self,
@@ -107,6 +110,7 @@ class Lab:
         stop_after: int | None = None,
         demo_algorithm: str = "rle",
         router: Router | None = None,
+        stop_requested: Callable[[], bool] | None = None,
     ) -> None:
         verify_chain(self.store)
         row = self.store.get_run(run_id)
@@ -114,11 +118,13 @@ class Lab:
             self.report(run_id)
             return
         limits = Limits.model_validate_json(row["policy_json"])
-        owner = "lab-" + str(uuid4())
+        owner = local_owner()
         fence = self.store.claim(run_id, owner, seconds=180)
         count = 0
         try:
             while self.store.get_run(run_id)["status"] == RunStatus.ACTIVE:
+                if stop_requested and stop_requested():
+                    break
                 row = self.store.get_run(run_id)
                 stage, version = Stage(row["stage"]), row["version"]
                 # Bound development/demo operation even before the full branch director exists.
@@ -129,9 +135,38 @@ class Lab:
                 self.store.heartbeat(run_id, owner, fence, seconds=180)
                 started = time.monotonic()
                 before_usage = Budget(self.store).totals(run_id)
-                output, target, reason = self._stage(
-                    run_id, stage, version, limits, router=router, demo_algorithm=demo_algorithm
-                )
+
+                def interrupted(stage_version: int = version) -> bool:
+                    if stop_requested and stop_requested():
+                        return True
+                    try:
+                        current = self.store.get_run(run_id)
+                        if (
+                            current["status"] != "ACTIVE"
+                            or current["owner"] != owner
+                            or current["fence"] != fence
+                            or current["version"] != stage_version
+                        ):
+                            return True
+                        if current["lease_until"] < self.store.clock() + 60:
+                            self.store.heartbeat(run_id, owner, fence, seconds=180)
+                    except StateError:
+                        return True
+                    return False
+
+                with cancellation_scope(interrupted):
+                    output, target, reason = self._stage(
+                        run_id,
+                        stage,
+                        version,
+                        limits,
+                        router=router,
+                        demo_algorithm=demo_algorithm,
+                        owner=owner,
+                        fence=fence,
+                        stop_requested=stop_requested,
+                    )
+
                 self.store.complete_step(
                     run_id,
                     owner=owner,
@@ -153,6 +188,9 @@ class Lab:
                 count += 1
                 if stop_after is not None and count >= stop_after:
                     break
+        except (runner.WorkInterrupted, ResourceBusy):
+            # Control events/job evidence explain interruption; no scientific failure is fabricated.
+            pass
         except (SearchStopped, DuplicateHypothesis) as error:
             self.director.stop(run_id, str(error))
             if self.store.get_run(run_id)["status"] == RunStatus.ACTIVE:
@@ -169,8 +207,19 @@ class Lab:
                 self.store.control(run_id, "pause")
             self.report(run_id)
         except ProviderError as error:
-            self.store.fail_step(run_id, owner, fence, error.code)
-            raise
+            if error.code == "PROVIDER_CANCEL_REQUESTED":
+                self.director.stop(run_id, "INFERENCE_RECONCILIATION_REQUIRED")
+                if self.store.get_run(run_id)["status"] == "ACTIVE":
+                    self.store.control(run_id, "pause")
+            else:
+                current = self.store.get_run(run_id)
+                if (
+                    current["status"] == "ACTIVE"
+                    and current["owner"] == owner
+                    and current["fence"] == fence
+                ):
+                    self.store.fail_step(run_id, owner, fence, error.code)
+                raise
         except (runner.ExecutionError, evaluator.EvaluationError) as error:
             self.store.fail_step(run_id, owner, fence, str(error))
             raise
@@ -187,6 +236,9 @@ class Lab:
         *,
         router: Router | None,
         demo_algorithm: str,
+        owner: str,
+        fence: int,
+        stop_requested: Callable[[], bool] | None = None,
     ) -> tuple[dict[str, Any], Stage | None, str | None]:
         topic = self.store.get_run(run_id)["topic"]
         output: dict[str, Any]
@@ -295,7 +347,15 @@ class Lab:
             output = {k: result[k] for k in ("plan_id", "plan_digest", "authorized")}
         elif stage == Stage.EXECUTE:
             plan = self.plan(run_id)
-            raw = runner.run(plan, limits)
+            raw = self.jobs.execute(
+                run_id,
+                owner=owner,
+                run_fence=fence,
+                stage_version=version,
+                plan=plan,
+                limits=limits,
+                stop_requested=stop_requested,
+            )
             digest = self.artifacts.put_json(raw)
             output = {
                 "artifact_digest": digest,
@@ -328,7 +388,16 @@ class Lab:
             results = []
             passed = True
             for index in range(1, plan.replications + 1):
-                raw = runner.run(plan, limits, replication=index)
+                raw = self.jobs.execute(
+                    run_id,
+                    owner=owner,
+                    run_fence=fence,
+                    stage_version=version,
+                    plan=plan,
+                    limits=limits,
+                    replication=index,
+                    stop_requested=stop_requested,
+                )
                 raw_digest = self.artifacts.put_json(raw)
                 report = evaluator.evaluate(plan, raw, replication=index)
                 report["raw_artifact_digest"] = raw_digest
@@ -426,6 +495,7 @@ class Lab:
             "stage": row["stage"],
             "completed_steps": len(self.store.outputs(run_id)),
             "search": self.director.tree(run_id),
+            "jobs": self.jobs.status(run_id),
             "assessment": assessment,
             "assessment_scope": "Last completed hypothesis assessment; see per-branch results",
             "commercial": market,

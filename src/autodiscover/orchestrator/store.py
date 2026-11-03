@@ -20,6 +20,8 @@ from autodiscover.orchestrator.contracts import (
     StepInput,
 )
 from autodiscover.orchestrator.durability import append_event, atomic_json, canonical, now
+from autodiscover.security.processes import coordinator_alive
+from autodiscover.security.redaction import contains_credential
 
 
 class StateError(RuntimeError):
@@ -95,6 +97,8 @@ class Store:
         from autodiscover.config import Limits
 
         policy = Limits.model_validate(policy).model_dump(mode="json")
+        if contains_credential(topic):
+            raise ValueError("Credential material is not permitted in research topics")
         if not topic.strip() or len(topic) > 1000:
             raise ValueError("Topic must contain 1–1000 characters")
         run_id = run_id or str(uuid4())
@@ -115,7 +119,12 @@ class Store:
                     canonical(policy),
                 ),
             )
-            self._event(db, run_id, "run_created", {"policy": policy})
+            self._event(
+                db,
+                run_id,
+                "run_created",
+                {"policy": policy, "topic_sha256": hashlib.sha256(topic.encode()).hexdigest()},
+            )
         self.checkpoint(run_id)
         return run_id
 
@@ -134,10 +143,12 @@ class Store:
         if not owner or not 0 < seconds <= 300:
             raise ValueError("Nonempty owner and lease 0–300 seconds required")
         with self.connection(write=True) as db:
+            previous = db.execute("SELECT owner FROM runs WHERE id=?", (run_id,)).fetchone()
+            dead_owner = previous[0] if previous and coordinator_alive(previous[0]) is False else ""
             cursor = db.execute(
                 """UPDATE runs SET owner=?,fence=fence+1,lease_until=?
-                WHERE id=? AND status=? AND (owner IS NULL OR lease_until<=?)""",
-                (owner, self.clock() + seconds, run_id, RunStatus.ACTIVE, self.clock()),
+                WHERE id=? AND status=? AND (owner IS NULL OR lease_until<=? OR owner=?)""",
+                (owner, self.clock() + seconds, run_id, RunStatus.ACTIVE, self.clock(), dead_owner),
             )
             if cursor.rowcount != 1:
                 raise StateError("Run not available for claim")
@@ -166,11 +177,13 @@ class Store:
 
     def release(self, run_id: str, owner: str, fence: int) -> None:
         with self.connection(write=True) as db:
-            db.execute(
+            result = db.execute(
                 """UPDATE runs SET owner=NULL,lease_until=NULL
                           WHERE id=? AND owner=? AND fence=?""",
                 (run_id, owner, fence),
             )
+            if result.rowcount:
+                self._event(db, run_id, "run_released", {"owner": None, "fence": fence})
 
     def step_input(self, run_id: str) -> StepInput:
         row = self.get_run(run_id)

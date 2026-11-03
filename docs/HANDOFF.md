@@ -1,15 +1,15 @@
 # Recovery handoff
 PROJECT: Autonomous Discovery Lab
 CURRENT BRANCH: main in /Users/ashley/Code/autonomous-discovery-lab
-LAST VERIFIED COMMIT: phase-7 commit; git log --grep='phase 7' (previous verified f5c352c9f791e9ecb75874581c2393d1519938aa)
+LAST VERIFIED COMMIT: previous milestone 8a182e712ea042b8379672936153bcbd281f4e87; Phase 8 source accepted, required commit pending
 CURRENT PHASE: 8
-CURRENT TASK: P8-OPERATE: durable scheduler/sub-jobs, bounded concurrency, interruption reconciliation, resource monitoring and active-worker pause/cancel/shutdown controls
-COMPLETED AND VERIFIED: phases 0–7; uv run pytest -q: 110 passed; Ruff passed; Pyright 0 errors; uv build wheel/sdist passed; full demo classified technical=true, novelty=unknown, commercial level0, cost USD0; public demo artifacts and retained snapshot saved; phase_reports/phase-7.md
-IMPLEMENTED BUT UNVERIFIED: Levels1–4 are contract-tested using local fixtures and require truthful human review of source documents in actual use; no automatic interview/payment authentication or business-viability claim. Current real demo remains commercially unvalidated. Reviewed execution remains encoding-family only; Phase8 durable scheduling/in-flight controls and Phase9 dashboard/approvals/final qualification remain.
-KNOWN FAILURES: no current local check failures; recorded limitations remain
-BLOCKERS: No local blocker for Phase8. No real buyer, pilot, payment, live inference or production qualification has been obtained.
-FILES RECENTLY MODIFIED: commercial/{contracts,service}.py; evidence/{markets,chain}.py; research/{catalog,retrieval}.py; orchestrator/{lab,contracts,migrations}.py; security/redaction.py; cli.py; test_commercial_validation.py; test_commercial_evidence.py; COMMERCIAL_VALIDATION.md; phase-7 acceptance artifacts
-LAST COMMANDS AND RESULTS: uv run pytest -q: 110 passed; Ruff passed; Pyright 0 errors; uv build wheel/sdist passed; full demo classified technical=true, novelty=unknown, commercial level0, cost USD0; public demo artifacts and retained snapshot saved
-NEXT EXACT ACTION: P8-OPERATE: durable scheduler/sub-jobs, bounded concurrency, interruption reconciliation, resource monitoring and active-worker pause/cancel/shutdown controls
-RELEVANT DECISIONS: DEC-012: external fact attestation is operator authority, never model authority; separate current classification from historical evidence
-BUDGET / RESOURCE STATUS: provider spend USD 0; no billable calls
+CURRENT TASK: P8-OPERATE accepted local checks/evidence; review intended staging and create exact required commit
+COMPLETED AND VERIFIED: phases 0–8 local scope; final Phase 8 checks 143 tests, focused 78, Ruff/Pyright/build; source manifest 58aba75623694c0fbf86b227d7a5a6f95f8e2b054057cad2bb84b2f66bb4fb21; fresh 8 workflows/96 stages/24 jobs, peak 1, $0 provider spend; 712-event snapshot,73 artifact hashes and six retained snapshots verified
+IMPLEMENTED BUT UNVERIFIED: no live Meta/Baseten, real buyer/pilot/payment, long-duration soak, distributed/production or broader experiment-family acceptance. Phase 9 remains unimplemented.
+KNOWN FAILURES: no current local check failures. B023 fixed and multi-stage/resume regression passes; renewal-race, pre-mutation integrity and backoff cancellation defects repaired. A one-off integrity command used host python3 and lacked project imports; corrected to uv run python and passed.
+BLOCKERS: none for Phase 8 local milestone
+FILES RECENTLY MODIFIED: Phase 8 source/tests, scripts/qualify_phase8.py, required docs and phase-8-acceptance evidence. Preserve unrelated untracked docs/PROJECT_STATUS_REPORT_.md.
+LAST COMMANDS AND RESULTS: qualification script all5 check groups passed; 143 full and 78 focused tests; source unchanged; independent24-job re-evaluation; archive/snapshot audit passed
+NEXT EXACT ACTION: git diff --check and stage only intended reviewed Phase 8 files; commit -m "feat: complete and verify phase 8 durable execution"; verify status/log/full hash and committed source manifest. Only after successful commit, write Phase 9 implementation plan (no UI/backend implementation this run), record exact Phase 8 SHA here and checkpoint.
+RELEVANT DECISIONS: DEC-013/014/015; master mission and original limits preserved
+BUDGET / RESOURCE STATUS: $0 provider spend; mock inference; no keys read or external paid calls

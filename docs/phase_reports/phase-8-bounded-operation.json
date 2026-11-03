@@ -1,0 +1,1153 @@
+{
+  "qualification": "Actual bounded local foreground operation; mocks only, no live provider or long-duration production soak claim",
+  "runs": 8,
+  "completed_stages": 96,
+  "completed_jobs": 24,
+  "peak_recorded_concurrent_experiments": 1,
+  "stage_worker_concurrency": 2,
+  "elapsed_seconds": 3.1331943330005743,
+  "batches": [
+    {
+      "stage_attempts": 112,
+      "stopped": false,
+      "step_limit_reached": false
+    }
+  ],
+  "provider_spend_usd": "0",
+  "reports": [
+    {
+      "schema_version": 1,
+      "run_id": "7716e560-e77b-4276-a31c-c322859ad856",
+      "status": "COMPLETED",
+      "stage": "DECIDE",
+      "completed_steps": 12,
+      "search": {
+        "nodes": [
+          {
+            "id": "deebf1d4741dae339aa1496811f7f85ff5342a1a3cb0afe8c9df4a6c875306af",
+            "run_id": "7716e560-e77b-4276-a31c-c322859ad856",
+            "identity": "496689a57796db202e944ddcb94eed12aab694c7710a7070dc39b09b6d065102",
+            "parent_id": null,
+            "depth": 0,
+            "domain": "bounded local research cycle 1",
+            "kind": "encoding",
+            "status": "PROMISING",
+            "revision_evidence": null,
+            "score": 0.8203125
+          }
+        ],
+        "allocations": [
+          {
+            "run_id": "7716e560-e77b-4276-a31c-c322859ad856",
+            "step_key": "prioritize:3",
+            "hypothesis_id": "deebf1d4741dae339aa1496811f7f85ff5342a1a3cb0afe8c9df4a6c875306af",
+            "mode": "explore",
+            "ordinal": 1
+          }
+        ],
+        "policy": {
+          "exploration_fraction": 0.5,
+          "max_branch_experiments": 2,
+          "max_candidates": 5,
+          "max_depth": 3,
+          "max_experiments": 5
+        },
+        "stopped_reason": null,
+        "novelty": "unknown",
+        "commercial_validation": "unvalidated"
+      },
+      "jobs": [
+        {
+          "id": "16d3635997a30d6defcc7e030e52232c075e5acb7437f4c2b4d48925e5346d71",
+          "run_id": "7716e560-e77b-4276-a31c-c322859ad856",
+          "stage_version": 6,
+          "replication": 0,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18177,
+          "worker_created_at": 1793700507.582879,
+          "artifact_digest": "a926f1f80f5e08c83e9c0718127b0691829bd03688258aa8ca4e8af9979895dd",
+          "last_error": null
+        },
+        {
+          "id": "c1e8b59ffb30d48ce208d681a9bdad196faca8763fe538266db0dcd120e464f5",
+          "run_id": "7716e560-e77b-4276-a31c-c322859ad856",
+          "stage_version": 8,
+          "replication": 1,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18190,
+          "worker_created_at": 1793700508.03072,
+          "artifact_digest": "2c6e9f2c06abbc4cd3d8313764ac0b49f3b83424cdd81ca21b6f760baabe8e73",
+          "last_error": null
+        },
+        {
+          "id": "364aec55874349830bbe027152e712e10a638b056cb83ada68816b37f141d587",
+          "run_id": "7716e560-e77b-4276-a31c-c322859ad856",
+          "stage_version": 8,
+          "replication": 2,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18191,
+          "worker_created_at": 1793700508.089632,
+          "artifact_digest": "b44228b676dae627d2153dba75b84a043cbf34f8e5b5ee6cb8e7f1d83a231f33",
+          "last_error": null
+        }
+      ],
+      "assessment": {
+        "hypothesis_id": "deebf1d4741dae339aa1496811f7f85ff5342a1a3cb0afe8c9df4a6c875306af",
+        "limitations": "Synthetic fixture benchmark of known encoding; no novelty assessment",
+        "novelty": "unknown",
+        "novelty_source_ids": [],
+        "schema_version": 1,
+        "technical_success": true
+      },
+      "assessment_scope": "Last completed hypothesis assessment; see per-branch results",
+      "commercial": {
+        "assessment_digest": "a9c7b4e632c12b207fc967c893b8d0aa181704137a0c97ea3edc688037c83e0b",
+        "evidence_ids": [],
+        "level": 0,
+        "opportunity_id": "opportunity-af67699c1834ce2a3b573e5adeb922a49de0d5e6bf7eb8182d256029f7fc82a3",
+        "schema_version": 1,
+        "validated": false,
+        "recorded_opportunity_id": "opportunity-af67699c1834ce2a3b573e5adeb922a49de0d5e6bf7eb8182d256029f7fc82a3",
+        "recorded_level": 0,
+        "recorded_validated": false,
+        "classification": "commercial opportunity unvalidated",
+        "missing_information": [
+          "target_user",
+          "economic_buyer",
+          "buyer_reachability"
+        ],
+        "limitations": "Levels reflect source-bound human-attested evidence; document authenticity and real payment are not automatically verified. No revenue forecast, novelty or technical result is inferred."
+      },
+      "usage": {
+        "charged_usd": "0",
+        "requests": 1,
+        "uncertain": 0,
+        "input_tokens": 349,
+        "output_tokens": 346
+      },
+      "evidence": {
+        "seq": 608,
+        "hash": "50384816aaf9c82e9dc1c335382e5ae728c54f2a6844246ededb7b90cc29b755",
+        "verified_events": 608,
+        "trust_limit": "Tamper-evident relative to retained anchor; not immutable"
+      },
+      "research": {
+        "source_ids": [],
+        "novelty": "unknown",
+        "coverage_exhaustive": false
+      },
+      "mode": "trusted encoding loop; source retrieval opt-in; live providers unverified"
+    },
+    {
+      "schema_version": 1,
+      "run_id": "4a05ad47-7485-4a35-bc4b-04bc3d5589f9",
+      "status": "COMPLETED",
+      "stage": "DECIDE",
+      "completed_steps": 12,
+      "search": {
+        "nodes": [
+          {
+            "id": "b90793ca1aa39b0bd04dd0f7e631bd6dc9943dd6c77da5afd05f9def9046bcc4",
+            "run_id": "4a05ad47-7485-4a35-bc4b-04bc3d5589f9",
+            "identity": "496689a57796db202e944ddcb94eed12aab694c7710a7070dc39b09b6d065102",
+            "parent_id": null,
+            "depth": 0,
+            "domain": "bounded local research cycle 2",
+            "kind": "encoding",
+            "status": "PROMISING",
+            "revision_evidence": null,
+            "score": 0.8203125
+          }
+        ],
+        "allocations": [
+          {
+            "run_id": "4a05ad47-7485-4a35-bc4b-04bc3d5589f9",
+            "step_key": "prioritize:3",
+            "hypothesis_id": "b90793ca1aa39b0bd04dd0f7e631bd6dc9943dd6c77da5afd05f9def9046bcc4",
+            "mode": "explore",
+            "ordinal": 1
+          }
+        ],
+        "policy": {
+          "exploration_fraction": 0.5,
+          "max_branch_experiments": 2,
+          "max_candidates": 5,
+          "max_depth": 3,
+          "max_experiments": 5
+        },
+        "stopped_reason": null,
+        "novelty": "unknown",
+        "commercial_validation": "unvalidated"
+      },
+      "jobs": [
+        {
+          "id": "27bf409b29d3e918de31a43a3f8801ee1b625d417051b1814465a5d4d8cde386",
+          "run_id": "4a05ad47-7485-4a35-bc4b-04bc3d5589f9",
+          "stage_version": 6,
+          "replication": 0,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18185,
+          "worker_created_at": 1793700507.646402,
+          "artifact_digest": "2343626a116a760f3fa3180d49357d895f06d527b189e97b0526b881f892c24d",
+          "last_error": null
+        },
+        {
+          "id": "322aabaeb8672adf0c85dfffcde579e182e06674ad671facb50c3a7e73395380",
+          "run_id": "4a05ad47-7485-4a35-bc4b-04bc3d5589f9",
+          "stage_version": 8,
+          "replication": 1,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18192,
+          "worker_created_at": 1793700508.152133,
+          "artifact_digest": "0cd8d2b5b6aee489583c6f96b4738b4c7999f12ebe9331141da5dc724a1ca460",
+          "last_error": null
+        },
+        {
+          "id": "eb6d118222f108799e767ca63483196079862e0888903f46a0e69e59169d0de0",
+          "run_id": "4a05ad47-7485-4a35-bc4b-04bc3d5589f9",
+          "stage_version": 8,
+          "replication": 2,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18197,
+          "worker_created_at": 1793700508.461829,
+          "artifact_digest": "a38af1a55f631b791d0e0edfc44eddb54f0ebdbef93740e67247891cb3e75eb4",
+          "last_error": null
+        }
+      ],
+      "assessment": {
+        "hypothesis_id": "b90793ca1aa39b0bd04dd0f7e631bd6dc9943dd6c77da5afd05f9def9046bcc4",
+        "limitations": "Synthetic fixture benchmark of known encoding; no novelty assessment",
+        "novelty": "unknown",
+        "novelty_source_ids": [],
+        "schema_version": 1,
+        "technical_success": true
+      },
+      "assessment_scope": "Last completed hypothesis assessment; see per-branch results",
+      "commercial": {
+        "assessment_digest": "810d5664e5e6bd76d6cdd938bfd0836ee860f91fe1956b1e2bc3449f378c0872",
+        "evidence_ids": [],
+        "level": 0,
+        "opportunity_id": "opportunity-33e83e6b46cf1170751fcea5e2184e7b6f970782fe90375aad3e593b4e85d8ec",
+        "schema_version": 1,
+        "validated": false,
+        "recorded_opportunity_id": "opportunity-33e83e6b46cf1170751fcea5e2184e7b6f970782fe90375aad3e593b4e85d8ec",
+        "recorded_level": 0,
+        "recorded_validated": false,
+        "classification": "commercial opportunity unvalidated",
+        "missing_information": [
+          "target_user",
+          "economic_buyer",
+          "buyer_reachability"
+        ],
+        "limitations": "Levels reflect source-bound human-attested evidence; document authenticity and real payment are not automatically verified. No revenue forecast, novelty or technical result is inferred."
+      },
+      "usage": {
+        "charged_usd": "0",
+        "requests": 1,
+        "uncertain": 0,
+        "input_tokens": 349,
+        "output_tokens": 346
+      },
+      "evidence": {
+        "seq": 608,
+        "hash": "50384816aaf9c82e9dc1c335382e5ae728c54f2a6844246ededb7b90cc29b755",
+        "verified_events": 608,
+        "trust_limit": "Tamper-evident relative to retained anchor; not immutable"
+      },
+      "research": {
+        "source_ids": [],
+        "novelty": "unknown",
+        "coverage_exhaustive": false
+      },
+      "mode": "trusted encoding loop; source retrieval opt-in; live providers unverified"
+    },
+    {
+      "schema_version": 1,
+      "run_id": "ed8b4666-f180-46cf-9720-3034a93e2e76",
+      "status": "COMPLETED",
+      "stage": "DECIDE",
+      "completed_steps": 12,
+      "search": {
+        "nodes": [
+          {
+            "id": "9f080d904209a5294b8edf9f915164aa4e0ad5c851d64db75e016cb7d60ad53e",
+            "run_id": "ed8b4666-f180-46cf-9720-3034a93e2e76",
+            "identity": "496689a57796db202e944ddcb94eed12aab694c7710a7070dc39b09b6d065102",
+            "parent_id": null,
+            "depth": 0,
+            "domain": "bounded local research cycle 3",
+            "kind": "encoding",
+            "status": "PROMISING",
+            "revision_evidence": null,
+            "score": 0.8203125
+          }
+        ],
+        "allocations": [
+          {
+            "run_id": "ed8b4666-f180-46cf-9720-3034a93e2e76",
+            "step_key": "prioritize:3",
+            "hypothesis_id": "9f080d904209a5294b8edf9f915164aa4e0ad5c851d64db75e016cb7d60ad53e",
+            "mode": "explore",
+            "ordinal": 1
+          }
+        ],
+        "policy": {
+          "exploration_fraction": 0.5,
+          "max_branch_experiments": 2,
+          "max_candidates": 5,
+          "max_depth": 3,
+          "max_experiments": 5
+        },
+        "stopped_reason": null,
+        "novelty": "unknown",
+        "commercial_validation": "unvalidated"
+      },
+      "jobs": [
+        {
+          "id": "2b95dc9be49b956eee9b91a914d5640c6e71f6d1add459b08e41ceece60f7da9",
+          "run_id": "ed8b4666-f180-46cf-9720-3034a93e2e76",
+          "stage_version": 6,
+          "replication": 0,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18186,
+          "worker_created_at": 1793700507.690192,
+          "artifact_digest": "4c7dfff37ea3a0b67b29f73ed46b9ca9a60a56d4db0fca4d4a94db7124dd185c",
+          "last_error": null
+        },
+        {
+          "id": "26441241c6a8d7a7efdff17559f346982ddbc24b24693dc08cca9300f3fe2474",
+          "run_id": "ed8b4666-f180-46cf-9720-3034a93e2e76",
+          "stage_version": 8,
+          "replication": 1,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18196,
+          "worker_created_at": 1793700508.408778,
+          "artifact_digest": "75adce6ee4fa9f9faedc218ad146d7a70b4e6961a37ba3d8a425cd6987a8ebc0",
+          "last_error": null
+        },
+        {
+          "id": "f47045c9139c021b8ffca69644cc0eda74966f74495e3d2f7f2a18a2d1ca13fb",
+          "run_id": "ed8b4666-f180-46cf-9720-3034a93e2e76",
+          "stage_version": 8,
+          "replication": 2,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18199,
+          "worker_created_at": 1793700508.694854,
+          "artifact_digest": "041fefd34d9e01509e4c8556482ebbdda1155dbea3a79006e488943694f8c7da",
+          "last_error": null
+        }
+      ],
+      "assessment": {
+        "hypothesis_id": "9f080d904209a5294b8edf9f915164aa4e0ad5c851d64db75e016cb7d60ad53e",
+        "limitations": "Synthetic fixture benchmark of known encoding; no novelty assessment",
+        "novelty": "unknown",
+        "novelty_source_ids": [],
+        "schema_version": 1,
+        "technical_success": true
+      },
+      "assessment_scope": "Last completed hypothesis assessment; see per-branch results",
+      "commercial": {
+        "assessment_digest": "c5810854a678387d197b3f8f525f43f1c3991140eabdbb18f4f4c4cb1af3ad92",
+        "evidence_ids": [],
+        "level": 0,
+        "opportunity_id": "opportunity-2b4483ddd0f217c73351f3374e7582a4e39cf6541c72508fa4eda96ef8e880c5",
+        "schema_version": 1,
+        "validated": false,
+        "recorded_opportunity_id": "opportunity-2b4483ddd0f217c73351f3374e7582a4e39cf6541c72508fa4eda96ef8e880c5",
+        "recorded_level": 0,
+        "recorded_validated": false,
+        "classification": "commercial opportunity unvalidated",
+        "missing_information": [
+          "target_user",
+          "economic_buyer",
+          "buyer_reachability"
+        ],
+        "limitations": "Levels reflect source-bound human-attested evidence; document authenticity and real payment are not automatically verified. No revenue forecast, novelty or technical result is inferred."
+      },
+      "usage": {
+        "charged_usd": "0",
+        "requests": 1,
+        "uncertain": 0,
+        "input_tokens": 349,
+        "output_tokens": 346
+      },
+      "evidence": {
+        "seq": 608,
+        "hash": "50384816aaf9c82e9dc1c335382e5ae728c54f2a6844246ededb7b90cc29b755",
+        "verified_events": 608,
+        "trust_limit": "Tamper-evident relative to retained anchor; not immutable"
+      },
+      "research": {
+        "source_ids": [],
+        "novelty": "unknown",
+        "coverage_exhaustive": false
+      },
+      "mode": "trusted encoding loop; source retrieval opt-in; live providers unverified"
+    },
+    {
+      "schema_version": 1,
+      "run_id": "7d6bb5fa-4899-4b23-b5e0-7f219af954a1",
+      "status": "COMPLETED",
+      "stage": "DECIDE",
+      "completed_steps": 12,
+      "search": {
+        "nodes": [
+          {
+            "id": "b81fd4e014e456189f50ae7add8cf32fa48223a87b81d4d55bf449b141f36343",
+            "run_id": "7d6bb5fa-4899-4b23-b5e0-7f219af954a1",
+            "identity": "496689a57796db202e944ddcb94eed12aab694c7710a7070dc39b09b6d065102",
+            "parent_id": null,
+            "depth": 0,
+            "domain": "bounded local research cycle 4",
+            "kind": "encoding",
+            "status": "PROMISING",
+            "revision_evidence": null,
+            "score": 0.8203125
+          }
+        ],
+        "allocations": [
+          {
+            "run_id": "7d6bb5fa-4899-4b23-b5e0-7f219af954a1",
+            "step_key": "prioritize:3",
+            "hypothesis_id": "b81fd4e014e456189f50ae7add8cf32fa48223a87b81d4d55bf449b141f36343",
+            "mode": "explore",
+            "ordinal": 1
+          }
+        ],
+        "policy": {
+          "exploration_fraction": 0.5,
+          "max_branch_experiments": 2,
+          "max_candidates": 5,
+          "max_depth": 3,
+          "max_experiments": 5
+        },
+        "stopped_reason": null,
+        "novelty": "unknown",
+        "commercial_validation": "unvalidated"
+      },
+      "jobs": [
+        {
+          "id": "0418105010354609ae32a7d8eed538205cbe740f0f3c6d472be00a759119e6c4",
+          "run_id": "7d6bb5fa-4899-4b23-b5e0-7f219af954a1",
+          "stage_version": 6,
+          "replication": 0,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18193,
+          "worker_created_at": 1793700508.213004,
+          "artifact_digest": "1fad16883ffcb5d667247941a6dbdaefff78d44031b47961fedd8cb2b6a52c3d",
+          "last_error": null
+        },
+        {
+          "id": "855ab70210795ecfc8a409dd11b76cc6586f846c768a3ed9a2c9889936876f4b",
+          "run_id": "7d6bb5fa-4899-4b23-b5e0-7f219af954a1",
+          "stage_version": 8,
+          "replication": 1,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18200,
+          "worker_created_at": 1793700508.769241,
+          "artifact_digest": "08cf356a028a379bc3102cff303979deccd2942de36e8580f2cc262435000ba3",
+          "last_error": null
+        },
+        {
+          "id": "2d8d99e80a6bc60e5f8a862790bb04e7e745dab2c2a03d096d211f8a1454c399",
+          "run_id": "7d6bb5fa-4899-4b23-b5e0-7f219af954a1",
+          "stage_version": 8,
+          "replication": 2,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18201,
+          "worker_created_at": 1793700508.822397,
+          "artifact_digest": "d3a93b3f91624befc64fbc65cd749950d94c7fcc2c64fabe33b0f3de57ce0561",
+          "last_error": null
+        }
+      ],
+      "assessment": {
+        "hypothesis_id": "b81fd4e014e456189f50ae7add8cf32fa48223a87b81d4d55bf449b141f36343",
+        "limitations": "Synthetic fixture benchmark of known encoding; no novelty assessment",
+        "novelty": "unknown",
+        "novelty_source_ids": [],
+        "schema_version": 1,
+        "technical_success": true
+      },
+      "assessment_scope": "Last completed hypothesis assessment; see per-branch results",
+      "commercial": {
+        "assessment_digest": "f347260b181588e3d0310a0d1e0f6312420e25b76db9c33e72d5f22b11abe028",
+        "evidence_ids": [],
+        "level": 0,
+        "opportunity_id": "opportunity-efb23429ca5439e9691690e57d947b24d3dff3bdff01fd8c01b56202aabbb254",
+        "schema_version": 1,
+        "validated": false,
+        "recorded_opportunity_id": "opportunity-efb23429ca5439e9691690e57d947b24d3dff3bdff01fd8c01b56202aabbb254",
+        "recorded_level": 0,
+        "recorded_validated": false,
+        "classification": "commercial opportunity unvalidated",
+        "missing_information": [
+          "target_user",
+          "economic_buyer",
+          "buyer_reachability"
+        ],
+        "limitations": "Levels reflect source-bound human-attested evidence; document authenticity and real payment are not automatically verified. No revenue forecast, novelty or technical result is inferred."
+      },
+      "usage": {
+        "charged_usd": "0",
+        "requests": 1,
+        "uncertain": 0,
+        "input_tokens": 349,
+        "output_tokens": 346
+      },
+      "evidence": {
+        "seq": 608,
+        "hash": "50384816aaf9c82e9dc1c335382e5ae728c54f2a6844246ededb7b90cc29b755",
+        "verified_events": 608,
+        "trust_limit": "Tamper-evident relative to retained anchor; not immutable"
+      },
+      "research": {
+        "source_ids": [],
+        "novelty": "unknown",
+        "coverage_exhaustive": false
+      },
+      "mode": "trusted encoding loop; source retrieval opt-in; live providers unverified"
+    },
+    {
+      "schema_version": 1,
+      "run_id": "68c3c03a-e4a8-4f97-8dab-1382d9850d80",
+      "status": "COMPLETED",
+      "stage": "DECIDE",
+      "completed_steps": 12,
+      "search": {
+        "nodes": [
+          {
+            "id": "365cb012a4a54c6e7061d4eeb2d62ba5cff6e87be3df907f6fd3da2236c5f67a",
+            "run_id": "68c3c03a-e4a8-4f97-8dab-1382d9850d80",
+            "identity": "496689a57796db202e944ddcb94eed12aab694c7710a7070dc39b09b6d065102",
+            "parent_id": null,
+            "depth": 0,
+            "domain": "bounded local research cycle 5",
+            "kind": "encoding",
+            "status": "PROMISING",
+            "revision_evidence": null,
+            "score": 0.8203125
+          }
+        ],
+        "allocations": [
+          {
+            "run_id": "68c3c03a-e4a8-4f97-8dab-1382d9850d80",
+            "step_key": "prioritize:3",
+            "hypothesis_id": "365cb012a4a54c6e7061d4eeb2d62ba5cff6e87be3df907f6fd3da2236c5f67a",
+            "mode": "explore",
+            "ordinal": 1
+          }
+        ],
+        "policy": {
+          "exploration_fraction": 0.5,
+          "max_branch_experiments": 2,
+          "max_candidates": 5,
+          "max_depth": 3,
+          "max_experiments": 5
+        },
+        "stopped_reason": null,
+        "novelty": "unknown",
+        "commercial_validation": "unvalidated"
+      },
+      "jobs": [
+        {
+          "id": "e5ab6b7b9c2531222b9c8e56bacffbb3fe92e34184c7c8fdc26c87cf069fba8d",
+          "run_id": "68c3c03a-e4a8-4f97-8dab-1382d9850d80",
+          "stage_version": 6,
+          "replication": 0,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18198,
+          "worker_created_at": 1793700508.558288,
+          "artifact_digest": "06619ce189cfa594eb22a19ca62c4ca9142338ad392b5fab99111dee57422bbb",
+          "last_error": null
+        },
+        {
+          "id": "02ee82823a5d9fa6f31dbe965ccfe0d16c200aac1a1ed735853a65c8490e27a1",
+          "run_id": "68c3c03a-e4a8-4f97-8dab-1382d9850d80",
+          "stage_version": 8,
+          "replication": 1,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18209,
+          "worker_created_at": 1793700509.321098,
+          "artifact_digest": "94ac0e18d2da4586b5db3a6cebdc7faccfb5fc5a8b1e00238aa4b532958f2ea9",
+          "last_error": null
+        },
+        {
+          "id": "f797d8da60b2233761c050155699ef938f42c6923c397f0d2711cc186f161e6d",
+          "run_id": "68c3c03a-e4a8-4f97-8dab-1382d9850d80",
+          "stage_version": 8,
+          "replication": 2,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18210,
+          "worker_created_at": 1793700509.366057,
+          "artifact_digest": "378f5eccab449d2c1b1a777aa56c459bc02b984668b36d7240b831293e627a33",
+          "last_error": null
+        }
+      ],
+      "assessment": {
+        "hypothesis_id": "365cb012a4a54c6e7061d4eeb2d62ba5cff6e87be3df907f6fd3da2236c5f67a",
+        "limitations": "Synthetic fixture benchmark of known encoding; no novelty assessment",
+        "novelty": "unknown",
+        "novelty_source_ids": [],
+        "schema_version": 1,
+        "technical_success": true
+      },
+      "assessment_scope": "Last completed hypothesis assessment; see per-branch results",
+      "commercial": {
+        "assessment_digest": "5ef05ea7122766836cb2089757b753db211a096a396bc0b58b409c5a5e95d0a1",
+        "evidence_ids": [],
+        "level": 0,
+        "opportunity_id": "opportunity-80cf07ed5dd2b45baf4325cdc1bfa25f5c76adaacb9d61009441444ac1fcbf76",
+        "schema_version": 1,
+        "validated": false,
+        "recorded_opportunity_id": "opportunity-80cf07ed5dd2b45baf4325cdc1bfa25f5c76adaacb9d61009441444ac1fcbf76",
+        "recorded_level": 0,
+        "recorded_validated": false,
+        "classification": "commercial opportunity unvalidated",
+        "missing_information": [
+          "target_user",
+          "economic_buyer",
+          "buyer_reachability"
+        ],
+        "limitations": "Levels reflect source-bound human-attested evidence; document authenticity and real payment are not automatically verified. No revenue forecast, novelty or technical result is inferred."
+      },
+      "usage": {
+        "charged_usd": "0",
+        "requests": 1,
+        "uncertain": 0,
+        "input_tokens": 349,
+        "output_tokens": 346
+      },
+      "evidence": {
+        "seq": 608,
+        "hash": "50384816aaf9c82e9dc1c335382e5ae728c54f2a6844246ededb7b90cc29b755",
+        "verified_events": 608,
+        "trust_limit": "Tamper-evident relative to retained anchor; not immutable"
+      },
+      "research": {
+        "source_ids": [],
+        "novelty": "unknown",
+        "coverage_exhaustive": false
+      },
+      "mode": "trusted encoding loop; source retrieval opt-in; live providers unverified"
+    },
+    {
+      "schema_version": 1,
+      "run_id": "c1b572c4-cb72-4988-a04b-a20252af3ec9",
+      "status": "COMPLETED",
+      "stage": "DECIDE",
+      "completed_steps": 12,
+      "search": {
+        "nodes": [
+          {
+            "id": "06ec583d36299f29f9cba822fa769c2a1589d32a43004ecfd6e040dc970dab6f",
+            "run_id": "c1b572c4-cb72-4988-a04b-a20252af3ec9",
+            "identity": "496689a57796db202e944ddcb94eed12aab694c7710a7070dc39b09b6d065102",
+            "parent_id": null,
+            "depth": 0,
+            "domain": "bounded local research cycle 6",
+            "kind": "encoding",
+            "status": "PROMISING",
+            "revision_evidence": null,
+            "score": 0.8203125
+          }
+        ],
+        "allocations": [
+          {
+            "run_id": "c1b572c4-cb72-4988-a04b-a20252af3ec9",
+            "step_key": "prioritize:3",
+            "hypothesis_id": "06ec583d36299f29f9cba822fa769c2a1589d32a43004ecfd6e040dc970dab6f",
+            "mode": "explore",
+            "ordinal": 1
+          }
+        ],
+        "policy": {
+          "exploration_fraction": 0.5,
+          "max_branch_experiments": 2,
+          "max_candidates": 5,
+          "max_depth": 3,
+          "max_experiments": 5
+        },
+        "stopped_reason": null,
+        "novelty": "unknown",
+        "commercial_validation": "unvalidated"
+      },
+      "jobs": [
+        {
+          "id": "a6b63431fdb45a164de1682419db20e881cec9d2dbc926694eaa6dc2928fc82c",
+          "run_id": "c1b572c4-cb72-4988-a04b-a20252af3ec9",
+          "stage_version": 6,
+          "replication": 0,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18187,
+          "worker_created_at": 1793700507.752069,
+          "artifact_digest": "a52f4da01c62aaea2ed2a0519a925ddd7349dc0a01217d5ee37233f8401a0e4e",
+          "last_error": null
+        },
+        {
+          "id": "db3a76a69d1b47b95994e6c836636b212abea0bcbc3bb50681c1b2da75cf2b4c",
+          "run_id": "c1b572c4-cb72-4988-a04b-a20252af3ec9",
+          "stage_version": 8,
+          "replication": 1,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18194,
+          "worker_created_at": 1793700508.297962,
+          "artifact_digest": "a113bfa2ba6cfb304adee05167aec74e3abb25fb2429d2602bbb3ff456d6d9cd",
+          "last_error": null
+        },
+        {
+          "id": "6ec8f1686918e6d35f6e2c74d9bd2cfd494b07e6f97406dab8fe376e798f2b29",
+          "run_id": "c1b572c4-cb72-4988-a04b-a20252af3ec9",
+          "stage_version": 8,
+          "replication": 2,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18195,
+          "worker_created_at": 1793700508.363174,
+          "artifact_digest": "725e5fe09b4f44f904a103b60130f7c7755f06f0f066cb9151851931b1bba662",
+          "last_error": null
+        }
+      ],
+      "assessment": {
+        "hypothesis_id": "06ec583d36299f29f9cba822fa769c2a1589d32a43004ecfd6e040dc970dab6f",
+        "limitations": "Synthetic fixture benchmark of known encoding; no novelty assessment",
+        "novelty": "unknown",
+        "novelty_source_ids": [],
+        "schema_version": 1,
+        "technical_success": true
+      },
+      "assessment_scope": "Last completed hypothesis assessment; see per-branch results",
+      "commercial": {
+        "assessment_digest": "169c45616d828cccdf98362f3996a186f944d8b9f39dd34cac9d703399d5fa08",
+        "evidence_ids": [],
+        "level": 0,
+        "opportunity_id": "opportunity-8e99fe350f32b65109b30c73db603a28aaabc98b98e1affb5f0d6b7ed83b49f6",
+        "schema_version": 1,
+        "validated": false,
+        "recorded_opportunity_id": "opportunity-8e99fe350f32b65109b30c73db603a28aaabc98b98e1affb5f0d6b7ed83b49f6",
+        "recorded_level": 0,
+        "recorded_validated": false,
+        "classification": "commercial opportunity unvalidated",
+        "missing_information": [
+          "target_user",
+          "economic_buyer",
+          "buyer_reachability"
+        ],
+        "limitations": "Levels reflect source-bound human-attested evidence; document authenticity and real payment are not automatically verified. No revenue forecast, novelty or technical result is inferred."
+      },
+      "usage": {
+        "charged_usd": "0",
+        "requests": 1,
+        "uncertain": 0,
+        "input_tokens": 349,
+        "output_tokens": 346
+      },
+      "evidence": {
+        "seq": 608,
+        "hash": "50384816aaf9c82e9dc1c335382e5ae728c54f2a6844246ededb7b90cc29b755",
+        "verified_events": 608,
+        "trust_limit": "Tamper-evident relative to retained anchor; not immutable"
+      },
+      "research": {
+        "source_ids": [],
+        "novelty": "unknown",
+        "coverage_exhaustive": false
+      },
+      "mode": "trusted encoding loop; source retrieval opt-in; live providers unverified"
+    },
+    {
+      "schema_version": 1,
+      "run_id": "e35bf087-81fd-4b06-a9f7-d4d1d238b177",
+      "status": "COMPLETED",
+      "stage": "DECIDE",
+      "completed_steps": 12,
+      "search": {
+        "nodes": [
+          {
+            "id": "ec37bb1e9fed20312a36f7cc1ff25c22e92ff793338d09a721583afa1fafe87a",
+            "run_id": "e35bf087-81fd-4b06-a9f7-d4d1d238b177",
+            "identity": "496689a57796db202e944ddcb94eed12aab694c7710a7070dc39b09b6d065102",
+            "parent_id": null,
+            "depth": 0,
+            "domain": "bounded local research cycle 7",
+            "kind": "encoding",
+            "status": "PROMISING",
+            "revision_evidence": null,
+            "score": 0.8203125
+          }
+        ],
+        "allocations": [
+          {
+            "run_id": "e35bf087-81fd-4b06-a9f7-d4d1d238b177",
+            "step_key": "prioritize:3",
+            "hypothesis_id": "ec37bb1e9fed20312a36f7cc1ff25c22e92ff793338d09a721583afa1fafe87a",
+            "mode": "explore",
+            "ordinal": 1
+          }
+        ],
+        "policy": {
+          "exploration_fraction": 0.5,
+          "max_branch_experiments": 2,
+          "max_candidates": 5,
+          "max_depth": 3,
+          "max_experiments": 5
+        },
+        "stopped_reason": null,
+        "novelty": "unknown",
+        "commercial_validation": "unvalidated"
+      },
+      "jobs": [
+        {
+          "id": "98edde2318b192d9b9bfc99e207f4dc84d5bce0f43ed7a0d71f11ef386b62e1a",
+          "run_id": "e35bf087-81fd-4b06-a9f7-d4d1d238b177",
+          "stage_version": 6,
+          "replication": 0,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18189,
+          "worker_created_at": 1793700507.928903,
+          "artifact_digest": "c0b5e5c710c93875a656c1d740fa9712e4748a5fa1bb9e3f30af652900b54540",
+          "last_error": null
+        },
+        {
+          "id": "b72fd2ec3e2f176b67a9c70f3ff8b737bdf6f073d5021074474f3372cfaa736b",
+          "run_id": "e35bf087-81fd-4b06-a9f7-d4d1d238b177",
+          "stage_version": 8,
+          "replication": 1,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18205,
+          "worker_created_at": 1793700508.951083,
+          "artifact_digest": "810153ab77c4349f8cfb12a1245d96a835416d81795e5573873258a9bc1a44d6",
+          "last_error": null
+        },
+        {
+          "id": "86e66405173a0f229a33a5ac57d980576f3a69f97ea4835d34ddf968f60cb790",
+          "run_id": "e35bf087-81fd-4b06-a9f7-d4d1d238b177",
+          "stage_version": 8,
+          "replication": 2,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18206,
+          "worker_created_at": 1793700509.005865,
+          "artifact_digest": "1681e67d744517f84484404c83b1efbdc9694a011c938dedb76c647dcf4abf0d",
+          "last_error": null
+        }
+      ],
+      "assessment": {
+        "hypothesis_id": "ec37bb1e9fed20312a36f7cc1ff25c22e92ff793338d09a721583afa1fafe87a",
+        "limitations": "Synthetic fixture benchmark of known encoding; no novelty assessment",
+        "novelty": "unknown",
+        "novelty_source_ids": [],
+        "schema_version": 1,
+        "technical_success": true
+      },
+      "assessment_scope": "Last completed hypothesis assessment; see per-branch results",
+      "commercial": {
+        "assessment_digest": "a09e8cd52ec4df60c49864a3c922713cd7414045486f08c539c178fca8b980a9",
+        "evidence_ids": [],
+        "level": 0,
+        "opportunity_id": "opportunity-b6adb8f015b9629aba13a55e9ce95eee9f45112b425e51dd94248ae81cc196e5",
+        "schema_version": 1,
+        "validated": false,
+        "recorded_opportunity_id": "opportunity-b6adb8f015b9629aba13a55e9ce95eee9f45112b425e51dd94248ae81cc196e5",
+        "recorded_level": 0,
+        "recorded_validated": false,
+        "classification": "commercial opportunity unvalidated",
+        "missing_information": [
+          "target_user",
+          "economic_buyer",
+          "buyer_reachability"
+        ],
+        "limitations": "Levels reflect source-bound human-attested evidence; document authenticity and real payment are not automatically verified. No revenue forecast, novelty or technical result is inferred."
+      },
+      "usage": {
+        "charged_usd": "0",
+        "requests": 1,
+        "uncertain": 0,
+        "input_tokens": 349,
+        "output_tokens": 346
+      },
+      "evidence": {
+        "seq": 608,
+        "hash": "50384816aaf9c82e9dc1c335382e5ae728c54f2a6844246ededb7b90cc29b755",
+        "verified_events": 608,
+        "trust_limit": "Tamper-evident relative to retained anchor; not immutable"
+      },
+      "research": {
+        "source_ids": [],
+        "novelty": "unknown",
+        "coverage_exhaustive": false
+      },
+      "mode": "trusted encoding loop; source retrieval opt-in; live providers unverified"
+    },
+    {
+      "schema_version": 1,
+      "run_id": "93e311f2-899d-4ab3-b9ef-3dc757761a14",
+      "status": "COMPLETED",
+      "stage": "DECIDE",
+      "completed_steps": 12,
+      "search": {
+        "nodes": [
+          {
+            "id": "271cb0b2d8a9f7a6442670a37c63ca004c7113a63a3cf4a9f5123e86258a462d",
+            "run_id": "93e311f2-899d-4ab3-b9ef-3dc757761a14",
+            "identity": "496689a57796db202e944ddcb94eed12aab694c7710a7070dc39b09b6d065102",
+            "parent_id": null,
+            "depth": 0,
+            "domain": "bounded local research cycle 8",
+            "kind": "encoding",
+            "status": "PROMISING",
+            "revision_evidence": null,
+            "score": 0.8203125
+          }
+        ],
+        "allocations": [
+          {
+            "run_id": "93e311f2-899d-4ab3-b9ef-3dc757761a14",
+            "step_key": "prioritize:3",
+            "hypothesis_id": "271cb0b2d8a9f7a6442670a37c63ca004c7113a63a3cf4a9f5123e86258a462d",
+            "mode": "explore",
+            "ordinal": 1
+          }
+        ],
+        "policy": {
+          "exploration_fraction": 0.5,
+          "max_branch_experiments": 2,
+          "max_candidates": 5,
+          "max_depth": 3,
+          "max_experiments": 5
+        },
+        "stopped_reason": null,
+        "novelty": "unknown",
+        "commercial_validation": "unvalidated"
+      },
+      "jobs": [
+        {
+          "id": "dfcf34adaea748924e789a7f970adf16770f2c2171f831b9d154a424cf7b1c42",
+          "run_id": "93e311f2-899d-4ab3-b9ef-3dc757761a14",
+          "stage_version": 6,
+          "replication": 0,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18188,
+          "worker_created_at": 1793700507.812632,
+          "artifact_digest": "94b55c808687b6a7e967677516cfc0380fb0f8d180f2f4dc103ab1356759c0d8",
+          "last_error": null
+        },
+        {
+          "id": "4537565346062be9093f1606ebffdd1c7ae4ba7ba4480f5f7645b197da9494c9",
+          "run_id": "93e311f2-899d-4ab3-b9ef-3dc757761a14",
+          "stage_version": 8,
+          "replication": 1,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18207,
+          "worker_created_at": 1793700509.078963,
+          "artifact_digest": "76eabcfd5d877a67503f6169f3f70959fc4beb3c6495ac6b7e43ba50c34b3759",
+          "last_error": null
+        },
+        {
+          "id": "0083bafa559fb6cef376a4c9c50371a1c5b3415a5d38862ff8cbaed72bb3d74c",
+          "run_id": "93e311f2-899d-4ab3-b9ef-3dc757761a14",
+          "stage_version": 8,
+          "replication": 2,
+          "plan_digest": "1d6ece1e12745c094a99213f4cad1f1825be65f1889970854ed6a7deb6350cc9",
+          "status": "COMPLETED",
+          "owner": null,
+          "fence": 1,
+          "lease_until": null,
+          "attempts": 1,
+          "error_count": 0,
+          "worker_pid": 18208,
+          "worker_created_at": 1793700509.137527,
+          "artifact_digest": "70dde0a0b547c907102d31c4c007fea96436fa147baf89a4e7b8d75eec1a8df2",
+          "last_error": null
+        }
+      ],
+      "assessment": {
+        "hypothesis_id": "271cb0b2d8a9f7a6442670a37c63ca004c7113a63a3cf4a9f5123e86258a462d",
+        "limitations": "Synthetic fixture benchmark of known encoding; no novelty assessment",
+        "novelty": "unknown",
+        "novelty_source_ids": [],
+        "schema_version": 1,
+        "technical_success": true
+      },
+      "assessment_scope": "Last completed hypothesis assessment; see per-branch results",
+      "commercial": {
+        "assessment_digest": "c516f7edbca47cb6bd457f3bb052bbc7a6c9eacfe4f72dcf5695eee03e756a3d",
+        "evidence_ids": [],
+        "level": 0,
+        "opportunity_id": "opportunity-bbe0d3bc7c5f15600133b02ef62dcfb89cb346da6f161368e24d74191b8b997c",
+        "schema_version": 1,
+        "validated": false,
+        "recorded_opportunity_id": "opportunity-bbe0d3bc7c5f15600133b02ef62dcfb89cb346da6f161368e24d74191b8b997c",
+        "recorded_level": 0,
+        "recorded_validated": false,
+        "classification": "commercial opportunity unvalidated",
+        "missing_information": [
+          "target_user",
+          "economic_buyer",
+          "buyer_reachability"
+        ],
+        "limitations": "Levels reflect source-bound human-attested evidence; document authenticity and real payment are not automatically verified. No revenue forecast, novelty or technical result is inferred."
+      },
+      "usage": {
+        "charged_usd": "0",
+        "requests": 1,
+        "uncertain": 0,
+        "input_tokens": 349,
+        "output_tokens": 346
+      },
+      "evidence": {
+        "seq": 608,
+        "hash": "50384816aaf9c82e9dc1c335382e5ae728c54f2a6844246ededb7b90cc29b755",
+        "verified_events": 608,
+        "trust_limit": "Tamper-evident relative to retained anchor; not immutable"
+      },
+      "research": {
+        "source_ids": [],
+        "novelty": "unknown",
+        "coverage_exhaustive": false
+      },
+      "mode": "trusted encoding loop; source retrieval opt-in; live providers unverified"
+    }
+  ],
+  "evidence": {
+    "seq": 608,
+    "hash": "50384816aaf9c82e9dc1c335382e5ae728c54f2a6844246ededb7b90cc29b755",
+    "verified_events": 608,
+    "trust_limit": "Tamper-evident relative to retained anchor; not immutable"
+  }
+}

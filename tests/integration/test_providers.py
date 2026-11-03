@@ -202,3 +202,129 @@ def test_invalid_structured_response_still_accounted(tmp_path):
             run, "research", GenerationRequest(prompt="test"), Proposal, key="bad"
         )
     assert Budget(store).totals(run)["requests"] == 1
+
+
+def test_absolute_provider_deadline_retains_unknown_cost_and_never_replays(tmp_path):
+    import threading
+    import time
+
+    store = Store(tmp_path)
+    run = store.create_run(
+        "absolute timeout", Limits(allow_live_inference=True).model_dump(mode="json")
+    )
+    calls = []
+
+    def stalled(request):
+        calls.append(1)
+        time.sleep(0.2)  # Local transport fixture, no real network or provider billing.
+        return response()
+
+    c = config().model_copy(update={"timeout_seconds": 0.02})
+    provider = MetaProvider(c, transport=httpx.MockTransport(stalled), api_key=SecretStr("fixture"))
+    router = Router(store, {"research": [provider]})
+    started = time.monotonic()
+    with pytest.raises(ProviderError, match="PROVIDER_TIMEOUT"):
+        router.generate(
+            run, "research", GenerationRequest(prompt="bounded caller deadline"), key="deadline"
+        )
+    assert time.monotonic() - started < 0.15
+    assert Budget(store).totals(run)["uncertain"] == 1
+    with pytest.raises(BudgetError, match="reconciliation"):
+        router.generate(
+            run, "research", GenerationRequest(prompt="bounded caller deadline"), key="deadline"
+        )
+    assert len(calls) == 1
+    deadline = time.monotonic() + 1
+    while (
+        any(t.name == "adl-provider-request" for t in threading.enumerate())
+        and time.monotonic() < deadline
+    ):
+        time.sleep(0.01)
+    assert not any(t.name == "adl-provider-request" for t in threading.enumerate())
+
+
+def test_concurrent_provider_usage_is_not_lost():
+    from concurrent.futures import ThreadPoolExecutor
+
+    provider = MetaProvider(
+        config(), transport=httpx.MockTransport(lambda r: response()), api_key=SecretStr("fixture")
+    )
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        generated = list(
+            pool.map(lambda i: provider.generate(GenerationRequest(prompt=f"case {i}")), range(8))
+        )
+    assert len(generated) == 8
+    assert provider.get_usage().input_tokens == 800
+    assert provider.get_usage().output_tokens == 240
+
+
+def test_cancelled_provider_call_retains_reservation_and_does_not_fallback(tmp_path):
+    import threading
+    import time
+
+    from autodiscover.security.cancellation import cancellation_scope
+
+    store = Store(tmp_path)
+    run = store.create_run(
+        "cooperative cancellation", Limits(allow_live_inference=True).model_dump(mode="json")
+    )
+    stopped = threading.Event()
+
+    def stalled(request):
+        stopped.set()
+        time.sleep(0.15)
+        return response()
+
+    provider = MetaProvider(
+        config(), transport=httpx.MockTransport(stalled), api_key=SecretStr("fixture")
+    )
+    fallback = MockProvider()
+    router = Router(
+        store,
+        {"research": [provider, fallback]},
+        fallback_evidence={"research": "explicit comparison fixture, no model equivalence claim"},
+    )
+    with cancellation_scope(stopped.is_set):
+        with pytest.raises(ProviderError, match="PROVIDER_CANCEL_REQUESTED"):
+            router.generate(
+                run, "research", GenerationRequest(prompt="cancel active inference"), key="cancel"
+            )
+    assert Budget(store).totals(run)["uncertain"] == 1
+    assert len(fallback.responses) == 1
+    deadline = time.monotonic() + 1
+    while (
+        any(t.name == "adl-provider-request" for t in threading.enumerate())
+        and time.monotonic() < deadline
+    ):
+        time.sleep(0.01)
+
+
+def test_rate_backoff_cancels_without_another_call_or_reservation(tmp_path):
+    import threading
+
+    from autodiscover.security.cancellation import cancellation_scope
+
+    store = Store(tmp_path)
+    run = store.create_run(
+        "stop during backoff", Limits(allow_live_inference=True).model_dump(mode="json")
+    )
+    calls = []
+    stopped = threading.Event()
+
+    def handler(request):
+        calls.append(1)
+        return httpx.Response(429, headers={"Retry-After": "30"})
+
+    def stop_on_wait(seconds):
+        assert seconds <= 0.05
+        stopped.set()
+
+    provider = MetaProvider(
+        config(), transport=httpx.MockTransport(handler), api_key=SecretStr("key")
+    )
+    router = Router(store, {"research": [provider]}, sleeper=stop_on_wait)
+    with cancellation_scope(stopped.is_set), pytest.raises(ProviderError, match="CANCEL_REQUESTED"):
+        router.generate(run, "research", GenerationRequest(prompt="bounded backoff"), key="backoff")
+    assert len(calls) == 1
+    assert Budget(store).totals(run)["requests"] == 1
+    assert Budget(store).totals(run)["uncertain"] == 1

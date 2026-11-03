@@ -8,7 +8,10 @@ from typing import Any
 
 from autodiscover.evidence.artifacts import Artifacts, IntegrityError
 from autodiscover.evidence.branches import verify_branch_projections
+from autodiscover.evidence.jobs import verify_job_projections
 from autodiscover.evidence.markets import verify_market_projections
+from autodiscover.evidence.runs import verify_run_projections
+from autodiscover.evidence.scheduling import verify_queue_projections
 from autodiscover.orchestrator.durability import canonical, now
 from autodiscover.orchestrator.store import Store
 
@@ -49,6 +52,7 @@ def verify_chain(store: Store, anchor: dict[str, Any] | None = None) -> dict[str
         events = [dict(r) for r in db.execute("SELECT * FROM events ORDER BY seq")]
         steps = [dict(r) for r in db.execute("SELECT * FROM steps ORDER BY rowid")]
         nodes = [dict(r) for r in db.execute("SELECT * FROM research_nodes")]
+        runs = [dict(r) for r in db.execute("SELECT * FROM runs")]
         queries = {
             "hypotheses": "SELECT * FROM hypotheses",
             "director_state": "SELECT * FROM director_state",
@@ -59,11 +63,14 @@ def verify_chain(store: Store, anchor: dict[str, Any] | None = None) -> dict[str
             "market_current": "SELECT * FROM market_current",
             "market_evidence": "SELECT * FROM market_evidence",
             "market_reviews": "SELECT * FROM market_reviews",
+            "experiment_jobs": "SELECT * FROM experiment_jobs",
+            "work_queue": "SELECT * FROM work_queue",
         }
         branch_tables = {
             name: [dict(r) for r in db.execute(query)] for name, query in queries.items()
         }
     checked = verify_events(events, anchor)
+    checked.update(verify_run_projections(events, runs))
     by_id = {event["id"]: event for event in events}
     for step in steps:
         result = json.loads(step["result_json"])
@@ -99,6 +106,10 @@ def verify_chain(store: Store, anchor: dict[str, Any] | None = None) -> dict[str
         raise IntegrityError("Research node projection missing evidence")
     verify_branch_projections(events, branch_tables)
     verify_market_projections(events, branch_tables, Artifacts(store.root / "artifacts"))
+    verify_job_projections(
+        events, branch_tables["experiment_jobs"], Artifacts(store.root / "artifacts")
+    )
+    verify_queue_projections(events, branch_tables["work_queue"])
     return checked
 
 

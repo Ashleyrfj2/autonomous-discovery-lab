@@ -51,11 +51,18 @@ class Generation(BaseModel):
 
 class ProviderError(RuntimeError):
     def __init__(
-        self, code: str, *, retryable: bool = False, uncertain: bool = False, retry_after: float = 0
+        self,
+        code: str,
+        *,
+        retryable: bool = False,
+        uncertain: bool = False,
+        retry_after: float = 0,
+        known_zero_cost: bool = False,
     ):
         super().__init__(code)
         self.code, self.retryable, self.uncertain = code, retryable, uncertain
         self.retry_after = min(max(retry_after, 0), 30)
+        self.known_zero_cost = known_zero_cost
 
 
 class Provider(Protocol):

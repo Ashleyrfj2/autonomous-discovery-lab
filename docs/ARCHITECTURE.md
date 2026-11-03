@@ -1,6 +1,6 @@
 # Architecture
 
-Status: initial contracts; implementation statuses live in the traceability and ledger.
+Status: phases 0–8 implemented and locally verified; detailed scope/evidence remains in traceability and ledger. Phase 9 interface is unimplemented.
 
 A modular Python monolith owns durable workflows in SQLite WAL. Versioned Pydantic contracts validate configuration, states, experiments, measurements, provider responses and evidence. Transactions persist state and append evidence together. Conditional worker leases and fencing tokens prevent stale writes; idempotency keys prevent duplicate transitions. External work executes outside SQLite transactions and records stable job identities; recovery reconciles existing artifacts rather than silently replaying completed side effects.
 
@@ -13,3 +13,7 @@ MVP experiments use fixed reviewed implementations, not submitted Python or shel
 Provider contract: generate, generate_structured, get_usage, estimate_cost, health_check. Config carries endpoint/model/capabilities and explicit prices; never silently assume a current model or rate. Mock runs use zero-cost deterministic proposals. Router reserves estimated upper costs before calls, settles usage conservatively, records fallback identity and circuit state. Live configuration is opt-in. Research retrieval is explicit network authorization with bounded responses and SSRF controls. Commercial evidence ingestion never contacts buyers.
 
 Durable JSONL logs are sanitized, locked and append-only; checkpoints use atomic replace plus fsync. Evidence chain detects unexpected edits only relative to a trusted anchor; retained export snapshots are needed beyond the local trust boundary. SQLite and local anchors are not immutable against an attacker controlling both.
+
+Phase 8 adds two durable projections: experiment_jobs (stable run/stage-version/replication identity, plan digest, lease/fence, process identity and accepted raw artifact) and work_queue (one-stage fair foreground dispatch). Job commits and their evidence are atomic; a completed replica is independent of the enclosing stage's later completion. The worker supervisor checks durable authority and shutdown controls during execution. Recovery audits evidence, verifies current identity/expiry under the writer lock, terminates only an abandoned matching process, and records bounded pure-computation retry. Coordinator identity is single-host PID plus creation time. Queue controls derive from durable run status. Evidence readers audit run, stage, job and queue projections; legacy missing topic/release anchors remain explicit.
+
+Inference caller deadlines/cancellation use trusted context local to a stage. Network transport is bounded separately and may outlive the caller; unknown reservations remain conservative budget consumption. No remote side-effect exactly-once guarantee is inferred. CLI queue/jobs/status/tree expose durable scheduling, resource and scientific state; Phase 9 UI remains unimplemented.

@@ -85,3 +85,12 @@ def test_permanent_context_exists():
     for index in range(1, 43):
         assert f"REQ-{index:03}" in trace
     assert Limits.load(root / "config/default.json") == Limits()
+
+
+def test_research_topic_credentials_are_rejected_before_persistence(tmp_path):
+    from autodiscover.orchestrator.store import Store
+
+    store = Store(tmp_path)
+    with pytest.raises(ValueError, match="Credential"):
+        store.create_run("API_KEY=fictional-sensitive-sentinel", {})
+    assert store.list_runs() == []

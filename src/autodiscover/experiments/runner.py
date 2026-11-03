@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +22,10 @@ from autodiscover.orchestrator.durability import canonical
 
 
 class ExecutionError(RuntimeError):
+    pass
+
+
+class WorkInterrupted(RuntimeError):
     pass
 
 
@@ -70,8 +75,17 @@ def preflight(plan: Plan, limits: Limits) -> dict[str, Any]:
     }
 
 
-def run(plan: Plan, limits: Limits, *, replication: int = 0) -> dict[str, Any]:
+def run(
+    plan: Plan,
+    limits: Limits,
+    *,
+    replication: int = 0,
+    guard: Callable[[], None] | None = None,
+    on_started: Callable[[int, float], None] | None = None,
+) -> dict[str, Any]:
     preflight(plan, limits)
+    if guard:
+        guard()
     request = {
         "algorithm": plan.algorithm,
         "rows": fixtures(plan, replication=replication),
@@ -93,10 +107,15 @@ def run(plan: Plan, limits: Limits, *, replication: int = 0) -> dict[str, Any]:
             env={"PYTHONHASHSEED": "0", "PATH": ""},
             start_new_session=True,
         )
-        monitor = psutil.Process(process.pid)
         stdout, stderr = bytearray(), bytearray()
         peak_rss = 0
         try:
+            try:
+                monitor = psutil.Process(process.pid)
+                if on_started:
+                    on_started(process.pid, monitor.create_time())
+            except psutil.NoSuchProcess:
+                raise ExecutionError("WORKER_START_FAILED") from None
             if not (process.stdin and process.stdout and process.stderr):
                 raise ExecutionError("WORKER_PIPE_UNAVAILABLE")
             # Input is bounded, but can exceed the OS pipe. Communicate via a selector too.
@@ -108,6 +127,8 @@ def run(plan: Plan, limits: Limits, *, replication: int = 0) -> dict[str, Any]:
                 selector.register(process.stderr, selectors.EVENT_READ, "stderr")
                 sent = 0
                 while selector.get_map():
+                    if guard:
+                        guard()
                     if time.monotonic() - started > plan.seconds:
                         raise ExecutionError("WORKER_TIMEOUT")
                     try:
@@ -134,6 +155,8 @@ def run(plan: Plan, limits: Limits, *, replication: int = 0) -> dict[str, Any]:
                             if len(stdout) + len(stderr) > plan.max_output_bytes:
                                 raise ExecutionError("WORKER_OUTPUT_LIMIT")
             code = process.wait(timeout=max(0.01, plan.seconds - (time.monotonic() - started)))
+            if guard:
+                guard()
             if code != 0:
                 # Raw stderr can include file paths/private data: never expose or log it.
                 raise ExecutionError("WORKER_FAILED")

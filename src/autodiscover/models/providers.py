@@ -2,6 +2,9 @@
 
 import json
 import os
+import queue
+import threading
+import time
 from decimal import Decimal
 from typing import Any
 
@@ -17,6 +20,9 @@ from autodiscover.models.contracts import (
     Usage,
 )
 from autodiscover.orchestrator.durability import canonical
+from autodiscover.security.cancellation import cancellation_requested
+
+_HTTP_INFLIGHT = threading.BoundedSemaphore(8)
 
 BASE_URLS = {"meta": "https://api.meta.ai/v1", "baseten": "https://inference.baseten.co/v1"}
 
@@ -35,13 +41,14 @@ class HTTPProvider:
         self.name, self.model = config.name, config.model
         self._transport, self._key = transport, api_key
         self._usage = Usage(input_tokens=0, output_tokens=0)
+        self._usage_lock = threading.Lock()
 
     def _client(self) -> httpx.Client:
         if not self.config.live_authorized:
-            raise ProviderError("LIVE_NOT_AUTHORIZED")
+            raise ProviderError("LIVE_NOT_AUTHORIZED", known_zero_cost=True)
         key = self._key or SecretStr(os.environ.get(self.config.api_key_env, ""))
         if not key.get_secret_value():
-            raise ProviderError("CREDENTIAL_UNAVAILABLE")
+            raise ProviderError("CREDENTIAL_UNAVAILABLE", known_zero_cost=True)
         return httpx.Client(
             base_url=BASE_URLS[self.config.kind] + "/",
             headers={"Authorization": f"Bearer {key.get_secret_value()}"},
@@ -97,8 +104,54 @@ class HTTPProvider:
     def _request(
         self, method: str, path: str, body: dict[str, Any] | None = None
     ) -> dict[str, Any]:
+        # HTTP read timeouts are per operation, so isolate caller latency from a stalled server.
+        # Timeout is an UNKNOWN remote outcome, never proof of server cancellation or free usage.
+        if cancellation_requested():
+            raise ProviderError("PROVIDER_CANCEL_REQUESTED", known_zero_cost=True)
+        if not _HTTP_INFLIGHT.acquire(blocking=False):
+            raise ProviderError("PROVIDER_INFLIGHT_LIMIT", known_zero_cost=True)
+        results: queue.Queue[tuple[dict[str, Any] | None, ProviderError | None]] = queue.Queue(
+            maxsize=1
+        )
+
+        def call() -> None:
+            try:
+                try:
+                    results.put((self._request_sync(method, path, body), None))
+                except ProviderError as error:
+                    results.put((None, error))
+                except Exception:
+                    results.put((None, ProviderError("PROVIDER_LOCAL_FAILURE", uncertain=True)))
+            finally:
+                _HTTP_INFLIGHT.release()
+
+        threading.Thread(target=call, daemon=True, name="adl-provider-request").start()
+        deadline = time.monotonic() + self.config.timeout_seconds
+        while True:
+            if cancellation_requested():
+                raise ProviderError("PROVIDER_CANCEL_REQUESTED", uncertain=True)
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise ProviderError("PROVIDER_TIMEOUT", uncertain=True)
+            try:
+                result, error = results.get(timeout=min(0.05, remaining))
+                break
+            except queue.Empty:
+                continue
+        if error is not None:
+            raise error
+        if result is None:
+            raise ProviderError("INVALID_RESPONSE", uncertain=True)
+        return result
+
+    def _request_sync(
+        self, method: str, path: str, body: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        deadline = time.monotonic() + self.config.timeout_seconds
         try:
             with self._client() as client, client.stream(method, path, json=body) as response:
+                if time.monotonic() >= deadline:
+                    raise ProviderError("PROVIDER_TIMEOUT", uncertain=True)
                 if response.status_code != 200:
                     code = response.status_code
                     try:
@@ -113,6 +166,8 @@ class HTTPProvider:
                     )
                 raw = bytearray()
                 for chunk in response.iter_bytes():
+                    if time.monotonic() >= deadline:
+                        raise ProviderError("PROVIDER_TIMEOUT", uncertain=True)
                     raw.extend(chunk)
                     if len(raw) > 2_000_000:
                         raise ProviderError("RESPONSE_TOO_LARGE", uncertain=True)
@@ -135,10 +190,11 @@ class HTTPProvider:
                 input_tokens=data["usage"]["prompt_tokens"],
                 output_tokens=data["usage"]["completion_tokens"],
             )
-            self._usage = Usage(
-                input_tokens=self._usage.input_tokens + usage.input_tokens,
-                output_tokens=self._usage.output_tokens + usage.output_tokens,
-            )
+            with self._usage_lock:
+                self._usage = Usage(
+                    input_tokens=self._usage.input_tokens + usage.input_tokens,
+                    output_tokens=self._usage.output_tokens + usage.output_tokens,
+                )
             cost = (
                 usage.input_tokens * self.config.input_usd_per_million
                 + usage.output_tokens * self.config.output_usd_per_million
@@ -170,7 +226,8 @@ class HTTPProvider:
             raise ProviderError("INVALID_STRUCTURED_RESPONSE", uncertain=True) from None
 
     def get_usage(self) -> Usage:
-        return self._usage
+        with self._usage_lock:
+            return self._usage
 
     def health_check(self) -> dict[str, Any]:
         data = self._request("GET", "models")
@@ -209,20 +266,23 @@ class MockProvider:
     def __init__(self, responses: list[dict[str, Any] | str] | None = None):
         self.responses = list(responses or [{"proposal": "bounded seeded comparison"}])
         self._usage = Usage(input_tokens=0, output_tokens=0)
+        self._usage_lock = threading.Lock()
 
     def estimate_cost(self, request: GenerationRequest) -> Decimal:
         return Decimal(0)
 
     def generate(self, request: GenerationRequest) -> Generation:
-        if not self.responses:
-            raise ProviderError("MOCK_FIXTURE_EXHAUSTED")
-        response = self.responses.pop(0)
+        with self._usage_lock:
+            if not self.responses:
+                raise ProviderError("MOCK_FIXTURE_EXHAUSTED", known_zero_cost=True)
+            response = self.responses.pop(0)
         text = response if isinstance(response, str) else canonical(response)
         usage = Usage(input_tokens=len(request.prompt.encode()), output_tokens=len(text.encode()))
-        self._usage = Usage(
-            input_tokens=self._usage.input_tokens + usage.input_tokens,
-            output_tokens=self._usage.output_tokens + usage.output_tokens,
-        )
+        with self._usage_lock:
+            self._usage = Usage(
+                input_tokens=self._usage.input_tokens + usage.input_tokens,
+                output_tokens=self._usage.output_tokens + usage.output_tokens,
+            )
         return Generation(
             text=text, provider=self.name, model=self.model, usage=usage, cost_usd=Decimal(0)
         )
@@ -237,7 +297,8 @@ class MockProvider:
             raise ProviderError("INVALID_STRUCTURED_RESPONSE") from None
 
     def get_usage(self) -> Usage:
-        return self._usage
+        with self._usage_lock:
+            return self._usage
 
     def health_check(self) -> dict[str, Any]:
         return {

@@ -144,6 +144,16 @@ class Budget:
                     "fence=fence+1 WHERE id=?",
                     (row["run_id"],),
                 )
+                self.store._event(
+                    db,
+                    row["run_id"],
+                    "run_budget_paused",
+                    {
+                        "status": "PAUSED",
+                        "reason": "RESERVATION_BOUND_EXCEEDED",
+                        "reservation": identifier,
+                    },
+                )
 
     def cached(self, run_id: str, key: str, fingerprint: str) -> dict[str, Any] | None:
         with self.store.connection() as db:
@@ -170,6 +180,15 @@ class Budget:
             rows = db.execute("SELECT * FROM reservations WHERE run_id=?", (run_id,)).fetchall()
         return {
             "charged_usd": str(Decimal(sum(r["charged_nano"] for r in rows)) / NANO),
+            "settled_usd": str(
+                Decimal(sum(r["charged_nano"] for r in rows if r["status"] == "SETTLED")) / NANO
+            ),
+            "reserved_usd": str(
+                Decimal(sum(r["charged_nano"] for r in rows if r["status"] == "RESERVED")) / NANO
+            ),
+            "uncertain_usd": str(
+                Decimal(sum(r["charged_nano"] for r in rows if r["status"] == "UNCERTAIN")) / NANO
+            ),
             "requests": len(rows),
             "uncertain": sum(r["status"] != "SETTLED" for r in rows),
             "input_tokens": sum(
