@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from autodiscover.config import Limits
 from autodiscover.evidence.artifacts import Artifacts, IntegrityError
+from autodiscover.hypotheses.allocation import AllocationHypothesis
 from autodiscover.hypotheses.engine import Hypothesis
 from autodiscover.hypotheses.proposals import ResearchProposal
 from autodiscover.orchestrator.durability import canonical
@@ -78,7 +79,7 @@ class Director:
     def register(
         self,
         run_id: str,
-        hypothesis: Hypothesis | ResearchProposal,
+        hypothesis: Hypothesis | AllocationHypothesis | ResearchProposal,
         *,
         evidence_id: str | None = None,
     ) -> str:
@@ -90,7 +91,11 @@ class Director:
             for source_id in hypothesis.source_ids:
                 catalog.source(source_id)
         digest = self.artifacts.put_json(hypothesis.model_dump(mode="json"))
-        kind = "encoding" if isinstance(hypothesis, Hypothesis) else "theoretical"
+        kind = (
+            "encoding" if isinstance(hypothesis, Hypothesis)
+            else "allocation" if isinstance(hypothesis, AllocationHypothesis)
+            else "theoretical"
+        )
         with self.store.connection(write=True) as db:
             existing = db.execute(
                 "SELECT id FROM hypotheses WHERE run_id=? AND identity=?",
@@ -173,7 +178,9 @@ class Director:
             )
         return digest
 
-    def get(self, run_id: str, identifier: str) -> Hypothesis | ResearchProposal:
+    def get(
+        self, run_id: str, identifier: str
+    ) -> Hypothesis | AllocationHypothesis | ResearchProposal:
         with self.store.connection() as db:
             row = db.execute(
                 "SELECT kind FROM hypotheses WHERE id=? AND run_id=?", (identifier, run_id)
@@ -181,7 +188,14 @@ class Director:
         if row is None:
             raise ValueError("Unknown hypothesis in run")
         data = self.artifacts.get_json(identifier)
-        return (Hypothesis if row[0] == "encoding" else ResearchProposal).model_validate(data)
+        schema = {
+            "encoding": Hypothesis,
+            "allocation": AllocationHypothesis,
+            "theoretical": ResearchProposal,
+        }.get(row[0])
+        if schema is None:
+            raise IntegrityError("Unknown executable hypothesis family")
+        return schema.model_validate(data)
 
     def select(self, run_id: str, *, key: str) -> str:
         policy = self.policy(run_id)
@@ -209,7 +223,8 @@ class Director:
                 dict(r)
                 for r in db.execute(
                     "SELECT * FROM hypotheses WHERE run_id=? "
-                    "AND kind='encoding' AND status IN ('PENDING','PROMISING') ORDER BY id",
+                    "AND kind IN ('encoding','allocation') "
+                    "AND status IN ('PENDING','PROMISING') ORDER BY id",
                     (run_id,),
                 )
             ]
@@ -226,11 +241,14 @@ class Director:
 
             root_counts: dict[str, int] = {}
             domain_counts: dict[str, int] = {}
+            family_counts: dict[str, int] = {}
             for allocation in allocations:
                 branch = root(allocation["hypothesis_id"])
                 root_counts[branch] = root_counts.get(branch, 0) + 1
                 domain = all_nodes[allocation["hypothesis_id"]]["domain"]
                 domain_counts[domain] = domain_counts.get(domain, 0) + 1
+                kind = all_nodes[allocation["hypothesis_id"]]["kind"]
+                family_counts[kind] = family_counts.get(kind, 0) + 1
             candidates = [
                 c
                 for c in candidates
@@ -243,6 +261,7 @@ class Director:
             if explore:
                 candidates.sort(
                     key=lambda c: (
+                        family_counts.get(c["kind"], 0),
                         domain_counts.get(c["domain"], 0),
                         c["status"] != "PENDING",
                         root_counts.get(root(c["id"]), 0),
@@ -251,7 +270,12 @@ class Director:
                 )
             else:
                 candidates.sort(
-                    key=lambda c: (-(c["score"] or 0), domain_counts.get(c["domain"], 0), c["id"])
+                    key=lambda c: (
+                        family_counts.get(c["kind"], 0),
+                        -(c["score"] or 0),
+                        domain_counts.get(c["domain"], 0),
+                        c["id"],
+                    )
                 )
             selected = candidates[0]["id"]
             mode = "explore" if explore else "exploit"
@@ -275,24 +299,25 @@ class Director:
         return selected
 
     def record(self, run_id: str, identifier: str, report_digest: str) -> None:
-        from autodiscover.experiments.contracts import Plan
+        from autodiscover.experiments.registry import evaluate_registered, parse_plan
 
         report = self.artifacts.get_json(report_digest)
         with self.store.connection(write=True) as db:
             hypothesis = db.execute(
                 "SELECT * FROM hypotheses WHERE id=? AND run_id=?", (identifier, run_id)
             ).fetchone()
-            if hypothesis is None or hypothesis["kind"] != "encoding":
+            if hypothesis is None or hypothesis["kind"] not in ("encoding", "allocation"):
                 raise ValueError("Only reviewed executable hypotheses have technical results")
-            plan = Plan.model_validate(self.artifacts.get_json(report["plan_digest"]))
+            plan = parse_plan(self.artifacts.get_json(report["plan_digest"]))
+            expected_kind = "encoding" if plan.implementation == "encoding-v1" else "allocation"
+            if hypothesis["kind"] != expected_kind:
+                raise IntegrityError("Hypothesis and experiment family disagree")
             if plan.hypothesis_id != hypothesis["identity"]:
                 raise IntegrityError("Evaluation belongs to a different hypothesis")
-            from autodiscover.experiments.evaluator import evaluate
-
             if plan.digest != report["plan_digest"] or not report.get("raw_artifact_digest"):
                 raise IntegrityError("Evaluation missing preregistration or raw evidence")
             raw = self.artifacts.get_json(report["raw_artifact_digest"])
-            independent = evaluate(plan, raw, replication=report["replication"])
+            independent = evaluate_registered(plan, raw, replication=report["replication"])
             if any(report.get(k) != value for k, value in independent.items()):
                 raise IntegrityError("Branch verdict disagrees with independent evaluation")
             if db.execute(
@@ -313,11 +338,14 @@ class Director:
                 is not None
             )
             status = "FAILED" if failed else "PROMISING"
+            metric_score = (
+                report["heldout_min_savings"]
+                if hypothesis["kind"] == "encoding"
+                else report["heldout_min_gain"]
+            )
             score = min(
-                report["heldout_min_savings"],
-                hypothesis["score"]
-                if hypothesis["score"] is not None
-                else report["heldout_min_savings"],
+                metric_score,
+                hypothesis["score"] if hypothesis["score"] is not None else metric_score,
             )
             db.execute(
                 "UPDATE hypotheses SET status=?,score=? WHERE id=? AND run_id=?",
@@ -402,7 +430,7 @@ class Director:
             identifier = root(allocation["hypothesis_id"])
             counts[identifier] = counts.get(identifier, 0) + 1
         return any(
-            n["kind"] == "encoding"
+            n["kind"] in ("encoding", "allocation")
             and n["status"] in ("PENDING", "PROMISING")
             and counts.get(root(n["id"]), 0) < policy.max_branch_experiments
             for n in tree["nodes"]
