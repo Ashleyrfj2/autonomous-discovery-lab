@@ -344,7 +344,7 @@ class Lab:
             output = {"selected_ids": [identifier]}
         elif stage == Stage.DESIGN:
             _identifier, h = self.selected_hypothesis(run_id)
-            seed = 42 + 9973 * (self.director.tree(run_id)["allocations"][-1]["ordinal"] - 1)
+            ordinal = self.director.tree(run_id)["allocations"][-1]["ordinal"]
             if isinstance(h, AllocationHypothesis):
                 plan: RegisteredPlan = AllocationPlan(
                     hypothesis_id=h.identity,
@@ -352,7 +352,8 @@ class Lab:
                     minimum_gain=h.threshold,
                     data_profile=h.data_profile,
                     seconds=min(10, limits.max_experiment_seconds),
-                    seed=seed,
+                    # Keep allocation ordinals below the fixture's replication stride (9973).
+                    seed=42 + ordinal - 1,
                 )
             else:
                 plan = Plan(
@@ -361,7 +362,7 @@ class Lab:
                     minimum_savings=h.threshold,
                     data_profile=h.data_profile,
                     seconds=min(10, limits.max_experiment_seconds),
-                    seed=seed,
+                    seed=42 + 9973 * (ordinal - 1),
                 )
             digest = self.artifacts.put_json(plan.model_dump(mode="json"))
             output = {"plan_id": h.identity, "plan_digest": digest}

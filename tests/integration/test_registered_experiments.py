@@ -169,3 +169,23 @@ def test_allocation_result_requires_completed_job_in_same_run(tmp_path):
     digest = lab.latest(original, Stage.VERIFY)["report_digest"]
     with pytest.raises(IntegrityError, match="completed allocation job"):
         lab.director.record(other, candidate, digest)
+
+
+def test_repeated_allocation_does_not_reuse_prior_replication_fixtures(tmp_path):
+    import json
+
+    from autodiscover.experiments.allocation_fixtures import allocation_fixtures
+    from autodiscover.orchestrator.contracts import Stage
+
+    lab = Lab(tmp_path)
+    run_id = lab.explore("allocation seed isolation", [allocation_demo_proposal()])
+    plans = [
+        parse_plan(lab.artifacts.get_json(json.loads(step["output_json"])["plan_digest"]))
+        for step in lab.store.outputs(run_id)
+        if step["stage"] == Stage.DESIGN
+    ]
+    assert len(plans) == 2
+    first, second = plans
+    assert isinstance(first, AllocationPlan) and isinstance(second, AllocationPlan)
+    first_replica = allocation_fixtures(first, replication=1)
+    assert allocation_fixtures(second) != first_replica
