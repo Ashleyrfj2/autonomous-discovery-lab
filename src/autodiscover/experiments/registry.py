@@ -59,14 +59,20 @@ def execution_spec(
 ) -> tuple[Path, list[dict[str, Any]]]:
     selected = family(plan.implementation)
     if isinstance(plan, Plan):
-        if plan.worker_sha256 != code_digest(selected.worker_file):
+        if (
+            plan.worker_sha256 != code_digest(selected.worker_file)
+            or plan.fixture_sha256 != code_digest(selected.fixture_file)
+        ):
             raise ValueError("REVIEWED_WORKER_IDENTITY_CHANGED")
         return Path(__file__).with_name(selected.worker_file), fixtures(
             plan, replication=replication
         )
     from autodiscover.experiments.allocation_contracts import allocation_digest
 
-    if plan.worker_sha256 != allocation_digest(selected.worker_file):
+    if (
+        plan.worker_sha256 != allocation_digest(selected.worker_file)
+        or plan.fixture_sha256 != allocation_digest(selected.fixture_file)
+    ):
         raise ValueError("REVIEWED_WORKER_IDENTITY_CHANGED")
     return Path(__file__).with_name(selected.worker_file), allocation_fixtures(
         plan, replication=replication
