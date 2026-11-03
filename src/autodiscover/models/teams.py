@@ -48,7 +48,9 @@ class ResearchTeam:
         for index, first in enumerate(self.ROLES):
             for second in self.ROLES[index + 1 :]:
                 if identities[first] & identities[second]:
-                    raise RoleSeparationError("Research roles must use distinct provider/model pairs")
+                    raise RoleSeparationError(
+                        "Research roles must use distinct provider/model pairs"
+                    )
         self.router = router
 
     def _critique(
