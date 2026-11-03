@@ -64,7 +64,9 @@ def test_registration_limits_and_preregistered_code_identity_fail_closed():
     with pytest.raises(ValueError, match="UNREVIEWED"):
         parse_plan({"implementation": "generated-python"})
     with pytest.raises(ValidationError):
-        AllocationPlan(algorithm="eval(open('/etc/passwd'))")
+        AllocationPlan.model_validate(
+            {"hypothesis_id": "unsafe", "algorithm": "eval(open('/etc/passwd'))"}
+        )
     altered = AllocationPlan(hypothesis_id="changed").model_copy(
         update={"worker_sha256": "0" * 64}
     )
