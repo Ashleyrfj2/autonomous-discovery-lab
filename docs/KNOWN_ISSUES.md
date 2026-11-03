@@ -1,7 +1,7 @@
 # Known issues
 
-- Local phase gates 0–5 have passed. Phases 6–9 remain: branching, commercial validation, extended scheduling, and monitoring/approval interfaces. See PROJECT_STATUS_REPORT.md for the current scope and limitations.
-- Execution supports only reviewed encoding-v1 algorithms. Other ideas need additional reviewed implementations or an authorized stronger execution backend. The cross-industry mission remains intact; the encoding demo is a first experiment family.
+- Local phase gates 0–6 have passed. Phases 7–9 remain: commercial validation, extended scheduling, and monitoring/approval interfaces. See PROJECT_STATUS_REPORT.md for the current scope and limitations.
+- Execution supports only reviewed encoding-v1 algorithms. Broad quantitative research proposals can be retained as theoretical; executing them needs additional reviewed implementations or an authorized stronger execution backend. The cross-industry mission remains intact; the encoding demo is a first experiment family.
 - Local macOS confinement uses deprecated/private Seatbelt profiles. Native denial was tested on this host. Unsupported platforms fail closed. This is not a production arbitrary-code sandbox.
 - Darwin rejects address/data rlimits on this host. Parent RSS polling enforces the configured memory limit and may observe brief overshoot between samples; bounded allowlisted inputs also constrain allocation. CPU, wall, output, file-size and file-descriptor bounds are separate.
 - No live Meta/Baseten calls, pricing/model capability acceptance, deployment, remote workers, production readiness or hackathon eligibility verification.

@@ -104,3 +104,21 @@ def test_persisted_success_projection_cannot_disagree_with_hash_chained_evidence
         )
     with pytest.raises(IntegrityError, match="projection"):
         lab.resume(run_id)
+
+
+def test_tampered_branch_score_and_deleted_allocations_are_detected(tmp_path):
+    from autodiscover.evidence.artifacts import IntegrityError
+    from autodiscover.evidence.chain import verify_chain
+    from autodiscover.orchestrator.lab import Lab
+
+    lab = Lab(tmp_path)
+    run = lab.demo(stop_after=4)
+    with lab.store.connection(write=True) as db:
+        db.execute("UPDATE hypotheses SET score=999 WHERE run_id=?", (run,))
+    with pytest.raises(IntegrityError, match="Branch"):
+        verify_chain(lab.store)
+    with lab.store.connection(write=True) as db:
+        db.execute("UPDATE hypotheses SET score=NULL WHERE run_id=?", (run,))
+        db.execute("DELETE FROM branch_allocations WHERE run_id=?", (run,))
+    with pytest.raises(IntegrityError, match="Branch"):
+        verify_chain(lab.store)

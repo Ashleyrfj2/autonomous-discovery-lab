@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "run_id": "1c9301ce-24d0-4c33-afb0-1762bad85d65",
+  "status": "COMPLETED",
+  "stage": "DECIDE",
+  "completed_steps": 24,
+  "search": {
+    "nodes": [
+      {
+        "id": "6b071871e38245a3bb80d8bd3f86bcba120d8bb803ac9805331e45117eb4839a",
+        "run_id": "1c9301ce-24d0-4c33-afb0-1762bad85d65",
+        "identity": "b9d123a9f181334ae7f7427f35b47324ecac2fb5acea033c11625c2d2aeba390",
+        "parent_id": null,
+        "depth": 0,
+        "domain": "gaming event streams",
+        "kind": "encoding",
+        "status": "FAILED",
+        "revision_evidence": null,
+        "score": -1.0
+      },
+      {
+        "id": "744987c177dc2926188465be13142db788a53b34b50a6b152b2323ddbfbe004b",
+        "run_id": "1c9301ce-24d0-4c33-afb0-1762bad85d65",
+        "identity": "2d8b0781d19290f6c3cbe0c3a820a13ca175faf285f717330840fafb48e96ae3",
+        "parent_id": null,
+        "depth": 0,
+        "domain": "consumer telemetry",
+        "kind": "encoding",
+        "status": "FAILED",
+        "revision_evidence": null,
+        "score": 0.0
+      },
+      {
+        "id": "f8fb4ea5fd79d6077e1edebf9c213470ab2547d12fb746a71e7b53ba7b154e4b",
+        "run_id": "1c9301ce-24d0-4c33-afb0-1762bad85d65",
+        "identity": "496689a57796db202e944ddcb94eed12aab694c7710a7070dc39b09b6d065102",
+        "parent_id": "744987c177dc2926188465be13142db788a53b34b50a6b152b2323ddbfbe004b",
+        "depth": 1,
+        "domain": "consumer telemetry",
+        "kind": "encoding",
+        "status": "PROMISING",
+        "revision_evidence": "ae68f88a3837058fb6164f4ed7ed425cb8657e6e9f09eec085d07eb0936ece76",
+        "score": 0.828125
+      }
+    ],
+    "allocations": [
+      {
+        "run_id": "1c9301ce-24d0-4c33-afb0-1762bad85d65",
+        "step_key": "prioritize:3",
+        "hypothesis_id": "6b071871e38245a3bb80d8bd3f86bcba120d8bb803ac9805331e45117eb4839a",
+        "mode": "explore",
+        "ordinal": 1
+      },
+      {
+        "run_id": "1c9301ce-24d0-4c33-afb0-1762bad85d65",
+        "step_key": "prioritize:9",
+        "hypothesis_id": "744987c177dc2926188465be13142db788a53b34b50a6b152b2323ddbfbe004b",
+        "mode": "exploit",
+        "ordinal": 2
+      },
+      {
+        "run_id": "1c9301ce-24d0-4c33-afb0-1762bad85d65",
+        "step_key": "prioritize:15",
+        "hypothesis_id": "f8fb4ea5fd79d6077e1edebf9c213470ab2547d12fb746a71e7b53ba7b154e4b",
+        "mode": "explore",
+        "ordinal": 3
+      }
+    ],
+    "policy": {
+      "exploration_fraction": 0.5,
+      "max_branch_experiments": 2,
+      "max_candidates": 5,
+      "max_depth": 3,
+      "max_experiments": 5
+    },
+    "stopped_reason": null,
+    "novelty": "unknown",
+    "commercial_validation": "unvalidated"
+  },
+  "assessment": {
+    "hypothesis_id": "f8fb4ea5fd79d6077e1edebf9c213470ab2547d12fb746a71e7b53ba7b154e4b",
+    "limitations": "Synthetic fixture benchmark of known encoding; no novelty assessment",
+    "novelty": "unknown",
+    "novelty_source_ids": [],
+    "schema_version": 1,
+    "technical_success": true
+  },
+  "assessment_scope": "Last completed hypothesis assessment; see per-branch results",
+  "commercial": {
+    "evidence_ids": [],
+    "level": 0,
+    "schema_version": 1,
+    "validated": false
+  },
+  "usage": {
+    "charged_usd": "0",
+    "requests": 0,
+    "uncertain": 0,
+    "input_tokens": 0,
+    "output_tokens": 0
+  },
+  "evidence": {
+    "seq": 39,
+    "hash": "a59879dfe1e2667dd1d90a6202ac761b672c9e1547a6ffd4b262e8a0aa55c371",
+    "verified_events": 39,
+    "trust_limit": "Tamper-evident relative to retained anchor; not immutable"
+  },
+  "research": {
+    "source_ids": [],
+    "novelty": "unknown",
+    "coverage_exhaustive": false
+  },
+  "mode": "trusted encoding loop; source retrieval opt-in; live providers unverified"
+}

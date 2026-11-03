@@ -50,4 +50,23 @@ CREATE TABLE source_locations(url TEXT NOT NULL,
  raw_digest TEXT NOT NULL,retrieved_at TEXT NOT NULL);
 CREATE INDEX source_location_url ON source_locations(url);
 """,
+    """
+CREATE TABLE director_state(run_id TEXT PRIMARY KEY REFERENCES runs(id),
+ policy_json TEXT NOT NULL,stopped_reason TEXT);
+CREATE TABLE hypotheses(id TEXT NOT NULL,run_id TEXT NOT NULL REFERENCES runs(id),
+ identity TEXT NOT NULL,parent_id TEXT,depth INTEGER NOT NULL,
+ domain TEXT NOT NULL,kind TEXT NOT NULL,status TEXT NOT NULL,revision_evidence TEXT,score REAL,
+ PRIMARY KEY(run_id,id),UNIQUE(run_id,identity),
+ FOREIGN KEY(run_id,parent_id) REFERENCES hypotheses(run_id,id));
+CREATE TABLE branch_allocations(run_id TEXT NOT NULL REFERENCES runs(id),step_key TEXT NOT NULL,
+ hypothesis_id TEXT NOT NULL,mode TEXT NOT NULL,ordinal INTEGER NOT NULL,
+ PRIMARY KEY(run_id,step_key),UNIQUE(run_id,ordinal),
+ FOREIGN KEY(run_id,hypothesis_id) REFERENCES hypotheses(run_id,id));
+CREATE TABLE branch_results(run_id TEXT NOT NULL,hypothesis_id TEXT NOT NULL,
+ report_digest TEXT NOT NULL,passed INTEGER NOT NULL,
+ PRIMARY KEY(run_id,hypothesis_id,report_digest),
+ FOREIGN KEY(run_id,hypothesis_id) REFERENCES hypotheses(run_id,id));
+CREATE TABLE progress_guards(run_id TEXT NOT NULL REFERENCES runs(id),task_id TEXT NOT NULL,
+ state_json TEXT NOT NULL,PRIMARY KEY(run_id,task_id));
+""",
 )

@@ -124,12 +124,12 @@ Task ID: P6-BRANCH
 Phase: 6
 Description: Trees/mutation/diversity/loop/stopping/replanning; acceptance: bounded branches and justified failure revision
 Dependencies: P5-RESEARCH
-Status: NOT_STARTED
-Files: pending
-Tests: pending
-Verification: pending
+Status: VERIFIED
+Files: hypotheses/{director,proposals}.py; orchestrator/{lab,loops,migrations,contracts,store}.py; evidence/{chain,branches}.py; models/router.py; security/budget.py; config.py; cli.py; test_branch_director.py; test_progress_guards.py; recovery/adversarial/end-to-end tests; phase-6 evidence artifacts
+Tests: uv run pytest -q: 92 passed; Ruff passed; Pyright 0 errors; uv build wheel/sdist passed; autodiscover explore completed three bounded allocations, preserved negative results, cost USD 0; archived hashes and snapshot verified
+Verification: phase_reports/phase-6.md
 Blockers: none
-Next action: implement after dependencies verify
+Next action: P7-MARKET: separate buyer/user/opportunity models, external evidence provenance/review, competition/adoption analysis and enforced commercial levels0–4
 
 
 ## P7-MARKET

@@ -15,6 +15,7 @@ class Limits(BaseModel):
     max_retries_per_step: int = Field(default=2, ge=0, le=10)
     max_hypotheses_per_cycle: int = Field(default=5, ge=1, le=100)
     max_concurrent_experiments: int = Field(default=1, ge=1, le=8)
+    explore_existing_candidates: bool = False
     allow_live_inference: bool = False
     allow_retrieval: bool = False
 

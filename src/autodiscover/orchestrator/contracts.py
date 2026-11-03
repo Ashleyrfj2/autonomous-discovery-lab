@@ -77,6 +77,7 @@ class ReplicateResult(Contract):
 
 
 class AssessResult(Contract):
+    hypothesis_id: str | None = None
     technical_success: bool
     novelty: Literal["unknown", "supported", "not_new"]
     novelty_source_ids: list[str] = []

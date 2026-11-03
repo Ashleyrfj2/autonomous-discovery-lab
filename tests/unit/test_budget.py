@@ -52,3 +52,39 @@ def test_cost_overrun_pauses_run_and_keeps_actual_usage(tmp_path):
     assert budget.totals(run)["charged_usd"] == "0.02"
     with pytest.raises(BudgetError):
         budget.reserve(run, "two", "hash", Decimal("0"), "mock", "fixture")
+
+
+def test_one_request_cannot_consume_other_candidates_cost_allocation(tmp_path):
+    store = Store(tmp_path)
+    run = store.create_run("fair cost allocation", {})
+    budget = Budget(store)
+    first = budget.reserve(
+        run,
+        "candidate:0",
+        "hash",
+        Decimal("0.3"),
+        "mock",
+        "fixture",
+        request_limit_usd=Decimal("0.4"),
+    )
+    budget.settle(first, None)
+    with pytest.raises(BudgetError, match="REQUEST_ALLOCATION"):
+        budget.reserve(
+            run,
+            "candidate:1",
+            "hash",
+            Decimal("0.2"),
+            "mock",
+            "fixture",
+            request_limit_usd=Decimal("0.4"),
+        )
+    budget.reserve(
+        run,
+        "another-candidate:0",
+        "other",
+        Decimal("0.4"),
+        "mock",
+        "fixture",
+        request_limit_usd=Decimal("0.4"),
+    )
+    assert budget.totals(run)["charged_usd"] == "0.7"

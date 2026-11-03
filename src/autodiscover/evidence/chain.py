@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from autodiscover.evidence.artifacts import IntegrityError
+from autodiscover.evidence.branches import verify_branch_projections
 from autodiscover.orchestrator.durability import canonical, now
 from autodiscover.orchestrator.store import Store
 
@@ -47,6 +48,16 @@ def verify_chain(store: Store, anchor: dict[str, Any] | None = None) -> dict[str
         events = [dict(r) for r in db.execute("SELECT * FROM events ORDER BY seq")]
         steps = [dict(r) for r in db.execute("SELECT * FROM steps ORDER BY rowid")]
         nodes = [dict(r) for r in db.execute("SELECT * FROM research_nodes")]
+        queries = {
+            "hypotheses": "SELECT * FROM hypotheses",
+            "director_state": "SELECT * FROM director_state",
+            "branch_allocations": "SELECT * FROM branch_allocations",
+            "branch_results": "SELECT * FROM branch_results",
+            "progress_guards": "SELECT * FROM progress_guards",
+        }
+        branch_tables = {
+            name: [dict(r) for r in db.execute(query)] for name, query in queries.items()
+        }
     checked = verify_events(events, anchor)
     by_id = {event["id"]: event for event in events}
     for step in steps:
@@ -61,6 +72,9 @@ def verify_chain(store: Store, anchor: dict[str, Any] | None = None) -> dict[str
             or result["version"] != payload["version"] + 1
         ):
             raise IntegrityError("Step projection disagrees with evidence")
+    authoritative_steps = {event["id"] for event in events if event["kind"] == "stage_completed"}
+    if authoritative_steps != {json.loads(step["result_json"])["event_id"] for step in steps}:
+        raise IntegrityError("Completed step projection missing evidence")
     validity: dict[str, bool] = {}
     for event in events:
         payload = json.loads(event["payload_json"])
@@ -76,6 +90,9 @@ def verify_chain(store: Store, anchor: dict[str, Any] | None = None) -> dict[str
             node["valid"]
         ) != validity.get(node["id"]):
             raise IntegrityError("Research validity projection disagrees with evidence")
+    if set(validity) != {node["id"] for node in nodes}:
+        raise IntegrityError("Research node projection missing evidence")
+    verify_branch_projections(events, branch_tables)
     return checked
 
 

@@ -229,10 +229,35 @@ class Store:
             forward = STAGES[STAGES.index(expected) + 1] if expected != Stage.DECIDE else None
             destination = target or forward
             if target is not None and target != forward:
-                if target not in BACKWARD.get(expected, set()) or not reason:
+                terminal_failure = False
+                if (
+                    expected in (Stage.VERIFY, Stage.REPLICATE)
+                    and target == Stage.DECIDE
+                    and not validated["passed"]
+                    and reason
+                ):
+                    from autodiscover.hypotheses.director import Director
+
+                    references = (
+                        [validated["report_digest"]]
+                        if expected == Stage.VERIFY
+                        else validated["report_digests"]
+                    )
+                    recorded = any(
+                        db.execute(
+                            "SELECT 1 FROM branch_results WHERE run_id=? "
+                            "AND report_digest=? AND passed=0",
+                            (run_id, digest),
+                        ).fetchone()
+                        for digest in references
+                    )
+                    terminal_failure = recorded and not Director(self).has_work(run_id)
+                if (
+                    target not in BACKWARD.get(expected, set()) or not reason
+                ) and not terminal_failure:
                     raise StateError("Backward transition needs an allowable target and reason")
             if expected in (Stage.VERIFY, Stage.REPLICATE) and not validated["passed"]:
-                if destination not in BACKWARD[expected]:
+                if destination not in BACKWARD[expected] and destination != Stage.DECIDE:
                     raise StateError("Failed verification cannot advance")
             if expected == Stage.DECIDE:
                 if validated["decision"] == "stop" and target is not None:

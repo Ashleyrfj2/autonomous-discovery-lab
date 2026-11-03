@@ -83,7 +83,14 @@ class Router:
             while attempts <= policy.max_retries_per_step:
                 amount = provider.estimate_cost(request)
                 reservation = self.budget.reserve(
-                    run_id, f"{key}:{attempts}", fingerprint, amount, provider.name, provider.model
+                    run_id,
+                    f"{key}:{attempts}",
+                    fingerprint,
+                    amount,
+                    provider.name,
+                    provider.model,
+                    request_limit_usd=policy.max_cost_per_run_usd
+                    / max(2, policy.max_hypotheses_per_cycle),
                 )
                 attempts += 1
                 try:

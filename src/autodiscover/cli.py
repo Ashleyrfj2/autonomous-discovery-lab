@@ -7,6 +7,8 @@ from pathlib import Path
 from autodiscover import __version__
 from autodiscover.config import Limits
 from autodiscover.evidence.chain import export_snapshot, verify_chain
+from autodiscover.hypotheses.engine import Hypothesis, demo_proposal
+from autodiscover.hypotheses.proposals import ResearchProposal
 from autodiscover.orchestrator.lab import Lab
 
 
@@ -21,6 +23,13 @@ def main() -> None:
     demo.add_argument("--topic", default="consumer, gaming and telemetry data")
     demo.add_argument("--config", type=Path, default=Path("config/default.json"))
     demo.add_argument("--stop-after", type=int)
+    demo.add_argument("--algorithm", choices=["rle", "identity"], default="rle")
+    explore = sub.add_parser(
+        "explore", help="Bounded offline exploration of multiple reviewed candidate directions"
+    )
+    explore.add_argument(
+        "--topic", default="lossless storage across repeated and alternating datasets"
+    )
     research = sub.add_parser(
         "research", help="Retrieve public prior-art metadata, then stop for inspection"
     )
@@ -29,6 +38,15 @@ def main() -> None:
     resume = sub.add_parser("resume", help="Continue an active run from committed state")
     resume.add_argument("run_id")
     resume.add_argument("--stop-after", type=int)
+    tree = sub.add_parser(
+        "tree", help="Inspect durable hypotheses, lineage, allocations and stopping"
+    )
+    tree.add_argument("run_id")
+    add = sub.add_parser(
+        "candidate-add", help="Import a typed candidate; unsupported families remain theoretical"
+    )
+    add.add_argument("run_id")
+    add.add_argument("candidate", type=Path)
     status = sub.add_parser("status", help="Inspect persisted state and verified reports")
     status.add_argument("run_id", nargs="?")
     for command in ("pause", "unpause", "cancel"):
@@ -45,7 +63,23 @@ def main() -> None:
     else:
         lab = Lab(args.root)
         if args.command == "demo":
-            run = lab.demo(args.topic, limits=Limits.load(args.config), stop_after=args.stop_after)
+            run = lab.demo(
+                args.topic,
+                limits=Limits.load(args.config),
+                stop_after=args.stop_after,
+                algorithm=args.algorithm,
+            )
+            result = lab.report(run)
+        elif args.command == "explore":
+            candidates = [
+                Hypothesis.model_validate(
+                    {**demo_proposal("consumer telemetry"), "algorithm": "identity"}
+                ),
+                Hypothesis.model_validate(
+                    {**demo_proposal("gaming event streams"), "data_profile": "alternating"}
+                ),
+            ]
+            run = lab.explore(args.topic, candidates)
             result = lab.report(run)
         elif args.command == "research":
             if not args.allow_network:
@@ -58,6 +92,17 @@ def main() -> None:
         elif args.command in ("pause", "unpause", "cancel"):
             lab.store.control(args.run_id, "resume" if args.command == "unpause" else args.command)
             result = lab.report(args.run_id)
+        elif args.command == "tree":
+            result = lab.director.tree(args.run_id)
+        elif args.command == "candidate-add":
+            if args.candidate.stat().st_size > 65536:
+                parser.error("Candidate JSON exceeds 64 KiB")
+            data = json.loads(args.candidate.read_text())
+            schema = (
+                ResearchProposal if data.get("experiment_family") == "theoretical" else Hypothesis
+            )
+            identifier = lab.director.register(args.run_id, schema.model_validate(data))
+            result = {"hypothesis_id": identifier, "search": lab.director.tree(args.run_id)}
         elif args.command == "status":
             result = (
                 lab.report(args.run_id)

@@ -29,7 +29,15 @@ class Budget:
         self.store = store
 
     def reserve(
-        self, run_id: str, key: str, fingerprint: str, amount: Decimal, provider: str, model: str
+        self,
+        run_id: str,
+        key: str,
+        fingerprint: str,
+        amount: Decimal,
+        provider: str,
+        model: str,
+        *,
+        request_limit_usd: Decimal | None = None,
     ) -> str:
         reserved = nano(amount)
         day = datetime.fromtimestamp(self.store.clock(), UTC).date().isoformat()
@@ -60,6 +68,15 @@ class Budget:
             day_total = db.execute(
                 "SELECT COALESCE(SUM(charged_nano),0) FROM reservations WHERE day=?", (day,)
             ).fetchone()[0]
+            if request_limit_usd is not None:
+                request_group = key.rsplit(":", 1)[0]
+                request_total = db.execute(
+                    "SELECT COALESCE(SUM(charged_nano),0) FROM reservations "
+                    "WHERE run_id=? AND substr(request_key,1,length(?)+1)=? || ':'",
+                    (run_id, request_group, request_group),
+                ).fetchone()[0]
+                if request_total + reserved > nano(request_limit_usd):
+                    raise BudgetError("REQUEST_ALLOCATION_EXHAUSTED")
             if run_total + reserved > nano(policy.max_cost_per_run_usd):
                 raise BudgetError("RUN_BUDGET_EXHAUSTED")
             if day_total + reserved > ceiling:

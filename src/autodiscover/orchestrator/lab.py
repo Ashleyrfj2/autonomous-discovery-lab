@@ -2,6 +2,7 @@
 
 import json
 import time
+from collections.abc import Sequence
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -12,11 +13,15 @@ from autodiscover.evidence.artifacts import Artifacts
 from autodiscover.evidence.chain import verify_chain
 from autodiscover.experiments import evaluator, runner
 from autodiscover.experiments.contracts import Plan
+from autodiscover.hypotheses.director import Director, DuplicateHypothesis, SearchStopped
 from autodiscover.hypotheses.engine import Hypothesis, demo_proposal, generate
+from autodiscover.hypotheses.proposals import ResearchProposal
+from autodiscover.models.contracts import ProviderError
 from autodiscover.models.providers import MockProvider
 from autodiscover.models.router import Router
 from autodiscover.orchestrator.contracts import RunStatus, Stage
 from autodiscover.orchestrator.durability import atomic_json
+from autodiscover.orchestrator.loops import ProgressGuard
 from autodiscover.orchestrator.store import Store
 from autodiscover.research.catalog import Catalog
 from autodiscover.research.intelligence import retrieve_publications, synthesize
@@ -28,6 +33,7 @@ class Lab:
     def __init__(self, root: Path):
         self.store = Store(root)
         self.artifacts = Artifacts(root / "artifacts")
+        self.director = Director(self.store)
 
     def demo(
         self,
@@ -41,6 +47,21 @@ class Lab:
         self.resume(run_id, stop_after=stop_after, demo_algorithm=algorithm)
         return run_id
 
+    def explore(
+        self,
+        topic: str,
+        candidates: Sequence[Hypothesis | ResearchProposal],
+        *,
+        limits: Limits | None = None,
+    ) -> str:
+        policy = (limits or Limits()).model_copy(update={"explore_existing_candidates": True})
+        run_id = self.store.create_run(topic, policy.model_dump(mode="json"))
+        self.director.configure(run_id)
+        for candidate in candidates:
+            self.director.register(run_id, candidate)
+        self.resume(run_id)
+        return run_id
+
     def latest(self, run_id: str, stage: Stage) -> dict[str, Any]:
         outputs = [s for s in self.store.outputs(run_id) if s["stage"] == stage]
         if not outputs:
@@ -50,6 +71,25 @@ class Lab:
     def hypothesis(self, run_id: str) -> Hypothesis:
         digest = self.latest(run_id, Stage.HYPOTHESIZE)["hypothesis_ids"][0]
         return Hypothesis.model_validate(self.artifacts.get_json(digest))
+
+    def selected_hypothesis(self, run_id: str) -> tuple[str, Hypothesis]:
+        identifier = self.latest(run_id, Stage.PRIORITIZE)["selected_ids"][0]
+        try:
+            hypothesis = self.director.get(run_id, identifier)
+        except ValueError:
+            # Pre-phase-6 PRIORITIZE stored semantic identity, not the artifact address.
+            # Adopt it explicitly without editing historical evidence or replaying execution.
+            hypothesis = self.hypothesis(run_id)
+            if hypothesis.identity != identifier:
+                raise ValueError("Historical selection does not match hypothesis") from None
+            registered = self.director.register(run_id, hypothesis)
+            adopted = self.director.select(run_id, key="legacy-prioritize:" + registered)
+            if adopted != registered:
+                raise SearchStopped("LEGACY_SELECTION_REQUIRES_REVIEW") from None
+            identifier = registered
+        if not isinstance(hypothesis, Hypothesis):
+            raise SearchStopped("NO_REVIEWED_EXECUTION_ADAPTER")
+        return identifier, hypothesis
 
     def plan(self, run_id: str) -> Plan:
         digest = self.latest(run_id, Stage.DESIGN)["plan_digest"]
@@ -81,6 +121,7 @@ class Lab:
                 stage, version = Stage(row["stage"]), row["version"]
                 # Bound development/demo operation even before the full branch director exists.
                 if version >= 12 * limits.max_hypotheses_per_cycle:
+                    self.director.stop(run_id, "STAGE_TRANSITION_LIMIT")
                     self.store.control(run_id, "pause")
                     break
                 self.store.heartbeat(run_id, owner, fence, seconds=180)
@@ -110,10 +151,24 @@ class Lab:
                 count += 1
                 if stop_after is not None and count >= stop_after:
                     break
-        except BudgetError:
+        except (SearchStopped, DuplicateHypothesis) as error:
+            self.director.stop(run_id, str(error))
+            if self.store.get_run(run_id)["status"] == RunStatus.ACTIVE:
+                self.store.control(run_id, "pause")
+        except BudgetError as error:
+            reason = str(error)
+            self.director.stop(
+                run_id,
+                reason
+                if reason.isupper() and " " not in reason
+                else "INFERENCE_RECONCILIATION_REQUIRED",
+            )
             if self.store.get_run(run_id)["status"] == RunStatus.ACTIVE:
                 self.store.control(run_id, "pause")
             self.report(run_id)
+        except ProviderError as error:
+            self.store.fail_step(run_id, owner, fence, error.code)
+            raise
         except (runner.ExecutionError, evaluator.EvaluationError) as error:
             self.store.fail_step(run_id, owner, fence, str(error))
             raise
@@ -161,25 +216,75 @@ class Lab:
                 if source_ids
                 else "Offline; no external sources"
             )
-            if router is None:
-                proposal = demo_proposal(topic, algorithm=demo_algorithm)
-                proposal["source_ids"] = source_ids
-                router = Router(self.store, {"HYPOTHESIZE": [MockProvider([proposal])]})
-            h = generate(router, run_id, topic, key=f"hypothesis:{version}", source_context=context)
-            if not set(h.source_ids).issubset(set(source_ids)):
-                raise ValueError("Hypothesis cites unavailable sources")
-            digest = self.artifacts.put_json(h.model_dump(mode="json"))
-            output = {"hypothesis_ids": [digest]}
+            verifications = [
+                json.loads(step["output_json"])
+                for step in self.store.outputs(run_id)
+                if step["stage"] == Stage.VERIFY
+            ]
+            prior_failed = bool(verifications and not verifications[-1]["passed"])
+            if router is None and prior_failed:
+                parent_id, _parent = self.selected_hypothesis(run_id)
+                try:
+                    identifier = self.director.revise(
+                        run_id, parent_id, verifications[-1]["report_digest"]
+                    )
+                except (SearchStopped, DuplicateHypothesis):
+                    if limits.explore_existing_candidates and self.director.has_work(run_id):
+                        return (
+                            {
+                                "hypothesis_ids": [
+                                    n["id"] for n in self.director.tree(run_id)["nodes"]
+                                ]
+                            },
+                            None,
+                            None,
+                        )
+                    raise
+                h = self.director.get(run_id, identifier)
+            elif (
+                router is None
+                and limits.explore_existing_candidates
+                and self.director.has_work(run_id)
+            ):
+                return (
+                    {"hypothesis_ids": [n["id"] for n in self.director.tree(run_id)["nodes"]]},
+                    None,
+                    None,
+                )
+            else:
+                if router is None:
+                    proposal = demo_proposal(topic, algorithm=demo_algorithm)
+                    proposal["source_ids"] = source_ids
+                    router = Router(self.store, {"HYPOTHESIZE": [MockProvider([proposal])]})
+                h = generate(
+                    router, run_id, topic, key=f"hypothesis:{version}", source_context=context
+                )
+                if not set(h.source_ids).issubset(set(source_ids)):
+                    raise ValueError("Hypothesis cites unavailable sources")
+                identifier = self.director.register(run_id, h)
+            stopped = ProgressGuard(self.store).observe(
+                run_id,
+                "hypothesis-generation",
+                state=stage,
+                signature=h.identity,
+                observation_key=f"hypothesis:{version}",
+                progress=float(len(self.director.tree(run_id)["nodes"])),
+            )
+            if stopped:
+                raise SearchStopped(stopped)
+            output = {"hypothesis_ids": [identifier]}
         elif stage == Stage.PRIORITIZE:
-            output = {"selected_ids": [self.hypothesis(run_id).identity]}
+            identifier = self.director.select(run_id, key=f"prioritize:{version}")
+            output = {"selected_ids": [identifier]}
         elif stage == Stage.DESIGN:
-            h = self.hypothesis(run_id)
+            _identifier, h = self.selected_hypothesis(run_id)
             plan = Plan(
                 hypothesis_id=h.identity,
                 algorithm=h.algorithm,
                 minimum_savings=h.threshold,
                 data_profile=h.data_profile,
                 seconds=min(10, limits.max_experiment_seconds),
+                seed=42 + 9973 * (self.director.tree(run_id)["allocations"][-1]["ordinal"] - 1),
             )
             digest = self.artifacts.put_json(plan.model_dump(mode="json"))
             output = {"plan_id": h.identity, "plan_digest": digest}
@@ -199,9 +304,22 @@ class Lab:
             plan = self.plan(run_id)
             raw = self.artifacts.get_json(self.latest(run_id, Stage.EXECUTE)["artifact_digest"])
             report = evaluator.evaluate(plan, raw)
+            report["raw_artifact_digest"] = self.latest(run_id, Stage.EXECUTE)["artifact_digest"]
             digest = self.artifacts.put_json(report)
+            selected_id, _h = self.selected_hypothesis(run_id)
+            self.director.record(run_id, selected_id, digest)
             output = {"passed": report["passed"], "report_digest": digest}
             if not report["passed"]:
+                if (
+                    limits.explore_existing_candidates
+                    and _h.algorithm != "identity"
+                    and not self.director.has_work(run_id)
+                ):
+                    return (
+                        output,
+                        Stage.DECIDE,
+                        "Failed independent test; bounded search has no eligible work",
+                    )
                 return output, Stage.HYPOTHESIZE, "Held-out threshold failed; revision required"
         elif stage == Stage.REPLICATE:
             plan = self.plan(run_id)
@@ -212,15 +330,25 @@ class Lab:
                 raw_digest = self.artifacts.put_json(raw)
                 report = evaluator.evaluate(plan, raw, replication=index)
                 report["raw_artifact_digest"] = raw_digest
-                results.append(self.artifacts.put_json(report))
+                report_digest = self.artifacts.put_json(report)
+                results.append(report_digest)
+                selected_id, _h = self.selected_hypothesis(run_id)
+                self.director.record(run_id, selected_id, report_digest)
                 passed = passed and report["passed"]
             output = {"passed": passed, "report_digests": results}
             if not passed:
+                if limits.explore_existing_candidates and not self.director.has_work(run_id):
+                    return (
+                        output,
+                        Stage.DECIDE,
+                        "Replication failed; bounded search has no eligible work",
+                    )
                 return output, Stage.HYPOTHESIZE, "Replication threshold failed; revision required"
         elif stage == Stage.ASSESS:
             verified = self.latest(run_id, Stage.VERIFY)["passed"]
             replicated = self.latest(run_id, Stage.REPLICATE)["passed"]
             output = {
+                "hypothesis_id": self.selected_hypothesis(run_id)[0],
                 "technical_success": verified and replicated,
                 "novelty": "unknown",
                 "limitations": (
@@ -230,6 +358,12 @@ class Lab:
         elif stage == Stage.VALIDATE_MARKET:
             output = {"level": 0, "evidence_ids": [], "validated": False}
         else:
+            if limits.explore_existing_candidates and self.director.has_work(run_id):
+                return (
+                    {"decision": "explore", "rationale": "Remaining bounded candidate allocation"},
+                    Stage.HYPOTHESIZE,
+                    "Explore eligible candidates without resetting branch limits",
+                )
             output = {
                 "decision": "stop",
                 "rationale": "Bounded demonstration complete; "
@@ -252,7 +386,9 @@ class Lab:
             "status": row["status"],
             "stage": row["stage"],
             "completed_steps": len(self.store.outputs(run_id)),
+            "search": self.director.tree(run_id),
             "assessment": assessment,
+            "assessment_scope": "Last completed hypothesis assessment; see per-branch results",
             "commercial": market,
             "usage": Budget(self.store).totals(run_id),
             "evidence": verify_chain(self.store),
