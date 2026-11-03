@@ -53,6 +53,7 @@ def propose(
     source_context: str,
     available_source_ids: list[str],
     key: str,
+    stage: Literal["RESEARCH_PROPOSALS", "EXPLORATORY"] = "RESEARCH_PROPOSALS",
 ) -> ResearchProposal:
     request = GenerationRequest(
         prompt=canonical(
@@ -69,7 +70,7 @@ def propose(
         )
     )
     proposal, _ = router.generate_structured(
-        run_id, "RESEARCH_PROPOSALS", request, ResearchProposal, key=key
+        run_id, stage, request, ResearchProposal, key=key
     )
     if not set(proposal.source_ids).issubset(available_source_ids):
         raise ValueError("Proposal references unavailable sources")
