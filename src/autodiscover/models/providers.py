@@ -78,11 +78,15 @@ class HTTPProvider:
         if request.json_schema is not None:
             if not self.config.structured_output:
                 raise ProviderError("STRUCTURED_OUTPUT_UNSUPPORTED")
+            schema = request.json_schema
+            if schema.get("additionalProperties") is False and "properties" in schema:
+                # Strict APIs require defaulted and nullable fields to be listed too.
+                schema = {**schema, "required": list(schema["properties"])}
             body["response_format"] = {
                 "type": "json_schema",
                 "json_schema": {
                     "name": "research_result",
-                    "schema": request.json_schema,
+                    "schema": schema,
                     "strict": True,
                 },
             }

@@ -6,9 +6,11 @@ import pytest
 from pydantic import BaseModel, SecretStr
 
 from autodiscover.config import Limits
+from autodiscover.hypotheses.proposals import ResearchProposal
 from autodiscover.models.contracts import GenerationRequest, ProviderConfig, ProviderError
 from autodiscover.models.providers import BasetenProvider, MetaProvider, MockProvider
 from autodiscover.models.router import Router
+from autodiscover.models.teams import CriticalReview
 from autodiscover.orchestrator.store import Store
 from autodiscover.security.budget import Budget, BudgetError
 
@@ -328,3 +330,28 @@ def test_rate_backoff_cancels_without_another_call_or_reservation(tmp_path):
     assert len(calls) == 1
     assert Budget(store).totals(run)["requests"] == 1
     assert Budget(store).totals(run)["uncertain"] == 1
+
+
+@pytest.mark.parametrize("schema_type", [ResearchProposal, CriticalReview])
+def test_research_role_wire_schema_requires_all_fields_in_strict_mode(schema_type):
+    original = schema_type.model_json_schema()
+    assert set(original["required"]) < set(original["properties"])
+    seen = []
+
+    def handler(request):
+        wire = json.loads(request.content)["response_format"]["json_schema"]
+        seen.append(wire)
+        assert wire["strict"] is True
+        assert set(wire["schema"]["required"]) == set(original["properties"])
+        assert {k: v for k, v in wire["schema"].items() if k != "required"} == {
+            k: v for k, v in original.items() if k != "required"
+        }
+        return response(text="{}")
+
+    provider = MetaProvider(
+        config(), transport=httpx.MockTransport(handler), api_key=SecretStr("contract-secret")
+    )
+    request = GenerationRequest(prompt="research role", json_schema=original)
+    provider.generate(request)
+    assert request.json_schema == original
+    assert len(seen) == 1
