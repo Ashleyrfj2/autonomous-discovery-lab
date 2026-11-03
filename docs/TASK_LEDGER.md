@@ -208,3 +208,16 @@ Tests: Plan reviewed against existing service/report/control/review contracts an
 Verification: Phase8 milestone commit confirmed before plan creation.
 Blockers: none for local plan; external deployment/spend/permissions remain separately authorized
 Next action: P9-READ in next implementation session; no implementation in this run
+
+
+## P8-RECHECK
+Task ID: P8-RECHECK
+Phase: 8
+Description: Reconcile repeated completion request with existing accepted milestone and final-source evidence.
+Dependencies: P8-OPERATE; P9-PREPARE
+Status: VERIFIED
+Files: docs/HANDOFF.md; DEVELOPMENT_HISTORY.md; TASK_LEDGER.md; phase_reports/phase-8-recheck.md
+Tests: Fresh Ruff passes; Pyright 0 findings; 143 tests passed in 9.88s; wheel/sdist builds. Accepted source/Git objects,73 artifacts and 712 events reverified.
+Verification: phase_reports/phase-8-recheck.md
+Blockers: none; unrelated PROJECT_STATUS_REPORT_.md untouched
+Next action: Phase9 P9-READ in next implementation session; planning only for this request
