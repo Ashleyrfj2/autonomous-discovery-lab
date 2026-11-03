@@ -92,7 +92,9 @@ def compile_prior_art_dossier(
                 "exact_quote": item.quote,
                 "proposed_relationship": item.relationship,
                 "unverified_reasoning": item.explanation,
-                "verification": "quote located; scientific interpretation not independently reviewed",
+                "verification": (
+                    "quote located; scientific interpretation not independently reviewed"
+                ),
             }
         )
 
