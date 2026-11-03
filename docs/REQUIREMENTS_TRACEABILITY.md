@@ -58,3 +58,13 @@ Actual qualification: 143 full tests; 78 focused tests; Ruff/types/build pass; 8
 Phase9 implementation explicitly started by the user after the planning run. P9-READ is LOCALLY_VERIFIED (150 full tests); REQ-031 now IN_PROGRESS. See phase_reports/phase-9-read.md and DEC-016. This supersedes prior NOT_STARTED references for Phase9, without changing accepted Phase8 scope.
 
 Phase9 backend audit: REQ-031 remains IN_PROGRESS; P9-READ/P9-AUTH/P9-CONTROL/P9-REVIEW backend tasks locally verified (175 tests;78 focused Phase8 regressions; Ruff/types/build). Workflow controls retain REQ-012/013 fencing/idempotency and budget authority; source-bound review retains REQ-009/027 and explicit operator trust, without real demand validation. P9-VIEW export and P9-QUALIFY browser/visual acceptance remain incomplete after the user-limited design attempt. Evidence: phase_reports/phase-9-backend.md and phase-9-backend-regression/.
+
+## Remote reviewed-experiment extension audit — 2026-11-03
+
+REQ-002/005/010/022/023: fixed allowlist registry and second reviewed `allocation-v1` family (preregistered plan, separate worker, separate seeded fixtures, independent exact enumerative evaluator and replications). Existing encoding worker, fixtures and evaluator intentionally unchanged to retain historical code identity. Cross-family run/Director/Jobs integration is IMPLEMENTED_UNVERIFIED; the written tests have not passed a Mac runtime gate. The new benchmark demonstrates only known synthetic allocation methods, not scientific novelty, independent publication discovery or practical deployment.
+
+REQ-004/006/014: opt-in three-role (proposal/exploratory/critic) router with distinct model identities and existing spend-control authority; input source sharing guard; no actual live inference, cost receipts or evidence of model quality. Implementation UNVERIFIED.
+
+REQ-025: allocates across fixed reviewed families while retaining existing branch quotas/diversity and avoiding cross-family score magnitude comparisons. A separate cost-aware portfolio plan is strictly advisory, with estimated costs, uncertainties, provenance and no job authorization. There is no production-calibrated information-gain model.
+
+REQ-007/031/032/033/034/037/038: remote source diff, tests and documentation recorded under branch and docs/phase_reports/chat-registered-experiments-2026-11-03.md. No change to Phase9 UI export/browser acceptance; no new external API, new permission or deployment was authorized. Status remains partial pending local source-manifest qualification. DEC-021.
