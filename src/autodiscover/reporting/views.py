@@ -119,7 +119,7 @@ class HypothesisNode(View):
     parent_id: str | None
     depth: int
     domain: str
-    kind: Literal["encoding", "theoretical"]
+    kind: Literal["encoding", "allocation", "theoretical"]
     status: str
     revision_evidence: str | None
     score: float | None
