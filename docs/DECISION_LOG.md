@@ -63,3 +63,7 @@ Problem: The existing lab could only execute reviewed encoding-v1 and could not 
 ## DEC-022 — Restricted Baseten profile and provider-aware qualification
 
 The prior critique request selected DeepSeek, outside the model scope described by the hackathon email. Bind the restricted model and credential environment in an opt-in profile. Use local typed validation for its prompt-delivered schema until server-side schema support is established. Configure reasoning depth only on documented model IDs. Keep proposal, exploration and critique separate by provider kind and model identity. Cache only complete schema-valid results, preserve attributable usage on failed output, and retain upper reservations when usage is unknown. Treat the smoke and staged ledgers together for the existing authorization cap. See the [phase report](phase_reports/hackathon-model-qualification.md).
+
+## DEC-023 — Stabilize spend and restart fencing before any live test
+
+Keep terminal and paused state when delayed accounting settles, retain reservations on response model mismatches, and block live fallback after ambiguous dispatch. Test stable keys and daily cap admission across spawned processes and preserve open holds across process death. A four-call, single-source test design fits the local wire guards with mocks. Its Meta component alone exceeds current conservative headroom. See the [qualification report](phase_reports/hackathon-model-qualification.md).

@@ -26,3 +26,5 @@ The registered-family branch passed Ruff, Pyright, 22 focused tests, 202 full te
 ## Hackathon model qualification
 
 The local provider and replay gate is covered by the [qualification report](phase_reports/hackathon-model-qualification.md). Live multi-model and overnight gates are BLOCKED. Verified allocation results apply to the synthetic preregistered protocol. Novelty remains unknown and commercial validation remains at level 0. Production isolation, provider entitlements, exact restricted endpoint capabilities and provider-side charge reconciliation remain open.
+
+Final stabilization passed 247 local tests. The committed offline scope is ready for review. The proposed complete live test exceeds current headroom before the exact Baseten price is known. Live testing, overnight operation and PR #2 merge are NO-GO. See [final stabilization](phase_reports/hackathon-model-qualification.md#final-stabilization-and-approval-boundary).

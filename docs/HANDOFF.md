@@ -30,3 +30,7 @@ The registered-experiments branch is LOCALLY VERIFIED at source commit `3e957669
 ## Current provider qualification handoff
 
 Resume on `chat/registered-experiments-20261103` in the linked PR #2 worktree. Read the [qualification report](phase_reports/hackathon-model-qualification.md) and `runtime/checkpoints/hackathon-qualification/source-baseline.json`. The retained staged root is `runtime/staged-qualification-CLHJGg`. The earlier smoke root is `runtime/paid-validation-y7xYlF`. Read both before any discussion of spend. The next external step is read-only provider billing and entitlement reconciliation. Full ResearchTeam inference and overnight operation are blocked. A diagnostic requires a documented cost bound within the existing cap and explicit new billable approval.
+
+## Final stabilization handoff
+
+The existing repair and safety follow-up are committed locally. The [final qualification section](phase_reports/hackathon-model-qualification.md#final-stabilization-and-approval-boundary) records the exact source commits, verified ledger, provider billing actions and four-call plan. Resume with account-owner read-only reconciliation and entitlement evidence. Live testing, overnight operation and PR #2 merge are NO-GO.
