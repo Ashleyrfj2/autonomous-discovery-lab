@@ -54,36 +54,20 @@ class Store:
             db.close()
 
     def _migrate(self) -> None:
+        from autodiscover.orchestrator.migrations import MIGRATIONS
+
         with self.connection() as db:
             db.execute("PRAGMA journal_mode=WAL")
             db.execute("PRAGMA synchronous=FULL")
+        with self.connection(write=True) as db:
             version = db.execute("PRAGMA user_version").fetchone()[0]
-            if version > 1:
+            if version > len(MIGRATIONS):
                 raise StateError("Database schema newer than this application")
-            # Explicit transaction: migration is atomic even after process termination.
-            db.executescript("""
-            BEGIN IMMEDIATE;
-            CREATE TABLE IF NOT EXISTS runs (
-              id TEXT PRIMARY KEY, schema_version INTEGER NOT NULL DEFAULT 1,
-              topic TEXT NOT NULL, stage TEXT NOT NULL, status TEXT NOT NULL,
-              version INTEGER NOT NULL DEFAULT 0, owner TEXT, fence INTEGER NOT NULL DEFAULT 0,
-              lease_until REAL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
-              failures INTEGER NOT NULL DEFAULT 0, last_error TEXT,
-              policy_json TEXT NOT NULL);
-            CREATE TABLE IF NOT EXISTS steps (
-              id TEXT PRIMARY KEY, run_id TEXT NOT NULL REFERENCES runs(id),
-              idempotency_key TEXT NOT NULL, input_hash TEXT NOT NULL,
-              stage TEXT NOT NULL, target TEXT, output_json TEXT NOT NULL,
-              result_json TEXT NOT NULL, UNIQUE(run_id,idempotency_key));
-            CREATE TABLE IF NOT EXISTS events (
-              seq INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT NOT NULL UNIQUE,
-              run_id TEXT NOT NULL REFERENCES runs(id), kind TEXT NOT NULL,
-              payload_json TEXT NOT NULL, timestamp TEXT NOT NULL,
-              previous_hash TEXT NOT NULL, hash TEXT NOT NULL UNIQUE);
-            CREATE INDEX IF NOT EXISTS events_run ON events(run_id,seq);
-            PRAGMA user_version=1;
-            COMMIT;
-            """)
+            for index in range(version, len(MIGRATIONS)):
+                for statement in MIGRATIONS[index].split(";"):
+                    if statement.strip():
+                        db.execute(statement)
+                db.execute(f"PRAGMA user_version={index + 1}")
 
     def _event(
         self, db: sqlite3.Connection, run_id: str, kind: str, payload: dict[str, Any]

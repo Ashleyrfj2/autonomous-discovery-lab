@@ -59,12 +59,12 @@ Task ID: P2-PROVIDERS
 Phase: 2
 Description: Mock/Meta/Baseten protocols, docs, structured validation and routing; acceptance: HTTP contracts/failures
 Dependencies: P1-RECOVERY
-Status: NOT_STARTED
-Files: pending
-Tests: pending
-Verification: pending
+Status: VERIFIED
+Files: models/{contracts,providers,router}.py; security/budget.py; orchestrator/{store,migrations}.py; test_providers.py; test_budget.py; test_migrations.py
+Tests: uv run pytest -q: 26 passed; uv run ruff check . passed; uv run pyright 0 errors; uv build wheel/sdist passed
+Verification: phase_reports/phase-2.md
 Blockers: none
-Next action: implement after dependencies verify
+Next action: P3-LOOP: implement preregistered trusted worker, content-addressed evidence and full CLI research cycle
 
 
 ## P2-BUDGET
@@ -72,12 +72,12 @@ Task ID: P2-BUDGET
 Phase: 2
 Description: Reservations/token/day/run/circuit accounting; acceptance: exhaustion/concurrent refusal/unknown cost
 Dependencies: P2-PROVIDERS
-Status: NOT_STARTED
-Files: pending
-Tests: pending
-Verification: pending
+Status: VERIFIED
+Files: models/{contracts,providers,router}.py; security/budget.py; orchestrator/{store,migrations}.py; test_providers.py; test_budget.py; test_migrations.py
+Tests: uv run pytest -q: 26 passed; uv run ruff check . passed; uv run pyright 0 errors; uv build wheel/sdist passed
+Verification: phase_reports/phase-2.md
 Blockers: none
-Next action: implement after dependencies verify
+Next action: P3-LOOP: implement preregistered trusted worker, content-addressed evidence and full CLI research cycle
 
 
 ## P3-LOOP
