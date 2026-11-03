@@ -13,3 +13,7 @@ Final source manifest 58aba75623694c0fbf86b227d7a5a6f95f8e2b054057cad2bb84b2f66b
 Phase 8 commit verified: e1e5ae78731d3d00e6154e0226326cb9ee74f40b. Committed Git objects match all 73 qualified source-manifest files; required evidence/docs and 118 intended milestone files present. Phase9 plan written only after that commit. Application implementation remains NOT_STARTED.
 
 Phase9 backend locally verified:175 full tests,78 targeted regressions, Ruff/Pyright/build pass, real loopback HTTP and native-worker control recovery. Current qualification source acf0e0aca2cd9b3dbf8fb3e8f7a05af88ef742fc2e76e2c7fa51e158920568a6. One upstream TestClient httpx deprecation warning is retained. Dashboard export/browser acceptance remains pending; user-authorized design workflow stopped within three minutes. Full Phase9 is not accepted.
+
+## Chat-mode research-quality extension (unverified)
+
+Remote branch chat/prior-art-qualification-20261103 contains proposed source-bound prior-art dossier and research qualification plan. Not merged or locally accepted. The unmodified main Phase9 backend's 175-test result is historical and does not cover this branch. Required: Ruff, Pyright, focused/full pytest, build, source-bound CLI smoke on actual registered evidence, unchanged snapshot/event/report hashes and exact commit/source identity. No release/novelty/provider/market/Phase9-view qualification is implied.
