@@ -306,7 +306,7 @@ Description: Read-only source-bound dossier: exact quotes, per-run ownership, in
 Dependencies: P5-RESEARCH, P9-READ
 Status: IMPLEMENTED_UNVERIFIED
 Files: src/autodiscover/research/prior_art.py; src/autodiscover/cli.py; tests/unit/test_prior_art.py; docs/PRIOR_ART_DOSSIER.md; docs/RESEARCH_QUALIFICATION_PLAN_2026-11-03.md
-Tests: Six pytest cases authored; full local Ruff/Pyright/pytest/build NOT RUN in ChatGPT. Historical 175 passing tests are from the unmodified main backend, not this branch.
+Tests: Eight pytest cases authored; full local Ruff/Pyright/pytest/build NOT RUN in ChatGPT. Historical 175 passing tests are from the unmodified main backend, not this branch.
 Verification: docs/phase_reports/chat-mode-2026-11-03.md; proposed CLI smoke described in PRIOR_ART_DOSSIER.md
 Blockers: Local Python3.12/uv source tree and persisted runtime evidence are not available through chat-mode GitHub; full method-level searches and independent science review remain unperformed.
 Next action: execute local checks + CLI adversarial smoke, inspect changes and record exact source manifest; if accepted, decide merge explicitly. Do not mark VERIFIED prematurely.
