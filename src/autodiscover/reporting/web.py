@@ -11,16 +11,19 @@ import time
 from collections.abc import Callable
 from http.cookies import SimpleCookie
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
+from uuid import UUID
 
 from fastapi import Depends, FastAPI, Query, Request
 from fastapi.exceptions import RequestValidationError
-from pydantic import BaseModel, ConfigDict, SecretStr, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from autodiscover.commercial.contracts import HumanReview
+from autodiscover.commercial.service import CommercialConflict, CommercialError, Market
 from autodiscover.evidence.artifacts import IntegrityError
-from autodiscover.orchestrator.store import StateError
+from autodiscover.orchestrator.store import ControlConflict, StateError, Store
 from autodiscover.reporting.views import PageRequest, ReadConflict, ReadService
 from autodiscover.security.redaction import sanitize
 
@@ -185,6 +188,24 @@ class OperatorBoundary:
             await reject(503, "OPERATOR_READ_FAILED")
 
 
+class ControlCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    action: Literal["pause", "resume", "cancel"]
+    expected_version: int = Field(ge=0, strict=True)
+    expected_fence: int = Field(ge=0, strict=True)
+    request_id: UUID
+    confirm_run_id: str | None = Field(default=None, max_length=100)
+
+
+class ReviewCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    evidence_id: str = Field(min_length=1, max_length=100)
+    review: HumanReview
+    request_id: UUID
+    expected_cursor: int = Field(ge=0, strict=True)
+    confirmation: str = Field(min_length=1, max_length=250)
+
+
 class Login(BaseModel):
     model_config = ConfigDict(extra="forbid")
     password: SecretStr
@@ -239,9 +260,15 @@ def create_app(
     async def missing(_request: Request, _error: StateError):
         return JSONResponse({"error": "UNKNOWN_OR_UNAVAILABLE_RUN"}, status_code=404)
 
+    @app.exception_handler(CommercialError)
+    async def market_unavailable(_request: Request, _error: CommercialError):
+        return JSONResponse({"error": "MARKET_EVIDENCE_UNAVAILABLE"}, status_code=422)
+
+    @app.exception_handler(CommercialConflict)
+    @app.exception_handler(ControlConflict)
     @app.exception_handler(ReadConflict)
     async def conflict(_request: Request, _error: ReadConflict):
-        return JSONResponse({"error": "STALE_CURSOR"}, status_code=409)
+        return JSONResponse({"error": "STALE_STATE_OR_REQUEST"}, status_code=409)
 
     @app.exception_handler(sqlite3.Error)
     async def database(_request: Request, _error: sqlite3.Error):
@@ -302,5 +329,45 @@ def create_app(
     @app.get("/api/queue")
     def queue(page: Pagination):
         return safe_json(reads.queue(page))
+
+    @app.post("/api/runs/{run_id}/control")
+    def control(run_id: str, body: ControlCommand, request: Request):
+        # Recheck current session after request parsing, before touching durable authority.
+        if authority.session(request.cookies.get(COOKIE, "")) is None:
+            return JSONResponse({"error": "OPERATOR_SESSION_REQUIRED"}, status_code=401)
+        if body.action == "cancel" and body.confirm_run_id != run_id:
+            return JSONResponse({"error": "CANCEL_CONFIRMATION_REQUIRED"}, status_code=422)
+        receipt = Store(reads.root, initialize=False).control(
+            run_id,
+            body.action,
+            expected_version=body.expected_version,
+            expected_fence=body.expected_fence,
+            request_id=str(body.request_id),
+        )
+        return safe_json(receipt)
+
+    @app.get("/api/market/{opportunity_id}/review")
+    def review_context(opportunity_id: str, page: Pagination):
+        return safe_json(reads.market(opportunity_id, page))
+
+    @app.post("/api/market/{opportunity_id}/review")
+    def review(opportunity_id: str, body: ReviewCommand, request: Request):
+        if authority.session(request.cookies.get(COOKIE, "")) is None:
+            return JSONResponse({"error": "OPERATOR_SESSION_REQUIRED"}, status_code=401)
+        confirmation = f"REVIEW {body.evidence_id} {body.review.source_digest}"
+        if not hmac.compare_digest(body.confirmation.encode(), confirmation.encode()):
+            return JSONResponse({"error": "EXPLICIT_SOURCE_CONFIRMATION_REQUIRED"}, status_code=422)
+        market = Market(Store(reads.root, initialize=False))
+        owner, _evidence = market.evidence(body.evidence_id)
+        if owner != opportunity_id:
+            return JSONResponse({"error": "EVIDENCE_OWNERSHIP_MISMATCH"}, status_code=422)
+        identifier = market.review(
+            body.evidence_id,
+            body.review,
+            actor_kind="human",
+            request_id=str(body.request_id),
+            expected_cursor=body.expected_cursor,
+        )
+        return safe_json({"review_id": identifier, "assessment": market.assess(opportunity_id)})
 
     return app

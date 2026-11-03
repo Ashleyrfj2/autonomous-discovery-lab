@@ -9,8 +9,9 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue
 
+from autodiscover.commercial.service import CommercialError, Market
 from autodiscover.config import Limits
-from autodiscover.evidence.artifacts import Artifacts
+from autodiscover.evidence.artifacts import Artifacts, IntegrityError
 from autodiscover.evidence.chain import verify_chain
 from autodiscover.hypotheses.director import Director, SearchPolicy
 from autodiscover.orchestrator.contracts import AssessResult, RunStatus, Stage
@@ -314,3 +315,41 @@ class ReadService:
     def report(self, run_id: str) -> dict[str, Any]:
         with self.snapshot() as (store, _cursor):
             return build_report(store, run_id)
+
+    def market(self, opportunity_id: str, request: PageRequest = DEFAULT_PAGE) -> dict[str, Any]:
+        with self.snapshot(request) as (store, cursor), store.connection() as db:
+            market = Market(store)
+            run_id, profile = market.opportunity(opportunity_id)
+            rows = db.execute(
+                "SELECT id FROM market_evidence WHERE opportunity_id=? "
+                "ORDER BY id LIMIT ? OFFSET ?",
+                (opportunity_id, request.limit + 1, request.offset),
+            ).fetchall()
+            contexts = []
+            for row in rows[: request.limit]:
+                _owner, evidence = market.evidence(row[0])
+                source_digest = None
+                try:
+                    source_digest, _url = market._external_source(evidence)
+                except (CommercialError, IntegrityError):
+                    pass
+                contexts.append(
+                    {
+                        "evidence_id": row[0],
+                        "evidence": evidence.model_dump(mode="json"),
+                        "source_digest": source_digest,
+                        "confirmation_text": f"REVIEW {row[0]} {source_digest}"
+                        if source_digest
+                        else None,
+                    }
+                )
+            return {
+                "cursor": cursor.model_dump(),
+                "run_id": run_id,
+                "opportunity": profile.model_dump(mode="json"),
+                "assessment": market.assess(opportunity_id),
+                "items": contexts,
+                "next_offset": request.offset + request.limit
+                if len(rows) > request.limit
+                else None,
+            }

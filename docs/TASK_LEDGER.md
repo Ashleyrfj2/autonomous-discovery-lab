@@ -247,3 +247,41 @@ Tests:163 full tests pass;13 operator tests including real loopback HTTP; Ruff/P
 Verification: phase_reports/phase-9-auth.md; phase-9-auth/ evidence
 Blockers: none for local read API; paid12ui dashboard generation needs spending authorization
 Next action: P9-CONTROL backend while design authorization is pending; no paid calls
+
+
+## P9-CONTROL
+Task ID: P9-CONTROL
+Phase: 9
+Description: Authenticated version/fence-checked and idempotent pause/resume/cancel, preserving worker recovery and budget authority.
+Dependencies: P9-READ; P9-AUTH
+Status: VERIFIED
+Files: orchestrator/store.py; reporting/web.py; tests/integration/test_operator_controls.py
+Tests:175 full tests, six control and six review tests,78 targeted Phase8 tests; Ruff/types/build pass; one upstream TestClient deprecation
+Verification: phase_reports/phase-9-backend.md; phase-9-backend-regression/
+Blockers: no backend blocker; mandatory paid UI design needs explicit spending cap
+Next action: backend accepted; UI/browser interactions await completed design export
+
+
+## P9-REVIEW
+Task ID: P9-REVIEW
+Phase: 9
+Description: Source-bound operator review/withdrawal backend with authenticated authority, explicit confirmation, ownership, cursor/digest guards and idempotent event writes. Browser interface remains separate.
+Dependencies: P9-READ; P9-AUTH
+Status: VERIFIED
+Files: commercial/service.py; reporting/{views,web}.py; test_operator_review.py
+Tests: six review regressions;175 full tests; lint/types/build; source validation inside writer-lock probe
+Verification: phase_reports/phase-9-backend.md; phase-9-backend-regression/
+Blockers: none for backend; no real market validation obtained
+Next action: connect explicit operator browser review without automatic attestations
+
+## P9-VIEW
+Task ID: P9-VIEW
+Phase: 9
+Description: Real-state operator dashboard and interactive views, using mandatory12ui design workflow.
+Dependencies: P9-READ; P9-AUTH
+Status: IN_PROGRESS
+Files: docs/design/phase-9-overview-reference.png; phase-9-design-provenance.json; runtime/phase9-design/ records
+Tests: four generated candidates inspected; strongestA selected; no completed HTML export or browser UI yet
+Verification: phase_reports/phase-9-backend.md; design provenance
+Blockers: authorized three-minute design window exhausted; conversion terminated at177.07s; extending it requires user direction
+Next action: resume existing conversion under an extended allowance, integrate with verified APIs and run browser/visual qualification; do not repurchase draft

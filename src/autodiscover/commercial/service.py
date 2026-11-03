@@ -1,6 +1,7 @@
 """Conservative commercial gates. No model or benchmark can validate external demand."""
 
 import hashlib
+import json
 from pathlib import Path
 from typing import Any, Literal
 from uuid import uuid4
@@ -15,6 +16,10 @@ from autodiscover.security.redaction import contains_credential
 
 
 class CommercialError(ValueError):
+    pass
+
+
+class CommercialConflict(CommercialError):
     pass
 
 
@@ -183,51 +188,75 @@ class Market:
         review: HumanReview,
         *,
         actor_kind: Literal["human", "model", "system"] = "system",
+        request_id: str | None = None,
+        expected_cursor: int | None = None,
     ) -> str:
-        # This entry point belongs to trusted operator UI/CLI, never the model tool set.
+        # Trusted operator boundary only; request metadata never establishes human authority.
         from autodiscover.evidence.chain import verify_chain
 
-        verify_chain(self.store)
         if actor_kind != "human":
             raise PermissionError(
                 "Only explicit operator review can attest external commercial facts"
             )
-        opportunity_id, evidence = self.evidence(evidence_id)
-        run_id, _ = self.opportunity(opportunity_id)
-        actual_digest, _url = self._external_source(evidence)
-        if review.source_digest != actual_digest:
-            raise CommercialError("Review refers to different source content")
-        record = {
-            "evidence_id": evidence_id,
-            "actor_kind": "human",
-            "review_event_id": str(uuid4()),
-            "reviewed_at": now(),
-            "review": review.model_dump(mode="json"),
-        }
-        digest = self.artifacts.put_json(record)
-        identifier = "market-review-" + digest
+        if (request_id is None) != (expected_cursor is None):
+            raise CommercialError("Review commands require identity and cursor together")
+        if contains_credential(canonical(review.model_dump(mode="json"))):
+            raise CommercialError("Credential material is not permitted in review records")
+        fingerprint = hashlib.sha256(
+            canonical(
+                {
+                    "evidence_id": evidence_id,
+                    "review": review.model_dump(mode="json"),
+                    "expected_cursor": expected_cursor,
+                }
+            ).encode()
+        ).hexdigest()
         with self.store.connection(write=True) as db:
-            if (
-                db.execute("SELECT 1 FROM market_reviews WHERE id=?", (identifier,)).fetchone()
-                is None
-            ):
-                db.execute(
-                    "INSERT INTO market_reviews(id,evidence_id,artifact_digest) VALUES(?,?,?)",
-                    (identifier, evidence_id, digest),
-                )
-                self.store._event(
-                    db,
-                    run_id,
-                    "market_review_recorded",
-                    {
-                        "review_id": identifier,
-                        "evidence_id": evidence_id,
-                        "artifact_digest": digest,
-                        "accepted": review.accepted,
-                        "facts": review.facts,
-                        "actor_kind": "human",
-                    },
-                )
+            checked = verify_chain(self.store)
+            opportunity_id, evidence = self.evidence(evidence_id)
+            run_id, _ = self.opportunity(opportunity_id)
+            if request_id is not None:
+                old = db.execute(
+                    "SELECT payload_json FROM events WHERE run_id=? "
+                    "AND kind='market_review_recorded' "
+                    "AND json_extract(payload_json,'$.command.id')=?",
+                    (run_id, request_id),
+                ).fetchone()
+                if old:
+                    payload = json.loads(old[0])
+                    if payload["command"]["fingerprint"] != fingerprint:
+                        raise CommercialConflict("Review identity reused with different inputs")
+                    return payload["review_id"]
+                if checked["seq"] != expected_cursor:
+                    raise CommercialConflict("Evidence changed; refresh the review context")
+            # Source validation and event commit share the writer lock.
+            actual_digest, _url = self._external_source(evidence)
+            if review.source_digest != actual_digest:
+                raise CommercialConflict("Review refers to different source content")
+            record = {
+                "evidence_id": evidence_id,
+                "actor_kind": "human",
+                "review_event_id": str(uuid4()),
+                "reviewed_at": now(),
+                "review": review.model_dump(mode="json"),
+            }
+            digest = self.artifacts.put_json(record)
+            identifier = "market-review-" + digest
+            db.execute(
+                "INSERT INTO market_reviews(id,evidence_id,artifact_digest) VALUES(?,?,?)",
+                (identifier, evidence_id, digest),
+            )
+            payload: dict[str, Any] = {
+                "review_id": identifier,
+                "evidence_id": evidence_id,
+                "artifact_digest": digest,
+                "accepted": review.accepted,
+                "facts": review.facts,
+                "actor_kind": "human",
+            }
+            if request_id is not None:
+                payload["command"] = {"id": request_id, "fingerprint": fingerprint}
+            self.store._event(db, run_id, "market_review_recorded", payload)
         return identifier
 
     def assess(self, opportunity_id: str) -> dict[str, Any]:

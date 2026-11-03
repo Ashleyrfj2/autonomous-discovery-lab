@@ -28,15 +28,25 @@ class StateError(RuntimeError):
     pass
 
 
+class ControlConflict(StateError):
+    pass
+
+
 class Store:
     read_only = False
 
-    def __init__(self, root: Path, *, clock: Callable[[], float] = time.time):
+    def __init__(
+        self, root: Path, *, clock: Callable[[], float] = time.time, initialize: bool = True
+    ):
         self.root = root
-        self.root.mkdir(parents=True, exist_ok=True)
         self.path = root / "lab.sqlite3"
         self.clock = clock
-        self._migrate()
+        if initialize:
+            self.root.mkdir(parents=True, exist_ok=True)
+            self._migrate()
+        else:
+            with SnapshotStore(root):
+                pass  # Existing schema only; HTTP never initializes or migrates storage.
 
     @contextmanager
     def connection(self, *, write: bool = False) -> Iterator[sqlite3.Connection]:
@@ -350,28 +360,78 @@ class Store:
         self.checkpoint(run_id)
         return status
 
-    def control(self, run_id: str, action: str) -> None:
+    def control(
+        self,
+        run_id: str,
+        action: str,
+        *,
+        expected_version: int | None = None,
+        expected_fence: int | None = None,
+        request_id: str | None = None,
+    ) -> dict[str, Any] | None:
+        guarded = request_id is not None
+        guard_fields = (expected_version, expected_fence, request_id)
+        if any(value is not None for value in guard_fields) and not all(
+            value is not None for value in guard_fields
+        ):
+            raise ValueError("Operator commands require identity, version and fence together")
+        if guarded and not re.fullmatch(r"[a-f0-9-]{36}", request_id or ""):
+            raise ValueError("Operator command identity must be a UUID")
+        command = {
+            "id": request_id,
+            "expected_version": expected_version,
+            "expected_fence": expected_fence,
+        }
         allowed = {
             "pause": (RunStatus.ACTIVE, RunStatus.PAUSED),
             "resume": (RunStatus.PAUSED, RunStatus.ACTIVE),
         }
         with self.connection(write=True) as db:
-            row = db.execute("SELECT status FROM runs WHERE id=?", (run_id,)).fetchone()
+            row = db.execute("SELECT * FROM runs WHERE id=?", (run_id,)).fetchone()
             if row is None:
                 raise StateError("Unknown run")
-            if action == "cancel" and row[0] in (RunStatus.ACTIVE, RunStatus.PAUSED):
+            if guarded:
+                from autodiscover.evidence.chain import verify_chain
+
+                verify_chain(self)  # Writer lock excludes competing mutations during this audit.
+                old = db.execute(
+                    "SELECT payload_json FROM events WHERE run_id=? AND kind='control' "
+                    "AND json_extract(payload_json,'$.command.id')=?",
+                    (run_id, request_id),
+                ).fetchone()
+                if old:
+                    payload = json.loads(old[0])
+                    if payload["command"] != command or payload["action"] != action:
+                        raise ControlConflict("Command identity reused with different inputs")
+                    return {**payload["receipt"], "replayed": True}
+                if row["version"] != expected_version or row["fence"] != expected_fence:
+                    raise ControlConflict("Run changed; refresh before issuing a command")
+            if action == "cancel" and row["status"] in (RunStatus.ACTIVE, RunStatus.PAUSED):
                 destination = RunStatus.CANCELLED
-            elif action in allowed and row[0] == allowed[action][0]:
+            elif action in allowed and row["status"] == allowed[action][0]:
                 destination = allowed[action][1]
             else:
-                raise StateError("Control not allowed in current status")
+                raise ControlConflict("Control not allowed in current status")
             db.execute(
                 """UPDATE runs SET status=?,owner=NULL,lease_until=NULL,fence=fence+1,
                         updated_at=? WHERE id=?""",
                 (destination, now(), run_id),
             )
-            self._event(db, run_id, "control", {"action": action, "status": destination})
+            payload: dict[str, Any] = {"action": action, "status": destination}
+            receipt = None
+            if guarded:
+                receipt = {
+                    "run_id": run_id,
+                    "request_id": request_id,
+                    "action": action,
+                    "status": destination,
+                    "version": row["version"],
+                    "fence": row["fence"] + 1,
+                }
+                payload.update(command=command, receipt=receipt)
+            self._event(db, run_id, "control", payload)
         self.checkpoint(run_id)
+        return {**receipt, "replayed": False} if receipt is not None else None
 
     def outputs(self, run_id: str) -> list[dict[str, Any]]:
         with self.connection() as db:
