@@ -2,7 +2,7 @@
 
 **As of:** November 3, 2026
 **Repository:** `/Users/ashley/Code/autonomous-discovery-lab`
-**Milestone:** Phase 8 locally accepted; exact milestone commit recorded in [HANDOFF.md](HANDOFF.md) after commit. Previous milestone: `8a182e712ea042b8379672936153bcbd281f4e87`.
+**Milestone:** Phase 8 locally accepted and committed as `e1e5ae78731d3d00e6154e0226326cb9ee74f40b`; recovery in [HANDOFF.md](HANDOFF.md). Previous milestone: `8a182e712ea042b8379672936153bcbd281f4e87`.
 **Source identity:** `58aba75623694c0fbf86b227d7a5a6f95f8e2b054057cad2bb84b2f66bb4fb21` (source/tests/config/scripts/dependency manifest).
 **Overall status:** working local research prototype; phases 0–8 have recorded local acceptance. Phase 9 implementation has not started. The full project is incomplete.
 
@@ -83,4 +83,4 @@ Actual novelty and commercial success depend on future research and external evi
 - Interrupted unfinished computation may be explicitly retried; committed completed results are preserved. A caller timeout/cancellation does not prove provider-side cancellation or zero billing, so uncertain reservations remain.
 - Optional remote/distributed workers and physical experimentation remain deferred pending need and authorization. Hackathon eligibility is unconfirmed.
 
-There is no known local blocker. After the required Phase 8 milestone commit, this run prepares a Phase 9 implementation plan only. Phase 9 dashboard/backend implementation is outside this run's scope. Detailed task state remains in [TASK_LEDGER.md](TASK_LEDGER.md), with recovery instructions in [HANDOFF.md](HANDOFF.md).
+There is no known local blocker. Phase 8 is committed; [the Phase 9 plan](PHASE_9_IMPLEMENTATION_PLAN.md) was prepared afterward. Phase 9 dashboard/backend implementation is outside this run's scope. Detailed task state remains in [TASK_LEDGER.md](TASK_LEDGER.md), with recovery instructions in [HANDOFF.md](HANDOFF.md).

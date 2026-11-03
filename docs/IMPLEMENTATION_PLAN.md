@@ -12,3 +12,5 @@ The complete phase criteria are in MASTER_REQUIREMENTS sections 8, 16 and 18. Ex
 7: Separate market model, external evidence collection/import, competitor analysis/gates; gate: technically good but unvalidated candidate classified correctly.
 8: Durable scheduler, concurrency, circuit/resource monitor, graceful controls/status; gate: interrupted extended bounded runs respect limits.
 9: Research monitoring dashboard with active tasks/discoveries, hypothesis trees, evidence/evaluation status, spend/resources and human approval controls. CLI inspection complements the dashboard. Evaluate optional remote workers and specialized experimentation separately; gate: real persisted operations can be inspected and controlled without raw logs.
+
+Phase 8 accepted commit: e1e5ae78731d3d00e6154e0226326cb9ee74f40b. Phase 9 preparation follows this commit; detailed dependency-ordered plan: [PHASE_9_IMPLEMENTATION_PLAN.md](PHASE_9_IMPLEMENTATION_PLAN.md). Plan only in this run; implementation has not started.

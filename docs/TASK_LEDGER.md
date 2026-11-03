@@ -155,7 +155,7 @@ Files: orchestrator/{jobs,scheduler,lab,store,migrations}.py; experiments/runner
 Tests: 143 full tests; 78 focused tests; Ruff passes; Pyright clean; wheel/sdist builds
 Verification: phase_reports/phase-8.md; phase_reports/phase-8-acceptance/; fresh eight workflows/96 stages/24 jobs, peak 1 experiment, zero provider spend, 712-event snapshot and 73 artifacts verified; exact source manifest recorded
 Blockers: none in local Phase 8 scope; no live/distributed/production acceptance
-Next action: create required feat: complete and verify phase 8 durable execution commit, verify contents, then Phase 9 planning only
+Next action: completed and committed as e1e5ae78731d3d00e6154e0226326cb9ee74f40b; Phase 9 plan prepared after commit, implementation next session only
 
 
 ## P9-INSPECT
@@ -164,11 +164,11 @@ Phase: 9
 Description: CLI dashboard/tree/evidence/spend/approval; acceptance: inspection/control without raw logs; evaluate optional extensions
 Dependencies: P8-OPERATE
 Status: NOT_STARTED
-Files: pending
+Files: docs/PHASE_9_IMPLEMENTATION_PLAN.md (plan only; application code not started)
 Tests: pending
 Verification: pending
 Blockers: none
-Next action: implement after dependencies verify
+Next action: next implementation session P9-READ shared non-persisting read service; see PHASE_9_IMPLEMENTATION_PLAN.md
 
 
 ## P5-STATUS-REPORT
@@ -195,3 +195,16 @@ Tests: Report records 134 passing tests, clean types/build and the open Ruff B02
 Verification: docs/PROJECT_STATUS_REPORT.md
 Blockers: none for historical report refresh; Phase 8 subsequently accepted, see P8-OPERATE
 Next action: historical report refresh superseded by Phase 8 acceptance; follow current handoff
+
+
+## P9-PREPARE
+Task ID: P9-PREPARE
+Phase: 9
+Description: Post-Phase8-commit implementation plan only; no Phase9 application changes.
+Dependencies: P8-OPERATE accepted and committed
+Status: VERIFIED
+Files: docs/PHASE_9_IMPLEMENTATION_PLAN.md; HANDOFF.md; IMPLEMENTATION_PLAN.md; TASK_LEDGER.md
+Tests: Plan reviewed against existing service/report/control/review contracts and master Phase9 scope; documentation links and source identity checked.
+Verification: Phase8 milestone commit confirmed before plan creation.
+Blockers: none for local plan; external deployment/spend/permissions remain separately authorized
+Next action: P9-READ in next implementation session; no implementation in this run
