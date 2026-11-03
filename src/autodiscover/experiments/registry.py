@@ -47,6 +47,8 @@ def family(name: str) -> ReviewedFamily:
 
 
 def parse_plan(data: dict[str, Any]) -> RegisteredPlan:
+    if not isinstance(data, dict):
+        raise ValueError("INVALID_PREREGISTERED_PLAN")
     name = data.get("implementation")
     family(name)
     if name == "encoding-v1":
