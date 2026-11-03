@@ -93,6 +93,10 @@ def main() -> None:
     market_review.add_argument("document", type=Path)
     market_show = sub.add_parser("market-show", help="Recompute current commercial evidence level")
     market_show.add_argument("opportunity_id")
+    portfolio = sub.add_parser(
+        "portfolio-plan", help="Read-only cost-aware planning; does not authorize experiments"
+    )
+    portfolio.add_argument("document", type=Path)
     status = sub.add_parser("status", help="Inspect persisted state and verified reports")
     status.add_argument("run_id", nargs="?")
     for command in ("pause", "unpause", "cancel"):
@@ -141,6 +145,14 @@ def main() -> None:
             access_log=False,
             log_level="warning",
         )
+        return
+    if args.command == "portfolio-plan":
+        from autodiscover.hypotheses.portfolio import PortfolioRequest, rank_portfolio
+
+        if args.document.stat().st_size > 65536:
+            parser.error("Planning request exceeds 64 KiB")
+        request = PortfolioRequest.model_validate_json(args.document.read_text(encoding="utf-8"))
+        print(json.dumps(sanitize(rank_portfolio(request)), indent=2))
         return
     if args.command == "check":
         result = {"valid": True, "limits": Limits.load(args.config).model_dump(mode="json")}
