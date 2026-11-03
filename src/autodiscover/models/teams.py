@@ -4,6 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from autodiscover.evidence.artifacts import Artifacts
 from autodiscover.hypotheses.proposals import ResearchProposal, propose
 from autodiscover.models.contracts import GenerationRequest
 from autodiscover.models.router import Router
@@ -128,12 +129,37 @@ class ResearchTeam:
                     "scientific_verdict": "not_evaluated",
                 }
             )
-        return {
+        packet: dict[str, object] = {
             "schema_version": 1,
             "run_id": run_id,
+            "source_ids": sources,
             "models_not_independent_scientific_oracles": True,
             "candidate_reviews": candidates,
             "novelty": "unknown",
             "commercial_validation": "unvalidated",
             "next_step": "Independent method review and preregistered experiment required",
         }
+        # Persist a content-addressed, non-authoritative research packet. Recheck
+        # sources under the event writer lock after all potentially slow model calls.
+        digest = Artifacts(self.router.store.root / "artifacts").put_json(packet)
+        with self.router.store.connection(write=True) as db:
+            for identifier in sources:
+                row = db.execute(
+                    "SELECT valid FROM research_nodes WHERE id=? AND kind='source'",
+                    (identifier,),
+                ).fetchone()
+                if row is None or not row["valid"]:
+                    raise ValueError("Research source invalidated during model review")
+            previous = db.execute(
+                "SELECT 1 FROM events WHERE run_id=? AND kind='research_team_reviewed' "
+                "AND json_extract(payload_json,'$.artifact_digest')=?",
+                (run_id, digest),
+            ).fetchone()
+            if previous is None:
+                self.router.store._event(
+                    db,
+                    run_id,
+                    "research_team_reviewed",
+                    {"artifact_digest": digest, "source_ids": sources},
+                )
+        return {**packet, "artifact_digest": digest}
