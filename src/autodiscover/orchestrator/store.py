@@ -29,6 +29,8 @@ class StateError(RuntimeError):
 
 
 class Store:
+    read_only = False
+
     def __init__(self, root: Path, *, clock: Callable[[], float] = time.time):
         self.root = root
         self.root.mkdir(parents=True, exist_ok=True)
@@ -407,3 +409,45 @@ class Store:
                 "evidence_anchor": dict(anchor) if anchor else None,
             },
         )
+
+
+class SnapshotStore(Store):
+    """Existing-schema, query-only SQLite snapshot; never initializes or migrates a root."""
+
+    read_only = True
+
+    def __init__(self, root: Path):
+        self.root, self.path, self.clock = root, root / "lab.sqlite3", time.time
+        self._db: sqlite3.Connection | None = None
+
+    def __enter__(self) -> "SnapshotStore":
+        from autodiscover.orchestrator.migrations import MIGRATIONS
+
+        self._db = sqlite3.connect(self.path.resolve().as_uri() + "?mode=ro", uri=True, timeout=10)
+        self._db.row_factory = sqlite3.Row
+        try:
+            self._db.execute("PRAGMA query_only=ON")
+            self._db.execute("BEGIN")
+            if self._db.execute("PRAGMA user_version").fetchone()[0] != len(MIGRATIONS):
+                raise StateError("Read views require the current schema; initialize using the CLI")
+            self._db.execute("SELECT seq FROM events ORDER BY seq DESC LIMIT 1").fetchone()
+            return self
+        except BaseException:
+            self.__exit__(None, None, None)
+            raise
+
+    def __exit__(self, *_args: Any) -> None:
+        if self._db is not None:
+            self._db.close()
+            self._db = None
+
+    @contextmanager
+    def connection(self, *, write: bool = False) -> Iterator[sqlite3.Connection]:
+        if write:
+            raise StateError("Snapshot is read only")
+        if self._db is None:
+            raise StateError("Snapshot context is closed")
+        yield self._db
+
+    def checkpoint(self, run_id: str) -> None:
+        raise StateError("Snapshot cannot persist checkpoints")

@@ -22,7 +22,10 @@ class ResourceBusy(RuntimeError):
 
 class Jobs:
     def __init__(self, store: Store):
-        self.store, self.artifacts = store, Artifacts(store.root / "artifacts")
+        self.store, self.artifacts = (
+            store,
+            Artifacts(store.root / "artifacts", read_only=store.read_only),
+        )
 
     def reconcile(self) -> int:
         from autodiscover.evidence.chain import verify_chain

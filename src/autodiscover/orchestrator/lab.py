@@ -461,52 +461,12 @@ class Lab:
             }
         return output, None, None
 
-    def report(self, run_id: str) -> dict[str, Any]:
-        row = self.store.get_run(run_id)
-        assessment = None
-        market = None
-        for step in self.store.outputs(run_id):
-            if step["stage"] == Stage.ASSESS:
-                assessment = json.loads(step["output_json"])
-            if step["stage"] == Stage.VALIDATE_MARKET:
-                market = json.loads(step["output_json"])
-        if market and market.get("opportunity_id"):
-            service = Market(self.store)
-            _run, profile = service.opportunity(market["opportunity_id"])
-            current_id = service.current(run_id, profile.candidate_id) or market["opportunity_id"]
-            current = service.assess(current_id)
-            market = {
-                **market,
-                "recorded_opportunity_id": market["opportunity_id"],
-                "opportunity_id": current_id,
-                "recorded_level": market["level"],
-                "recorded_validated": market["validated"],
-                "level": current["level"],
-                "validated": current["validated"],
-                "evidence_ids": current["evidence_ids"],
-                "classification": current["classification"],
-                "missing_information": current["missing_information"],
-                "limitations": current["limitations"],
-            }
-        report = {
-            "schema_version": 1,
-            "run_id": run_id,
-            "status": row["status"],
-            "stage": row["stage"],
-            "completed_steps": len(self.store.outputs(run_id)),
-            "search": self.director.tree(run_id),
-            "jobs": self.jobs.status(run_id),
-            "assessment": assessment,
-            "assessment_scope": "Last completed hypothesis assessment; see per-branch results",
-            "commercial": market,
-            "usage": Budget(self.store).totals(run_id),
-            "evidence": verify_chain(self.store),
-            "research": {
-                "source_ids": Catalog(self.store).sources(run_id),
-                "novelty": "unknown",
-                "coverage_exhaustive": False,
-            },
-            "mode": "trusted encoding loop; source retrieval opt-in; live providers unverified",
-        }
-        atomic_json(self.store.root / "reports" / f"{run_id}.json", report)
+    def report(self, run_id: str, *, persist: bool = True) -> dict[str, Any]:
+        from autodiscover.orchestrator.store import SnapshotStore
+        from autodiscover.reporting.reports import build_report
+
+        with SnapshotStore(self.store.root) as snapshot:
+            report = build_report(snapshot, run_id)
+        if persist:
+            atomic_json(self.store.root / "reports" / f"{run_id}.json", report)
         return report

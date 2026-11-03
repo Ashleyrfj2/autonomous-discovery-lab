@@ -16,9 +16,11 @@ class IntegrityError(ValueError):
 
 
 class Artifacts:
-    def __init__(self, root: Path, max_bytes: int = 8000000):
+    def __init__(self, root: Path, max_bytes: int = 8000000, *, read_only: bool = False):
         self.root, self.max_bytes = root.resolve(), max_bytes
-        self.root.mkdir(parents=True, exist_ok=True)
+        self.read_only = read_only
+        if not read_only:
+            self.root.mkdir(parents=True, exist_ok=True)
 
     def path(self, digest: str) -> Path:
         if not re.fullmatch(r"[a-f0-9]{64}", digest):
@@ -29,6 +31,8 @@ class Artifacts:
         return path
 
     def put(self, content: bytes) -> str:
+        if self.read_only:
+            raise IntegrityError("Read-only artifacts cannot persist content")
         if len(content) > self.max_bytes:
             raise IntegrityError("Artifact exceeds limit")
         digest = hashlib.sha256(content).hexdigest()

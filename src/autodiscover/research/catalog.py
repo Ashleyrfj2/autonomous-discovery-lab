@@ -34,7 +34,9 @@ class Source(BaseModel):
 class Catalog:
     def __init__(self, store: Store):
         self.store = store
-        self.artifacts = Artifacts(store.root / "artifacts")
+        self.artifacts = Artifacts(store.root / "artifacts", read_only=store.read_only)
+        if store.read_only:
+            return  # Index recovery belongs to explicit writable initialization, never a GET.
         # The URL index is derived and rebuilt for sources registered before migration 4.
         with store.connection() as db:
             missing = db.execute(

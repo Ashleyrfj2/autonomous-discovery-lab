@@ -20,7 +20,10 @@ class CommercialError(ValueError):
 
 class Market:
     def __init__(self, store: Store):
-        self.store, self.artifacts = store, Artifacts(store.root / "artifacts")
+        self.store, self.artifacts = (
+            store,
+            Artifacts(store.root / "artifacts", read_only=store.read_only),
+        )
         self.catalog = Catalog(store)
 
     def save(self, run_id: str, opportunity: Opportunity) -> str:

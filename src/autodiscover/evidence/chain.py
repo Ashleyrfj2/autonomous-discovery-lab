@@ -48,7 +48,8 @@ def verify_events(
 
 def verify_chain(store: Store, anchor: dict[str, Any] | None = None) -> dict[str, Any]:
     with store.connection() as db:
-        db.execute("BEGIN")
+        if not db.in_transaction:
+            db.execute("BEGIN")
         events = [dict(r) for r in db.execute("SELECT * FROM events ORDER BY seq")]
         steps = [dict(r) for r in db.execute("SELECT * FROM steps ORDER BY rowid")]
         nodes = [dict(r) for r in db.execute("SELECT * FROM research_nodes")]
@@ -105,9 +106,13 @@ def verify_chain(store: Store, anchor: dict[str, Any] | None = None) -> dict[str
     if set(validity) != {node["id"] for node in nodes}:
         raise IntegrityError("Research node projection missing evidence")
     verify_branch_projections(events, branch_tables)
-    verify_market_projections(events, branch_tables, Artifacts(store.root / "artifacts"))
+    verify_market_projections(
+        events, branch_tables, Artifacts(store.root / "artifacts", read_only=store.read_only)
+    )
     verify_job_projections(
-        events, branch_tables["experiment_jobs"], Artifacts(store.root / "artifacts")
+        events,
+        branch_tables["experiment_jobs"],
+        Artifacts(store.root / "artifacts", read_only=store.read_only),
     )
     verify_queue_projections(events, branch_tables["work_queue"])
     return checked

@@ -83,4 +83,6 @@ Actual novelty and commercial success depend on future research and external evi
 - Interrupted unfinished computation may be explicitly retried; committed completed results are preserved. A caller timeout/cancellation does not prove provider-side cancellation or zero billing, so uncertain reservations remain.
 - Optional remote/distributed workers and physical experimentation remain deferred pending need and authorization. Hackathon eligibility is unconfirmed.
 
-There is no known local blocker. Phase 8 is committed; [the Phase 9 plan](PHASE_9_IMPLEMENTATION_PLAN.md) was prepared afterward. Phase 9 dashboard/backend implementation is outside this run's scope. Detailed task state remains in [TASK_LEDGER.md](TASK_LEDGER.md), with recovery instructions in [HANDOFF.md](HANDOFF.md).
+There is no known local blocker. Phase 8 is committed; [the Phase 9 plan](PHASE_9_IMPLEMENTATION_PLAN.md) was prepared afterward. The user subsequently authorized starting Phase 9. The typed snapshot read service is now verified; authentication/UI/control/review/browser work remains. Detailed task state remains in [TASK_LEDGER.md](TASK_LEDGER.md), with recovery instructions in [HANDOFF.md](HANDOFF.md).
+
+Phase9 P9-READ milestone:150 full tests and78 focused regressions pass; query-only coherent snapshots and typed bounded read views implemented. See [read-task report](phase_reports/phase-9-read.md). Phase9 remains incomplete.

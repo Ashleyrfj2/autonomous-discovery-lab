@@ -163,10 +163,10 @@ Task ID: P9-INSPECT
 Phase: 9
 Description: CLI dashboard/tree/evidence/spend/approval; acceptance: inspection/control without raw logs; evaluate optional extensions
 Dependencies: P8-OPERATE
-Status: NOT_STARTED
-Files: docs/PHASE_9_IMPLEMENTATION_PLAN.md (plan only; application code not started)
-Tests: pending
-Verification: pending
+Status: IN_PROGRESS
+Files: docs/PHASE_9_IMPLEMENTATION_PLAN.md (plan only; P9-READ code now verified)
+Tests: P9-READ150 pass; remaining auth/UI/control/review/browser qualification pending
+Verification: phase_reports/phase-9-read.md (read task only)
 Blockers: none
 Next action: next implementation session P9-READ shared non-persisting read service; see PHASE_9_IMPLEMENTATION_PLAN.md
 
@@ -221,3 +221,16 @@ Tests: Fresh Ruff passes; Pyright 0 findings; 143 tests passed in 9.88s; wheel/s
 Verification: phase_reports/phase-8-recheck.md
 Blockers: none; unrelated PROJECT_STATUS_REPORT_.md untouched
 Next action: Phase9 P9-READ in next implementation session; planning only for this request
+
+
+## P9-READ
+Task ID: P9-READ
+Phase: 9
+Description: Shared read-only report and typed bounded snapshot views for REQ-031, preserving CLI persistence and scientific classifications.
+Dependencies: P8-OPERATE
+Status: VERIFIED
+Files: reporting/{reports,views}.py; orchestrator/{store,lab}.py; read-only artifact/service adapters; tests/integration/test_read_views.py
+Tests: 150 full tests; seven read-view regressions;78 focused Phase8 tests; Ruff and Pyright clean; wheel/sdist built
+Verification: phase_reports/phase-9-read.md; phase-9-read-regression/
+Blockers: none for local read service
+Next action: P9-AUTH local authenticated adapter; full Phase9 remains in progress

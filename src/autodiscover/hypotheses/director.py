@@ -42,7 +42,7 @@ class SearchPolicy(BaseModel):
 class Director:
     def __init__(self, store: Store):
         self.store = store
-        self.artifacts = Artifacts(store.root / "artifacts")
+        self.artifacts = Artifacts(store.root / "artifacts", read_only=store.read_only)
 
     def configure(self, run_id: str, policy: SearchPolicy | None = None) -> SearchPolicy:
         limits = Limits.model_validate_json(self.store.get_run(run_id)["policy_json"])
