@@ -76,7 +76,8 @@ def rank_portfolio(request: PortfolioRequest) -> dict[str, object]:
             cost_penalty = 1 + float(candidate.estimated_max_cost_usd) + (
                 candidate.estimated_seconds / 60
             )
-            return evidence_weight * uncertain_gain * diversity / cost_penalty, candidate.candidate_id
+            weighted = evidence_weight * uncertain_gain * diversity / cost_penalty
+            return weighted, candidate.candidate_id
 
         choice = sorted(affordable, key=lambda item: (-score(item)[0], item.candidate_id))[0]
         selected.append(
