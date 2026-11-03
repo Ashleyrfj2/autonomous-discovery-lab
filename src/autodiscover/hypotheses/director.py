@@ -272,6 +272,7 @@ class Director:
                 candidates.sort(
                     key=lambda c: (
                         family_counts.get(c["kind"], 0),
+                        c["kind"],  # Do not compare unrelated family metric scores.
                         -(c["score"] or 0),
                         domain_counts.get(c["domain"], 0),
                         c["id"],
