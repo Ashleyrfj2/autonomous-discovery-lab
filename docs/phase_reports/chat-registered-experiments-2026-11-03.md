@@ -53,3 +53,5 @@ A separate local arithmetic check of shuffled bounded allocation traps confirmed
 ## Context recovery
 
 Read `AGENTS.md`, `docs/PROJECT_CHARTER.md`, `docs/HANDOFF.md`, `docs/REGISTERED_EXPERIMENTS.md`, this report, `docs/DECISION_LOG.md`, `docs/TASK_LEDGER.md`, and the current draft PR. Never infer production readiness or scientific success from a synthetic test or a remote GitHub commit.
+
+Follow-up code-review improvement: research-team output is retained in the existing local artifact store with an append-only non-authoritative event, replay deduplicated by digest. Source validity is rechecked at event commit. An additional unit assertion for readback/idempotent replay is authored but not locally run.
