@@ -310,3 +310,7 @@ Tests: Ruff, Pyright, 22 focused tests, 202 full tests and package build pass. N
 Verification: docs/phase_reports/pr-2-local-verification.md.
 Blockers: none in local scope. Live inference, field validity and production acceptance remain separate.
 Next action: human review of the local PR 2 commits and audit evidence.
+
+## HACKATHON-MODEL-QUALIFICATION
+
+Phase 9 provider gate on the existing PR #2 branch. Local adapter, structured output, source-bound review packet and replay verification are recorded in the [phase report](phase_reports/hackathon-model-qualification.md). Live acceptance is BLOCKED by unresolved charges, exact restricted-model capability and three-role credential entitlement evidence. The next eligible step is read-only reconciliation against provider records and an exact cost bound for a separately approved staged request. Overnight operation remains blocked.

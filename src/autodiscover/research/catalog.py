@@ -288,6 +288,7 @@ class Catalog:
         run_id: str,
         *,
         max_characters: int = 10000,
+        excerpt_characters: int = 1200,
         public_source_ids: list[str] | None = None,
     ) -> str:
         items = []
@@ -303,7 +304,7 @@ class Catalog:
                     "source_id": identifier,
                     "title": source.title,
                     "doi": source.doi,
-                    "untrusted_excerpt": text[:1200],
+                    "untrusted_excerpt": text[:excerpt_characters],
                     "kind": source.source_kind,
                 }
             )

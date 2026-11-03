@@ -73,3 +73,5 @@ REQ-007/031/032/033/034/037/038: remote source diff, tests and documentation rec
 ## PR 2 local qualification
 
 REQ-002/005/010/022/023 have native local evidence for the two reviewed families, failed-result preservation and allocation replication. REQ-004/006/014 have mock-only evidence for role routing, source safeguards and replay. REQ-025 has evidence for family-aware allocation and advisory budget/time limits. See [PR 2 audit](phase_reports/pr-2-local-verification.md) for the scoped REQ-007/017/032/033/037 evidence and remaining limits.
+
+Provider qualification update for REQ-004, REQ-006, REQ-014, REQ-015 and REQ-019. The restricted Baseten profile, documented Meta reasoning, typed source-bound packet, cache-only replay and usage controls have local mock HTTP evidence. Archived source and recovery records were checked separately. Live acceptance remains blocked as recorded in the [phase report](phase_reports/hackathon-model-qualification.md).

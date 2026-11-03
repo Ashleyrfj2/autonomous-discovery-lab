@@ -1,5 +1,6 @@
 """Opt-in separated model roles; model criticism is not scientific verification."""
 
+from sqlite3 import Connection
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -7,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from autodiscover.evidence.artifacts import Artifacts
 from autodiscover.hypotheses.proposals import ResearchProposal, propose
 from autodiscover.models.contracts import GenerationRequest
+from autodiscover.models.providers import HTTPProvider
 from autodiscover.models.router import Router
 from autodiscover.orchestrator.durability import canonical
 from autodiscover.research.catalog import Catalog
@@ -25,6 +27,37 @@ class CriticalReview(BaseModel):
     novelty_verified: Literal[False] = False
     technical_verified: Literal[False] = False
     commercial_validated: Literal[False] = False
+
+
+class CandidateReview(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    role: Literal["RESEARCH_PROPOSALS", "EXPLORATORY"]
+    proposal: ResearchProposal
+    critique: CriticalReview
+    scientific_verdict: Literal["not_evaluated"] = "not_evaluated"
+
+
+class ResearchReviewPacket(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    schema_version: Literal[1] = 1
+    run_id: str
+    source_ids: list[str] = Field(max_length=5)
+    models_not_independent_scientific_oracles: Literal[True] = True
+    candidate_reviews: list[CandidateReview] = Field(min_length=2, max_length=2)
+    novelty: Literal["unknown"] = "unknown"
+    commercial_validation: Literal["unvalidated"] = "unvalidated"
+    next_step: str = "Independent method review and preregistered experiment required"
+
+
+def _check_sources(db: Connection, run_id: str, sources: list[str]) -> None:
+    for identifier in sources:
+        row = db.execute(
+            "SELECT n.valid FROM research_nodes n JOIN run_sources r ON n.id=r.source_id "
+            "WHERE r.run_id=? AND n.id=? AND n.kind='source'",
+            (run_id, identifier),
+        ).fetchone()
+        if row is None or not row["valid"]:
+            raise ValueError("Research source invalidated during model review")
 
 
 class RoleSeparationError(ValueError):
@@ -46,7 +79,12 @@ class ResearchTeam:
             providers = router.routes.get(role)
             if not providers:
                 raise RoleSeparationError("All three research model roles must be configured")
-            identities[role] = {(provider.name, provider.model) for provider in providers}
+            identities[role] = {
+                (provider.config.kind, provider.config.model)
+                if isinstance(provider, HTTPProvider)
+                else (provider.name, provider.model)
+                for provider in providers
+            }
         for index, first in enumerate(self.ROLES):
             for second in self.ROLES[index + 1 :]:
                 if identities[first] & identities[second]:
@@ -54,6 +92,9 @@ class ResearchTeam:
                         "Research roles must use distinct provider/model pairs"
                     )
         self.router = router
+        self.requires_public_sources = any(
+            provider.is_live for role in self.ROLES for provider in router.routes[role]
+        )
 
     def _critique(
         self,
@@ -67,11 +108,11 @@ class ResearchTeam:
         request = GenerationRequest(
             prompt=canonical(
                 {
-                    "task": "Challenge this proposal; find confounds and competing explanations. "
-                    "Suggest a falsifying test. You are a critic, not a scientific verifier. "
+                    "task": "Give one short item per risk, flaw and alternative explanation. "
+                    "Suggest one falsifying test. Cite a permitted source when supplied. "
                     "Do not assert novelty, technical validation or commercial demand.",
                     "hypothesis": proposal.model_dump(mode="json"),
-                    "source_context_untrusted": source_context[:10000],
+                    "source_context_untrusted": source_context,
                     "permitted_source_ids": source_ids,
                 }
             )
@@ -83,6 +124,8 @@ class ResearchTeam:
         )
         if not set(review.source_ids).issubset(source_ids):
             raise ValueError("Critic referenced unavailable sources")
+        if source_ids and not review.source_ids:
+            raise ValueError("Critic must cite at least one available source")
         return review
 
     def investigate(
@@ -97,8 +140,10 @@ class ResearchTeam:
             raise ValueError("Bounded stable research key required")
         catalog = Catalog(self.router.store)
         sources = catalog.sources(run_id)[:5]
+        if self.requires_public_sources and not sources:
+            raise ValueError("Live research roles require verified public sources")
         context = (
-            catalog.context(run_id, public_source_ids=sources)
+            catalog.context(run_id, excerpt_characters=450, public_source_ids=sources)
             if sources
             else "No external research sources"
         )
@@ -106,6 +151,8 @@ class ResearchTeam:
             raise ValueError("Refusing to send recognizable credentials to model roles")
         candidates = []
         for role in ("RESEARCH_PROPOSALS", "EXPLORATORY"):
+            with self.router.store.connection() as db:
+                _check_sources(db, run_id, sources)
             proposal = propose(
                 self.router,
                 run_id,
@@ -116,6 +163,8 @@ class ResearchTeam:
                 key=f"{key}:{role}:propose",
                 stage=role,
             )
+            with self.router.store.connection() as db:
+                _check_sources(db, run_id, sources)
             critic = self._critique(
                 run_id,
                 proposal,
@@ -123,37 +172,15 @@ class ResearchTeam:
                 source_context=context,
                 key=f"{key}:{role}:critique",
             )
-            candidates.append(
-                {
-                    "role": role,
-                    "proposal": proposal.model_dump(mode="json"),
-                    "critique": critic.model_dump(mode="json"),
-                    "scientific_verdict": "not_evaluated",
-                }
-            )
-        packet: dict[str, object] = {
-            "schema_version": 1,
-            "run_id": run_id,
-            "source_ids": sources,
-            "models_not_independent_scientific_oracles": True,
-            "candidate_reviews": candidates,
-            "novelty": "unknown",
-            "commercial_validation": "unvalidated",
-            "next_step": "Independent method review and preregistered experiment required",
-        }
-        # Persist a content-addressed, non-authoritative research packet. Recheck
-        # sources under the event writer lock after all potentially slow model calls.
-        packet = sanitize(packet)
-        digest = Artifacts(self.router.store.root / "artifacts").put_json(packet)
+            candidates.append(CandidateReview(role=role, proposal=proposal, critique=critic))
+        packet = ResearchReviewPacket(
+            run_id=run_id, source_ids=sources, candidate_reviews=candidates
+        )
+        # Recheck sources under the event writer lock after all potentially slow model calls.
+        body = sanitize(packet.model_dump(mode="json"))
         with self.router.store.connection(write=True) as db:
-            for identifier in sources:
-                row = db.execute(
-                    "SELECT n.valid FROM research_nodes n JOIN run_sources r ON n.id=r.source_id "
-                    "WHERE r.run_id=? AND n.id=? AND n.kind='source'",
-                    (run_id, identifier),
-                ).fetchone()
-                if row is None or not row["valid"]:
-                    raise ValueError("Research source invalidated during model review")
+            _check_sources(db, run_id, sources)
+            digest = Artifacts(self.router.store.root / "artifacts").put_json(body)
             previous = db.execute(
                 "SELECT 1 FROM events WHERE run_id=? AND kind='research_team_reviewed' "
                 "AND json_extract(payload_json,'$.artifact_digest')=?",
@@ -166,4 +193,4 @@ class ResearchTeam:
                     "research_team_reviewed",
                     {"artifact_digest": digest, "source_ids": sources},
                 )
-        return {**packet, "artifact_digest": digest}
+        return {**body, "artifact_digest": digest}

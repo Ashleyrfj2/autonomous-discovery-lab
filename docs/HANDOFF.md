@@ -26,3 +26,7 @@ Remote branch continuation: opt-in ResearchTeam now saves its model critiques as
 ## PR 2 local verification
 
 The registered-experiments branch is LOCALLY VERIFIED at source commit `3e95766904d289077f05d703d8f2f0a123576711`. The audit repaired six issues and retained positive, negative, recovery and historical encoding evidence. Ruff, Pyright, 22 focused tests, 202 full tests and the build passed. The local commits are ready for human review. See [PR 2 audit](phase_reports/pr-2-local-verification.md).
+
+## Current provider qualification handoff
+
+Resume on `chat/registered-experiments-20261103` in the linked PR #2 worktree. Read the [qualification report](phase_reports/hackathon-model-qualification.md) and `runtime/checkpoints/hackathon-qualification/source-baseline.json`. The retained staged root is `runtime/staged-qualification-CLHJGg`. The earlier smoke root is `runtime/paid-validation-y7xYlF`. Read both before any discussion of spend. The next external step is read-only provider billing and entitlement reconciliation. Full ResearchTeam inference and overnight operation are blocked. A diagnostic requires a documented cost bound within the existing cap and explicit new billable approval.

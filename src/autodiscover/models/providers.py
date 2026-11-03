@@ -18,9 +18,11 @@ from autodiscover.models.contracts import (
     ProviderError,
     T,
     Usage,
+    parse_structured,
 )
 from autodiscover.orchestrator.durability import canonical
 from autodiscover.security.cancellation import cancellation_requested
+from autodiscover.security.redaction import contains_credential
 
 _HTTP_INFLIGHT = threading.BoundedSemaphore(8)
 
@@ -37,21 +39,25 @@ class HTTPProvider:
         transport: httpx.BaseTransport | None = None,
         api_key: SecretStr | None = None,
     ):
-        self.config = config
+        # model_copy(update=...) and model_construct can bypass Pydantic validation.
+        self.config = ProviderConfig.model_validate(config.model_dump())
         self.name, self.model = config.name, config.model
         self._transport, self._key = transport, api_key
         self._usage = Usage(input_tokens=0, output_tokens=0)
         self._usage_lock = threading.Lock()
 
-    def _client(self) -> httpx.Client:
+    def _client(self, body: dict[str, Any] | None) -> httpx.Client:
         if not self.config.live_authorized:
             raise ProviderError("LIVE_NOT_AUTHORIZED", known_zero_cost=True)
         key = self._key or SecretStr(os.environ.get(self.config.api_key_env, ""))
-        if not key.get_secret_value():
+        value = key.get_secret_value()
+        if not value:
             raise ProviderError("CREDENTIAL_UNAVAILABLE", known_zero_cost=True)
+        if body is not None and value in canonical(body):
+            raise ProviderError("CREDENTIAL_IN_PROMPT", known_zero_cost=True)
         return httpx.Client(
             base_url=BASE_URLS[self.config.kind] + "/",
-            headers={"Authorization": f"Bearer {key.get_secret_value()}"},
+            headers={"Authorization": f"Bearer {value}"},
             timeout=self.config.timeout_seconds,
             transport=self._transport,
             follow_redirects=False,
@@ -59,10 +65,12 @@ class HTTPProvider:
         )
 
     def _body(self, request: GenerationRequest) -> dict[str, Any]:
+        if contains_credential(canonical(request.model_dump(mode="json"))):
+            raise ProviderError("CREDENTIAL_IN_PROMPT", known_zero_cost=True)
         if request.max_output_tokens > self.config.output_limit:
             raise ProviderError("OUTPUT_CAPABILITY_EXCEEDED")
         body: dict[str, Any] = {
-            "model": self.model,
+            "model": self.config.model,
             "stream": False,
             "messages": [
                 {
@@ -75,21 +83,25 @@ class HTTPProvider:
         }
         cap_name = "max_completion_tokens" if self.config.kind == "meta" else "max_tokens"
         body[cap_name] = request.max_output_tokens
+        if self.config.reasoning_effort is not None:
+            body["reasoning_effort"] = self.config.reasoning_effort
         if request.json_schema is not None:
-            if not self.config.structured_output:
-                raise ProviderError("STRUCTURED_OUTPUT_UNSUPPORTED")
             schema = request.json_schema
             if schema.get("additionalProperties") is False and "properties" in schema:
                 # Strict APIs require defaulted and nullable fields to be listed too.
                 schema = {**schema, "required": list(schema["properties"])}
-            body["response_format"] = {
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "research_result",
-                    "schema": schema,
-                    "strict": True,
-                },
-            }
+            if self.config.profile == "baseten_hackathon":
+                # Native schema support for the restricted ID is unconfirmed.
+                body["messages"][0]["content"] += (
+                    " Return one JSON object matching this schema: " + canonical(schema)
+                )
+            elif self.config.structured_output:
+                body["response_format"] = {
+                    "type": "json_schema",
+                    "json_schema": {"name": "research_result", "schema": schema, "strict": True},
+                }
+            else:
+                raise ProviderError("STRUCTURED_OUTPUT_UNSUPPORTED")
         # Conservative byte bound plus framing; reserve the full configured context for input.
         if (
             len(canonical(body).encode()) + 256 + request.max_output_tokens
@@ -153,7 +165,7 @@ class HTTPProvider:
     ) -> dict[str, Any]:
         deadline = time.monotonic() + self.config.timeout_seconds
         try:
-            with self._client() as client, client.stream(method, path, json=body) as response:
+            with self._client(body) as client, client.stream(method, path, json=body) as response:
                 if time.monotonic() >= deadline:
                     raise ProviderError("PROVIDER_TIMEOUT", uncertain=True)
                 if response.status_code != 200:
@@ -190,50 +202,98 @@ class HTTPProvider:
         body = self._body(request)
         data = self._request("POST", "chat/completions", body)
         try:
+            reported = data["usage"]
+            details = reported.get("completion_tokens_details")
             usage = Usage(
-                input_tokens=data["usage"]["prompt_tokens"],
-                output_tokens=data["usage"]["completion_tokens"],
+                input_tokens=reported["prompt_tokens"],
+                output_tokens=reported["completion_tokens"],
+                reasoning_tokens=details.get("reasoning_tokens") if details is not None else None,
             )
-            with self._usage_lock:
-                self._usage = Usage(
-                    input_tokens=self._usage.input_tokens + usage.input_tokens,
-                    output_tokens=self._usage.output_tokens + usage.output_tokens,
-                )
-            cost = (
-                usage.input_tokens * self.config.input_usd_per_million
-                + usage.output_tokens * self.config.output_usd_per_million
-            ) / Decimal(1000000)
-            choice = data["choices"][0]
-            if choice["finish_reason"] != "stop" or choice["message"].get("refusal"):
-                raise ProviderError("INCOMPLETE_OR_REFUSED", uncertain=True)
-            text = choice["message"]["content"]
-            if not isinstance(text, str) or not text:
-                raise ProviderError("INVALID_CONTENT", uncertain=True)
-            return Generation(
-                text=text,
-                provider=self.name,
-                model=data.get("model", self.model),
-                usage=usage,
-                cost_usd=cost,
-            )
-        except (KeyError, IndexError, TypeError, ValidationError):
+            if "total_tokens" in reported:
+                total = reported["total_tokens"]
+                if type(total) is not int or total != usage.input_tokens + usage.output_tokens:
+                    raise ValueError("Inconsistent total usage")
+        except (AttributeError, KeyError, TypeError, ValueError):
             raise ProviderError("INVALID_RESPONSE_OR_USAGE", uncertain=True) from None
+
+        with self._usage_lock:
+            reasoning = self._usage.reasoning_tokens
+            if usage.reasoning_tokens is not None:
+                reasoning = (reasoning or 0) + usage.reasoning_tokens
+            self._usage = Usage(
+                input_tokens=self._usage.input_tokens + usage.input_tokens,
+                output_tokens=self._usage.output_tokens + usage.output_tokens,
+                reasoning_tokens=reasoning,
+            )
+        cost = (
+            usage.input_tokens * self.config.input_usd_per_million
+            + usage.output_tokens * self.config.output_usd_per_million
+        ) / Decimal(1000000)
+        model = data.get("model")
+
+        def failed(code: str) -> ProviderError:
+            if data.get("model") != self.config.model:
+                return ProviderError(code, uncertain=True, usage=usage)
+            return ProviderError(code, usage=usage, cost_usd=cost)
+
+        if not isinstance(model, str) or not model:
+            raise failed("INVALID_RESPONSE_MODEL")
+
+        try:
+            choice = data["choices"][0]
+            finish = choice["finish_reason"]
+            if finish == "length" or usage.output_tokens > request.max_output_tokens:
+                raise failed("OUTPUT_TOKEN_LIMIT")
+            message = choice["message"]
+            if finish != "stop" or message.get("refusal"):
+                raise failed("INCOMPLETE_OR_REFUSED")
+            text = message.get("content")
+            if text is None or isinstance(text, str) and not text.strip():
+                if message.get("reasoning_content") or (
+                    usage.output_tokens > 0 and usage.reasoning_tokens == usage.output_tokens
+                ):
+                    raise failed("REASONING_ONLY")
+                if usage.output_tokens == request.max_output_tokens:
+                    raise failed("OUTPUT_TOKEN_LIMIT")
+                raise failed("EMPTY_FINAL_CONTENT")
+            if not isinstance(text, str):
+                raise failed("INVALID_CONTENT")
+            key = (
+                self._key.get_secret_value() if self._key else os.environ.get(
+                    self.config.api_key_env, ""
+                )
+            )
+            if key and key in text:
+                raise failed("CREDENTIAL_IN_RESPONSE")
+            return Generation(
+                text=text, provider=self.name, model=model, usage=usage, cost_usd=cost
+            )
+        except (AttributeError, KeyError, IndexError, TypeError, ValidationError):
+            raise failed("INVALID_RESPONSE") from None
 
     def generate_structured(
         self, request: GenerationRequest, schema: type[T]
     ) -> tuple[T, Generation]:
         request = request.model_copy(update={"json_schema": schema.model_json_schema()})
         result = self.generate(request)
+        if result.model != self.config.model:
+            raise ProviderError(
+                "PROVIDER_IDENTITY_MISMATCH", usage=result.usage, cost_usd=result.cost_usd
+            )
         try:
-            return schema.model_validate_json(result.text), result
-        except ValidationError:
-            raise ProviderError("INVALID_STRUCTURED_RESPONSE", uncertain=True) from None
+            return parse_structured(result.text, schema), result
+        except (ValueError, RecursionError):
+            raise ProviderError(
+                "INVALID_STRUCTURED_RESPONSE", usage=result.usage, cost_usd=result.cost_usd
+            ) from None
 
     def get_usage(self) -> Usage:
         with self._usage_lock:
             return self._usage
 
     def health_check(self) -> dict[str, Any]:
+        if self.config.profile == "baseten_hackathon":
+            raise ProviderError("HACKATHON_INFERENCE_ENDPOINT_ONLY", known_zero_cost=True)
         data = self._request("GET", "models")
         models = data.get("data", [])
         available = any(isinstance(m, dict) and m.get("id") == self.model for m in models)

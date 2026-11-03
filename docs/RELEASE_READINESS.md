@@ -22,3 +22,7 @@ Branch `chat/registered-experiments-20261103` proposes two reviewed executable e
 ## PR 2 local qualification
 
 The registered-family branch passed Ruff, Pyright, 22 focused tests, 202 full tests, the package build, fresh native positive and negative runs, and interrupted-worker recovery. This qualification applies to the local reviewed worker protocol and mock model roles. See the [PR 2 audit](phase_reports/pr-2-local-verification.md) for exact source, results and remaining limits.
+
+## Hackathon model qualification
+
+The local provider and replay gate is covered by the [qualification report](phase_reports/hackathon-model-qualification.md). Live multi-model and overnight gates are BLOCKED. Verified allocation results apply to the synthetic preregistered protocol. Novelty remains unknown and commercial validation remains at level 0. Production isolation, provider entitlements, exact restricted endpoint capabilities and provider-side charge reconciliation remain open.

@@ -322,15 +322,56 @@ def test_source_context_uses_only_the_checked_source_selection(tmp_path, monkeyp
             assert "live_https" in request.prompt
             return super().generate(request)
 
+    cited_critique = critique() | {"source_ids": [ids[0]]}
     router = Router(
         store,
         {
-            "RESEARCH_PROPOSALS": [ObservingProposer([proposal()])],
-            "EXPLORATORY": [Explorer([proposal()])],
-            "CRITIQUE": [Critic([critique(), critique()])],
+            "RESEARCH_PROPOSALS": [ObservingProposer([proposal() | {"source_ids": [ids[0]]}])],
+            "EXPLORATORY": [Explorer([proposal() | {"source_ids": [ids[0]]}])],
+            "CRITIQUE": [Critic([cited_critique, cited_critique])],
         },
     )
     ResearchTeam(router).investigate(run, topic="allocation", domains=["logistics"], key="sources")
+
+
+def test_source_withdrawal_during_proposal_stops_critique_dispatch(tmp_path):
+    from autodiscover.research.catalog import Catalog
+    from autodiscover.research.retrieval import Fetched
+
+    store = Store(tmp_path)
+    run = store.create_run("source withdrawal", {})
+    catalog = Catalog(store)
+    url = "https://example.org/withdrawn-study"
+    source = catalog.add(
+        run, Fetched(url, url, b"Public finding", "text/plain", "2026-11-03", "live_https"),
+        title="Fixture study", text="Public finding", source_kind="primary_document",
+    )
+
+    class WithdrawingProposer(Proposer):
+        def generate(self, request):
+            result = super().generate(request)
+            catalog.invalidate(run, source, reason="Fixture withdrawal during generation")
+            return result
+
+    critic = Critic([critique()])
+    router = Router(
+        store,
+        {
+            "RESEARCH_PROPOSALS": [WithdrawingProposer([proposal() | {"source_ids": [source]}])],
+            "EXPLORATORY": [Explorer([proposal()])],
+            "CRITIQUE": [critic],
+        },
+    )
+    with pytest.raises(ValueError, match="source invalidated"):
+        ResearchTeam(router).investigate(
+            run, topic="allocation", domains=["logistics"], key="withdrawal"
+        )
+    assert len(critic.responses) == 1
+    assert router.budget.totals(run)["requests"] == 1
+    with store.connection() as db:
+        assert db.execute(
+            "SELECT COUNT(*) FROM events WHERE kind='research_team_reviewed'"
+        ).fetchone()[0] == 0
 
 
 def test_portfolio_fractional_time_budget_and_order():

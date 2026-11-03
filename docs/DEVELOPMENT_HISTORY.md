@@ -37,3 +37,7 @@
 ## 2026-11-03 — PR 2 local audit
 
 Qualified registered families, separate mock model roles and advisory portfolio planning on the macOS/Python 3.12 runtime. Repaired six issues and independently replayed ten fresh results and 24 historical encoding reports. Recorded 202 passing full-suite tests, static checks, build, and native recovery evidence in the [PR 2 audit](phase_reports/pr-2-local-verification.md).
+
+## 2026-11-03 — Hackathon model integration
+
+Recovered the four unpushed PR #2 commits and original staged evidence. Added a restricted Baseten profile, documented direct Meta reasoning controls, strict structured-response parsing and attributable failure usage accounting. Verified the typed source-bound mock HTTP cycle and cache-only replay. Preserved earlier uncertainty and recorded the combined financial gate in the [phase report](phase_reports/hackathon-model-qualification.md).

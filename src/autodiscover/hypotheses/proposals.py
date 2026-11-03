@@ -58,10 +58,11 @@ def propose(
     request = GenerationRequest(
         prompt=canonical(
             {
-                "task": "Generate one original falsifiable "
-                "cross-domain hypothesis with quantitative prediction, comparator, "
-                "units and protocol. "
-                "It remains theoretical/untested; never claim novelty, verification or demand.",
+                "task": "Return one falsifiable theoretical cross-domain hypothesis. "
+                "Keep each text field to one short sentence. Give a quantitative effect, "
+                "units, comparator and measurement protocol. Set parent_id and revision_reason "
+                "to null. Cite a permitted source when supplied. "
+                "Do not assert novelty, verification or demand.",
                 "topic": topic,
                 "eligible_domains": domains,
                 "untrusted_source_data": source_context,
@@ -74,4 +75,6 @@ def propose(
     )
     if not set(proposal.source_ids).issubset(available_source_ids):
         raise ValueError("Proposal references unavailable sources")
+    if available_source_ids and not proposal.source_ids:
+        raise ValueError("Proposal must cite at least one available source")
     return proposal
