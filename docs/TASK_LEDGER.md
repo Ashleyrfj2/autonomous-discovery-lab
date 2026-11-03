@@ -298,3 +298,27 @@ Tests: design-only continuation; no source changes or fresh backend tests. Exist
 Verification: phase_reports/phase-9-design-continuation.md
 Blockers: overall window exhausted without planner result; pending user response for one uninterrupted10-minute local attempt
 Next action: await explicit longer allowance; no new draft/API fallback and no removal of interrupted ledgers
+
+## CHAT-PRIORART-20261103
+Task ID: CHAT-PRIORART-20261103
+Phase: cross-cutting scientific quality / REQ-003,019,020,021,034,037
+Description: Read-only source-bound dossier: exact quotes, per-run ownership, invalidation, provenance and non-authoritative mechanism comparisons. Preserve unknown novelty.
+Dependencies: P5-RESEARCH, P9-READ
+Status: IMPLEMENTED_UNVERIFIED
+Files: src/autodiscover/research/prior_art.py; src/autodiscover/cli.py; tests/unit/test_prior_art.py; docs/PRIOR_ART_DOSSIER.md; docs/RESEARCH_QUALIFICATION_PLAN_2026-11-03.md
+Tests: Six pytest cases authored; full local Ruff/Pyright/pytest/build NOT RUN in ChatGPT. Historical 175 passing tests are from the unmodified main backend, not this branch.
+Verification: docs/phase_reports/chat-mode-2026-11-03.md; proposed CLI smoke described in PRIOR_ART_DOSSIER.md
+Blockers: Local Python3.12/uv source tree and persisted runtime evidence are not available through chat-mode GitHub; full method-level searches and independent science review remain unperformed.
+Next action: execute local checks + CLI adversarial smoke, inspect changes and record exact source manifest; if accepted, decide merge explicitly. Do not mark VERIFIED prematurely.
+
+## CHAT-RESEARCH-QUALIFICATION-20261103
+Task ID: CHAT-RESEARCH-QUALIFICATION-20261103
+Phase: research evaluation and full-project release qualification
+Description: Original-source benchmark landscape, dependency-ordered measurement plan, contamination/faithfulness/novelty/commercial gates.
+Dependencies: previous scientific and operational phase records
+Status: IMPLEMENTED_UNVERIFIED
+Files: docs/RESEARCH_QUALIFICATION_PLAN_2026-11-03.md
+Tests: Desk research and original-source URL inspection; no scientific benchmark run or independent expert annotation.
+Verification: cited original papers in plan, no runtime acceptance claimed.
+Blockers: Actual experiments/reviewers and low-spend live provider trial require the user's runtime and authorization.
+Next action: freeze B0 cases and evaluate independently, then calibrate stage scores before setting pass thresholds.
