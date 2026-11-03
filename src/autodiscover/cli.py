@@ -1,4 +1,4 @@
-"""CLI entry point. Commands are added only with verified implementations."""
+"""CLI for bounded research runs, recovery, reports, controls and integrity inspection."""
 
 import argparse
 import json
@@ -6,18 +6,69 @@ from pathlib import Path
 
 from autodiscover import __version__
 from autodiscover.config import Limits
+from autodiscover.evidence.chain import export_snapshot, verify_chain
+from autodiscover.orchestrator.lab import Lab
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(prog="autodiscover")
     parser.add_argument("--version", action="version", version=__version__)
+    parser.add_argument("--root", type=Path, default=Path("runtime"))
     sub = parser.add_subparsers(dest="command", required=True)
-    check = sub.add_parser("check", help="Validate a local policy file; no provider calls")
+    check = sub.add_parser("check", help="Validate local policy; no provider calls")
     check.add_argument("--config", type=Path, default=Path("config/default.json"))
+    demo = sub.add_parser("demo", help="Execute complete offline trusted encoding research cycle")
+    demo.add_argument("--topic", default="consumer, gaming and telemetry data")
+    demo.add_argument("--config", type=Path, default=Path("config/default.json"))
+    demo.add_argument("--stop-after", type=int)
+    resume = sub.add_parser("resume", help="Continue an active run from committed state")
+    resume.add_argument("run_id")
+    resume.add_argument("--stop-after", type=int)
+    status = sub.add_parser("status", help="Inspect persisted state and verified reports")
+    status.add_argument("run_id", nargs="?")
+    for command in ("pause", "unpause", "cancel"):
+        sub.add_parser(command).add_argument("run_id")
+    integrity = sub.add_parser("integrity", help="Verify chain against optional retained anchor")
+    integrity.add_argument("--anchor", type=Path)
+    snapshot = sub.add_parser(
+        "snapshot", help="Export no-overwrite evidence snapshot for separate retention"
+    )
+    snapshot.add_argument("destination", type=Path)
     args = parser.parse_args()
     if args.command == "check":
-        config = Limits.load(args.config)
-        print(json.dumps({"valid": True, "limits": config.model_dump(mode="json")}, indent=2))
+        result = {"valid": True, "limits": Limits.load(args.config).model_dump(mode="json")}
+    else:
+        lab = Lab(args.root)
+        if args.command == "demo":
+            run = lab.demo(args.topic, limits=Limits.load(args.config), stop_after=args.stop_after)
+            result = lab.report(run)
+        elif args.command == "resume":
+            lab.resume(args.run_id, stop_after=args.stop_after)
+            result = lab.report(args.run_id)
+        elif args.command in ("pause", "unpause", "cancel"):
+            lab.store.control(args.run_id, "resume" if args.command == "unpause" else args.command)
+            result = lab.report(args.run_id)
+        elif args.command == "status":
+            result = (
+                lab.report(args.run_id)
+                if args.run_id
+                else [
+                    {
+                        "run_id": r["id"],
+                        "topic": r["topic"],
+                        "stage": r["stage"],
+                        "status": r["status"],
+                        "version": r["version"],
+                    }
+                    for r in lab.store.list_runs()
+                ]
+            )
+        elif args.command == "integrity":
+            anchor = json.loads(args.anchor.read_text()) if args.anchor else None
+            result = verify_chain(lab.store, anchor.get("anchor", anchor) if anchor else None)
+        else:
+            result = export_snapshot(lab.store, args.destination)
+    print(json.dumps(result, indent=2))
 
 
 if __name__ == "__main__":

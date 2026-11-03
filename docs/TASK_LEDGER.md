@@ -85,12 +85,12 @@ Task ID: P3-LOOP
 Phase: 3
 Description: Question/hypothesis/plan/worker/evidence/CLI; acceptance: full reproducible offline cycle
 Dependencies: P2-BUDGET
-Status: NOT_STARTED
-Files: pending
-Tests: pending
-Verification: pending
+Status: VERIFIED
+Files: experiments/{contracts,datasets,worker,runner,evaluator}.py; evidence/{artifacts,chain}.py; hypotheses/engine.py; orchestrator/lab.py; cli.py; security/redaction.py; tests/{unit,integration,adversarial,end_to_end}; docs/phase_reports/phase-3-evidence-snapshot.json
+Tests: uv run pytest -q: 35 passed; Ruff passed; Pyright 0 errors; uv build wheel/sdist passed; autodiscover demo completed with technical_success=true, novelty=unknown, commercial level=0, cost USD 0; snapshot export verified
+Verification: phase_reports/phase-3.md
 Blockers: none
-Next action: implement after dependencies verify
+Next action: P4-VERIFY: harden raw-result schemas and preregistered code identity; reject metric/fixture/claim manipulation; verify replication and uncertainty
 
 
 ## P4-VERIFY

@@ -7,7 +7,11 @@ name = "autonomous-discovery-lab"
 version = "0.1.0"
 description = "Persistent, bounded research workflows with independently evaluated evidence"
 requires-python = ">=3.12,<3.13"
-dependencies = ["pydantic>=2.12,<3", "httpx>=0.28,<1"]
+dependencies = [
+    "pydantic>=2.12,<3",
+    "httpx>=0.28,<1",
+    "psutil>=7,<8",
+]
 
 [project.scripts]
 autodiscover = "autodiscover.cli:main"

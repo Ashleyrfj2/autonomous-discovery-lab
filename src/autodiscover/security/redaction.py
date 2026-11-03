@@ -4,7 +4,11 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
-_SECRET_KEY = re.compile(r"key|token|secret|password|authorization|cookie|credential", re.I)
+_SECRET_KEY = re.compile(
+    r"^key$|api[_-]?key|(?:access|refresh|auth|bearer)[_-]?token|"
+    r"secret|password|authorization|cookie|credential",
+    re.I,
+)
 _PATTERNS = [
     re.compile(r"\b(?:sk-|gsk_|hf_|AKIA)[A-Za-z0-9_\-]{8,}"),
     re.compile(r"(?i)\b(?:bearer|basic)\s+[^\s,;]+"),

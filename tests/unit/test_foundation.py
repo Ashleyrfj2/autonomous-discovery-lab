@@ -52,6 +52,10 @@ def test_locked_events_and_redaction(tmp_path):
     assert len(rows) == len({r["event_id"] for r in rows}) == 40
     assert "dont-save-me" not in path.read_text()
     assert "secret-value" not in path.read_text()
+    assert sanitize({"input_tokens": 10, "output_tokens": 3}) == {
+        "input_tokens": 10,
+        "output_tokens": 3,
+    }
     assert sanitize({"contact": "person@example.com"}) == {"contact": "[REDACTED]"}
 
 

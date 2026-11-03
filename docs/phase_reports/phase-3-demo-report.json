@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "run_id": "e4fbbb9d-4146-49c2-bd8c-a24d1eb4b53a",
+  "status": "COMPLETED",
+  "stage": "DECIDE",
+  "completed_steps": 12,
+  "assessment": {
+    "limitations": "Synthetic fixture benchmark of known encoding; no novelty assessment",
+    "novelty": "unknown",
+    "novelty_source_ids": [],
+    "schema_version": 1,
+    "technical_success": true
+  },
+  "commercial": {
+    "evidence_ids": [],
+    "level": 0,
+    "schema_version": 1,
+    "validated": false
+  },
+  "usage": {
+    "charged_usd": "0",
+    "requests": 1,
+    "uncertain": 0,
+    "input_tokens": 362,
+    "output_tokens": 340
+  },
+  "evidence": {
+    "seq": 17,
+    "hash": "68c9622e2c4a66f1d4e65c7d482c2219837b9517e4d14062d687382d50b70ca4",
+    "verified_events": 17,
+    "trust_limit": "Tamper-evident relative to retained anchor; not immutable"
+  },
+  "mode": "offline trusted encoding demo; sources/live providers unverified"
+}
