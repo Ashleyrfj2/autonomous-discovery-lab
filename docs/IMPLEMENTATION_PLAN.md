@@ -11,4 +11,4 @@ The complete phase criteria are in MASTER_REQUIREMENTS sections 8, 16 and 18. Ex
 6: Trees/revisions/mutation, diversity, branch and loop limits; gate: bounded multiple directions without duplicate work.
 7: Separate market model, external evidence collection/import, competitor analysis/gates; gate: technically good but unvalidated candidate classified correctly.
 8: Durable scheduler, concurrency, circuit/resource monitor, graceful controls/status; gate: interrupted extended bounded runs respect limits.
-9: CLI monitoring/control/evidence/tree/spend/approval interface; optional web/remote/specialized workers deferred with explicit evidence and rationale; gate: inspection without raw logs.
+9: Research monitoring dashboard with active tasks/discoveries, hypothesis trees, evidence/evaluation status, spend/resources and human approval controls. CLI inspection complements the dashboard. Evaluate optional remote workers and specialized experimentation separately; gate: real persisted operations can be inspected and controlled without raw logs.
