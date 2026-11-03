@@ -122,9 +122,13 @@ class Router:
         policy = Limits.model_validate_json(row["policy_json"])
         last_error = ProviderError("NO_AVAILABLE_PROVIDER")
         attempts = 0
+        ambiguous_live_outcome = False
         for index, provider in enumerate(providers):
-            if provider.is_live and not policy.allow_live_inference:
-                raise ProviderError("RUN_LIVE_NOT_AUTHORIZED")
+            if provider.is_live:
+                if ambiguous_live_outcome:
+                    continue
+                if not policy.allow_live_inference:
+                    raise ProviderError("RUN_LIVE_NOT_AUTHORIZED")
             if not self._available(provider):
                 continue
             while attempts <= policy.max_retries_per_step:
@@ -154,6 +158,7 @@ class Router:
                     if actual is not None and actual > amount:
                         raise ProviderError("RESERVATION_BOUND_EXCEEDED", uncertain=True) from None
                     last_error = error
+                    ambiguous_live_outcome |= provider.is_live and error.uncertain
                     if error.code == "PROVIDER_CANCEL_REQUESTED":
                         raise error
                     # A timeout/ambiguous server result is never replayed automatically.
@@ -183,7 +188,7 @@ class Router:
                         validation_failed = True
                 self.budget.settle(
                     reservation,
-                    result.cost_usd,
+                    result.cost_usd if identity_matches or not provider.is_live else None,
                     usage=result.usage.model_dump(exclude_none=True),
                     result=(
                         result.model_dump(mode="json")
@@ -191,11 +196,14 @@ class Router:
                         else None
                     ),
                 )
+                if not identity_matches:
+                    self._record_failure(
+                        run_id, provider, "PROVIDER_IDENTITY_MISMATCH", attempts,
+                        uncertain=provider.is_live,
+                    )
+                    raise ProviderError("PROVIDER_IDENTITY_MISMATCH", uncertain=provider.is_live)
                 if not within_bound:
                     raise ProviderError("RESERVATION_BOUND_EXCEEDED", uncertain=True)
-                if not identity_matches:
-                    self._circuit(provider, "PROVIDER_IDENTITY_MISMATCH")
-                    raise ProviderError("PROVIDER_IDENTITY_MISMATCH")
                 if validation_failed:
                     self._record_failure(
                         run_id, provider, "INVALID_STRUCTURED_RESPONSE", attempts, uncertain=False

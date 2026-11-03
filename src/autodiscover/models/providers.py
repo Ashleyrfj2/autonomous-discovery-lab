@@ -46,13 +46,16 @@ class HTTPProvider:
         self._usage = Usage(input_tokens=0, output_tokens=0)
         self._usage_lock = threading.Lock()
 
-    def _client(self, body: dict[str, Any] | None) -> httpx.Client:
+    def _credential(self) -> SecretStr:
         if not self.config.live_authorized:
             raise ProviderError("LIVE_NOT_AUTHORIZED", known_zero_cost=True)
         key = self._key or SecretStr(os.environ.get(self.config.api_key_env, ""))
-        value = key.get_secret_value()
-        if not value:
+        if not key.get_secret_value():
             raise ProviderError("CREDENTIAL_UNAVAILABLE", known_zero_cost=True)
+        return key
+
+    def _client(self, body: dict[str, Any] | None, key: SecretStr) -> httpx.Client:
+        value = key.get_secret_value()
         if body is not None and value in canonical(body):
             raise ProviderError("CREDENTIAL_IN_PROMPT", known_zero_cost=True)
         return httpx.Client(
@@ -118,7 +121,7 @@ class HTTPProvider:
         ) / Decimal(1000000)
 
     def _request(
-        self, method: str, path: str, body: dict[str, Any] | None = None
+        self, method: str, path: str, *, key: SecretStr, body: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         # HTTP read timeouts are per operation, so isolate caller latency from a stalled server.
         # Timeout is an UNKNOWN remote outcome, never proof of server cancellation or free usage.
@@ -133,7 +136,7 @@ class HTTPProvider:
         def call() -> None:
             try:
                 try:
-                    results.put((self._request_sync(method, path, body), None))
+                    results.put((self._request_sync(method, path, key=key, body=body), None))
                 except ProviderError as error:
                     results.put((None, error))
                 except Exception:
@@ -161,11 +164,13 @@ class HTTPProvider:
         return result
 
     def _request_sync(
-        self, method: str, path: str, body: dict[str, Any] | None = None
+        self, method: str, path: str, *, key: SecretStr, body: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         deadline = time.monotonic() + self.config.timeout_seconds
         try:
-            with self._client(body) as client, client.stream(method, path, json=body) as response:
+            with self._client(body, key) as client, client.stream(
+                method, path, json=body
+            ) as response:
                 if time.monotonic() >= deadline:
                     raise ProviderError("PROVIDER_TIMEOUT", uncertain=True)
                 if response.status_code != 200:
@@ -200,7 +205,8 @@ class HTTPProvider:
 
     def generate(self, request: GenerationRequest) -> Generation:
         body = self._body(request)
-        data = self._request("POST", "chat/completions", body)
+        key = self._credential()
+        data = self._request("POST", "chat/completions", key=key, body=body)
         try:
             reported = data["usage"]
             details = reported.get("completion_tokens_details")
@@ -238,6 +244,8 @@ class HTTPProvider:
 
         if not isinstance(model, str) or not model:
             raise failed("INVALID_RESPONSE_MODEL")
+        if model != self.config.model:
+            raise failed("PROVIDER_IDENTITY_MISMATCH")
 
         try:
             choice = data["choices"][0]
@@ -258,13 +266,17 @@ class HTTPProvider:
                 raise failed("EMPTY_FINAL_CONTENT")
             if not isinstance(text, str):
                 raise failed("INVALID_CONTENT")
-            key = (
-                self._key.get_secret_value() if self._key else os.environ.get(
-                    self.config.api_key_env, ""
-                )
-            )
-            if key and key in text:
+            secret = key.get_secret_value()
+            if secret in text:
                 raise failed("CREDENTIAL_IN_RESPONSE")
+            if "\\" in text:
+                # Catch a reflected credential encoded as JSON escapes before validation/cache.
+                try:
+                    normalized = json.dumps(json.loads(text), ensure_ascii=False)
+                except (ValueError, RecursionError):
+                    normalized = ""
+                if json.dumps(secret, ensure_ascii=False)[1:-1] in normalized:
+                    raise failed("CREDENTIAL_IN_RESPONSE")
             return Generation(
                 text=text, provider=self.name, model=model, usage=usage, cost_usd=cost
             )
@@ -276,10 +288,6 @@ class HTTPProvider:
     ) -> tuple[T, Generation]:
         request = request.model_copy(update={"json_schema": schema.model_json_schema()})
         result = self.generate(request)
-        if result.model != self.config.model:
-            raise ProviderError(
-                "PROVIDER_IDENTITY_MISMATCH", usage=result.usage, cost_usd=result.cost_usd
-            )
         try:
             return parse_structured(result.text, schema), result
         except (ValueError, RecursionError):
@@ -294,7 +302,7 @@ class HTTPProvider:
     def health_check(self) -> dict[str, Any]:
         if self.config.profile == "baseten_hackathon":
             raise ProviderError("HACKATHON_INFERENCE_ENDPOINT_ONLY", known_zero_cost=True)
-        data = self._request("GET", "models")
+        data = self._request("GET", "models", key=self._credential())
         models = data.get("data", [])
         available = any(isinstance(m, dict) and m.get("id") == self.model for m in models)
         return {

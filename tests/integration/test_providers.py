@@ -676,3 +676,91 @@ def test_mock_http_team_source_bound_packet_replays_without_dispatch(tmp_path):
     with pytest.raises(ValueError, match="Source invalid"):
         replay.investigate(run, **args)
     assert len(calls) == 4
+
+
+@pytest.mark.parametrize("ambiguous", ["timeout", "server-error"])
+def test_ambiguous_inference_does_not_dispatch_to_another_live_provider(tmp_path, ambiguous):
+    store = Store(tmp_path)
+    run = store.create_run("fallback boundary", Limits(allow_live_inference=True).model_dump())
+    calls = []
+
+    def uncertain(request):
+        calls.append(request.url.host)
+        if ambiguous == "timeout":
+            raise httpx.ReadTimeout("fixture")
+        return httpx.Response(503)
+
+    def alternate(request):
+        calls.append(request.url.host)
+        return response()
+
+    primary = MetaProvider(
+        config(), transport=httpx.MockTransport(uncertain), api_key=SecretStr("fixture-primary")
+    )
+    backup = BasetenProvider(
+        config("baseten"), transport=httpx.MockTransport(alternate),
+        api_key=SecretStr("fixture-alternate"),
+    )
+    router = Router(
+        store, {"research": [primary, backup]},
+        fallback_evidence={"research": "mock route evaluation"},
+    )
+    with pytest.raises(ProviderError, match="PROVIDER_TIMEOUT|HTTP_503"):
+        router.generate(run, "research", GenerationRequest(prompt="test"), key="stable")
+    assert calls == ["api.meta.ai"]
+    assert router.budget.totals(run)["uncertain"] == 1
+
+
+def test_unexpected_response_model_retains_full_reservation(tmp_path):
+    store = Store(tmp_path)
+    run = store.create_run(
+        "unexpected priced model", Limits(allow_live_inference=True).model_dump()
+    )
+    provider = MetaProvider(
+        config(), transport=httpx.MockTransport(lambda r: response(model="unexpected-model")),
+        api_key=SecretStr("fixture-key"),
+    )
+    router = Router(store, {"research": [provider]})
+    with pytest.raises(ProviderError, match="PROVIDER_IDENTITY_MISMATCH"):
+        router.generate(run, "research", GenerationRequest(prompt="test"), key="wrong-model")
+    totals = router.budget.totals(run)
+    assert totals["settled_usd"] == "0"
+    assert totals["uncertain_usd"] == "0.009216"
+    assert totals["output_tokens"] == 30
+
+
+def test_invalid_retry_after_uses_finite_exponential_backoff(tmp_path):
+    store = Store(tmp_path)
+    run = store.create_run("malformed backoff", Limits(allow_live_inference=True).model_dump())
+    delays = []
+    provider = MetaProvider(
+        config(), transport=httpx.MockTransport(
+            lambda request: httpx.Response(429, headers={"Retry-After": "NaN"})
+        ), api_key=SecretStr("fixture-key"),
+    )
+    router = Router(store, {"research": [provider]}, sleeper=delays.append)
+    with pytest.raises(ProviderError, match="HTTP_429"):
+        router.generate(run, "research", GenerationRequest(prompt="test"), key="backoff")
+    assert delays == [0.25, 0.5]
+
+
+def test_escaped_credential_from_dispatched_key_is_never_cached(tmp_path, monkeypatch):
+    original = "fixture-credential-original"
+    monkeypatch.setenv("TEST_PROVIDER_KEY", original)
+
+    def handler(request):
+        assert request.headers["authorization"] == "Bearer " + original
+        monkeypatch.setenv("TEST_PROVIDER_KEY", "fixture-credential-replacement")
+        encoded = "".join(fr"\u{ord(character):04x}" for character in original)
+        return response(text='{"prediction":"' + encoded + '"}')
+
+    store = Store(tmp_path)
+    run = store.create_run("escaped credential", Limits(allow_live_inference=True).model_dump())
+    provider = MetaProvider(config(), transport=httpx.MockTransport(handler))
+    router = Router(store, {"research": [provider]})
+    with pytest.raises(ProviderError, match="CREDENTIAL_IN_RESPONSE"):
+        router.generate_structured(
+            run, "research", GenerationRequest(prompt="test"), Proposal, key="escaped"
+        )
+    with store.connection() as db:
+        assert db.execute("SELECT result_json FROM reservations").fetchone()[0] is None

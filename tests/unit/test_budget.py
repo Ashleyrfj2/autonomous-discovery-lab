@@ -4,6 +4,7 @@ from decimal import Decimal
 import pytest
 
 from autodiscover.config import Limits
+from autodiscover.evidence.chain import verify_chain
 from autodiscover.orchestrator.store import Store
 from autodiscover.security.budget import Budget, BudgetError, nano
 
@@ -88,3 +89,17 @@ def test_one_request_cannot_consume_other_candidates_cost_allocation(tmp_path):
         request_limit_usd=Decimal("0.4"),
     )
     assert budget.totals(run)["charged_usd"] == "0.7"
+
+
+def test_late_cost_overrun_cannot_restore_a_cancelled_run(tmp_path):
+    store = Store(tmp_path)
+    run = store.create_run("cancelled with inference in flight", {})
+    budget = Budget(store)
+    identifier = budget.reserve(run, "one", "hash", Decimal("0.01"), "meta", "configured")
+    store.control(run, "cancel")
+    fence = store.get_run(run)["fence"]
+    budget.settle(identifier, Decimal("0.02"), usage={"input_tokens": 5})
+    assert store.get_run(run)["status"] == "CANCELLED"
+    assert store.get_run(run)["fence"] == fence
+    assert budget.totals(run)["charged_usd"] == "0.02"
+    verify_chain(store)

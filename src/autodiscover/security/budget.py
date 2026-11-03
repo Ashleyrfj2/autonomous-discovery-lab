@@ -139,11 +139,13 @@ class Budget:
             )
             if amount > row["reserved_nano"]:
                 # Persist actual usage before refusing further automatic progress.
-                db.execute(
+                paused = db.execute(
                     "UPDATE runs SET status='PAUSED',owner=NULL,lease_until=NULL,"
-                    "fence=fence+1 WHERE id=?",
+                    "fence=fence+1 WHERE id=? AND status='ACTIVE'",
                     (row["run_id"],),
                 )
+                if not paused.rowcount:
+                    return  # Late usage cannot change an operator decision or terminal state.
                 self.store._event(
                     db,
                     row["run_id"],

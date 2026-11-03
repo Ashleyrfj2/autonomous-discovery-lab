@@ -2,6 +2,7 @@
 
 import json
 from decimal import Decimal
+from math import isfinite
 from typing import Any, Literal, Protocol, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -119,7 +120,7 @@ class ProviderError(RuntimeError):
     ):
         super().__init__(code)
         self.code, self.retryable, self.uncertain = code, retryable, uncertain
-        self.retry_after = min(max(retry_after, 0), 30)
+        self.retry_after = min(max(retry_after, 0), 30) if isfinite(retry_after) else 0
         self.known_zero_cost = known_zero_cost
         self.usage, self.cost_usd = usage, cost_usd
 
