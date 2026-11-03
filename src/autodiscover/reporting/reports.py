@@ -59,6 +59,9 @@ def build_report(store: Store, run_id: str) -> dict[str, Any]:
             "novelty": "unknown",
             "coverage_exhaustive": False,
         },
-        "mode": "trusted encoding loop; source retrieval opt-in; live providers unverified",
+        "mode": (
+            "trusted reviewed encoding/allocation families; source retrieval opt-in; "
+            "live providers unverified"
+        ),
     }
     return report
