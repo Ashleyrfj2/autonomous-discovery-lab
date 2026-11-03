@@ -304,9 +304,9 @@ Task ID: CHAT-REGISTERED-FAMILIES-20261103
 Phase: post-Phase8 scientific capability extension; existing Phase9 remains independently IN_PROGRESS
 Description: fixed reviewed experiment-family registry, allocation-v1 worker/fixture/independent brute-force evaluator, persistent multi-family Lab/Director/Jobs integration, CLI, separated model roles and advisory cost portfolio. Preserve encoding hashes.
 Dependencies: P8-OPERATE, P5-RESEARCH, P4-VERIFY
-Status: IMPLEMENTED_UNVERIFIED
+Status: VERIFIED (local PR 2 scope)
 Files: src/autodiscover/experiments/{registry,allocation_*}.py; hypotheses/{allocation,portfolio,director,proposals}.py; models/teams.py; experiments/runner.py; orchestrator/{lab,jobs}.py; reporting/{views,reports}.py; cli.py; tests/{integration/test_registered_experiments.py,unit/test_model_team_portfolio.py}; docs/REGISTERED_EXPERIMENTS.md
-Tests: authored Mac-only native-worker/integration/adversarial tests plus pure model/budget tests. Historical175 tests are from previous main; new branch has NOT run Ruff, Pyright, pytest, build or actual macOS sandbox.
-Verification: docs/phase_reports/chat-registered-experiments-2026-11-03.md and an arithmetic sanity check of allocation traps; local acceptance is pending.
-Blockers: local Python3.12, native sandbox, real runtime and exact source manifest not accessible from ChatGPT GitHub connector.
-Next action: preserve local untracked files, inspect PR, run local checks and recorded interruption/rehydration tests; fail closed and repair before marking VERIFIED. No CI-only merge.
+Tests: Ruff, Pyright, 22 focused tests, 202 full tests and package build pass. Native encoding, allocation dynamic, greedy negative, interruption recovery and archived encoding replay pass.
+Verification: docs/phase_reports/pr-2-local-verification.md.
+Blockers: none in local scope. Live inference, field validity and production acceptance remain separate.
+Next action: human review of the local PR 2 commits and audit evidence.

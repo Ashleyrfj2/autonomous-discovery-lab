@@ -17,3 +17,8 @@ Phase9 backend locally verified:175 full tests,78 targeted regressions, Ruff/Pyr
 ## Registered-family and model-team remote implementation (unverified)
 
 Branch `chat/registered-experiments-20261103` proposes two reviewed executable experiment families (encoding-v1 and synthetic allocation-v1), disjoint proposal/exploratory/critic model routes, and read-only cost/uncertainty portfolio planning. All new source and authored tests are NOT YET qualified on the user's Python3.12/macOS runner. Historical175 passing Phase9 backend tests belong to main, not this changed source. Required: lint, type-check, focused/full tests and builds, independent positive/negative run evaluation, cross-family recovery, release manifest, original encoding digest compatibility, archived evidence verification. Scientific novelty, real buyer signal, private-data provider sharing policy, paid models, distributed production and Phase9 browser gate remain incomplete. No merge or deployment.
+
+
+## PR 2 local qualification
+
+The registered-family branch passed Ruff, Pyright, 22 focused tests, 202 full tests, the package build, fresh native positive and negative runs, and interrupted-worker recovery. This qualification applies to the local reviewed worker protocol and mock model roles. See the [PR 2 audit](phase_reports/pr-2-local-verification.md) for exact source, results and remaining limits.

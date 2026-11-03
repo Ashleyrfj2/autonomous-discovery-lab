@@ -68,3 +68,8 @@ REQ-004/006/014: opt-in three-role (proposal/exploratory/critic) router with dis
 REQ-025: allocates across fixed reviewed families while retaining existing branch quotas/diversity and avoiding cross-family score magnitude comparisons. A separate cost-aware portfolio plan is strictly advisory, with estimated costs, uncertainties, provenance and no job authorization. There is no production-calibrated information-gain model.
 
 REQ-007/031/032/033/034/037/038: remote source diff, tests and documentation recorded under branch and docs/phase_reports/chat-registered-experiments-2026-11-03.md. No change to Phase9 UI export/browser acceptance; no new external API, new permission or deployment was authorized. Status remains partial pending local source-manifest qualification. DEC-021.
+
+
+## PR 2 local qualification
+
+REQ-002/005/010/022/023 have native local evidence for the two reviewed families, failed-result preservation and allocation replication. REQ-004/006/014 have mock-only evidence for role routing, source safeguards and replay. REQ-025 has evidence for family-aware allocation and advisory budget/time limits. See [PR 2 audit](phase_reports/pr-2-local-verification.md) for the scoped REQ-007/017/032/033/037 evidence and remaining limits.

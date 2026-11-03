@@ -21,3 +21,8 @@ A **separate unmerged remote branch** `chat/registered-experiments-20261103` was
 STATUS: IMPLEMENTED_UNVERIFIED. Connector commits are NOT test acceptance. Local Ruff, Pyright, full pytest, uv build, macOS Seatbelt run, fresh-root greedy-negative/DP-positive runs, evidence hash/replication/recovery verification and exact-source audit are still required. Earlier 175-test Phase9 backend acceptance is historical main only. Do NOT automatically merge; preserve untracked `docs/PROJECT_STATUS_REPORT_.md`, and do not overwrite current main handoff or resume 12ui conversion under an expired time allowance. Separate earlier draft PR #1 (`chat/prior-art-qualification-20261103`) remains open/unmerged and is not implicitly part of this branch. Neither PR establishes novelty, verified customer demand, live providers, production or Phase9 UI acceptance.
 
 Remote branch continuation: opt-in ResearchTeam now saves its model critiques as hashed local artifacts and idempotent `research_team_reviewed` events; this remains **non-authoritative research memory** and requires the local test/build and event-chain replay gates before acceptance.
+
+
+## PR 2 local verification
+
+The registered-experiments branch is LOCALLY VERIFIED at source commit `3e95766904d289077f05d703d8f2f0a123576711`. The audit repaired six issues and retained positive, negative, recovery and historical encoding evidence. Ruff, Pyright, 22 focused tests, 202 full tests and the build passed. The local commits are ready for human review. See [PR 2 audit](phase_reports/pr-2-local-verification.md).
