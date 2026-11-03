@@ -254,7 +254,9 @@ class Lab:
         output: dict[str, Any]
         if stage == Stage.DISCOVER:
             output = {
-                "questions": [f"Which reviewed experiment can measurably improve results in {topic}?"]
+                "questions": [
+                    f"Which reviewed experiment can measurably improve results in {topic}?"
+                ]
             }
         elif stage == Stage.RESEARCH:
             if limits.allow_retrieval:
