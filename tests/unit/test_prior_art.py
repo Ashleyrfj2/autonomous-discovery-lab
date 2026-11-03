@@ -66,6 +66,8 @@ def test_read_only_dossier_never_certifies_novelty(tmp_path):
     assert before == after
     assert document["assessment"]["novelty"] == "unknown"
     assert document["assessment"]["novelty_verified"] is False
+    assert document["coverage"]["primary_document_comparisons"] == 0
+    assert any("Fixture" in warning for warning in document["warnings"])
     assert document["assessment"]["possible_overlap_observations"] == 1
     assert document["searches_executed_by_this_command"] == 0
     assert document["comparisons"][0]["exact_quote"] == "Method Alpha reduces storage"
@@ -138,3 +140,47 @@ def test_duplicate_observations_and_recognizable_secrets_rejected(tmp_path):
             compile_prior_art_dossier(Catalog(snapshot), run_id, duplicated)
         with pytest.raises(ValueError, match="credential"):
             compile_prior_art_dossier(Catalog(snapshot), run_id, contaminated)
+
+
+def test_operator_document_is_eligible_for_method_comparison_not_novelty(tmp_path):
+    store = Store(tmp_path)
+    run_id = store.create_run("research", {})
+    catalog = Catalog(store)
+    text = "Method Alpha reduces storage in laboratory measurements."
+    fetched = Fetched(
+        "https://www.rfc-editor.org/rfc/rfc1951",
+        "https://www.rfc-editor.org/rfc/rfc1951",
+        text.encode(),
+        "text/plain",
+        "2026-11-03T00:00:00+00:00",
+        provenance="operator_document",
+    )
+    identifier = catalog.add(
+        run_id,
+        fetched,
+        title="Operator imported document for source-bound review",
+        text=text,
+        source_kind="primary_document",
+    )
+    with SnapshotStore(tmp_path) as snapshot:
+        dossier = compile_prior_art_dossier(Catalog(snapshot), run_id, request(identifier))
+    assert dossier["coverage"]["primary_document_comparisons"] == 1
+    assert dossier["assessment"]["novelty"] == "unknown"
+    assert dossier["assessment"]["independent_method_review"] == "not_performed"
+
+
+def test_relabeling_same_passage_is_not_independent_comparison(tmp_path):
+    store = Store(tmp_path)
+    run_id = store.create_run("research", {})
+    identifier = source(Catalog(store), run_id)
+    base = request(identifier)
+    renamed = base.comparisons[0].model_copy(
+        update={"relationship": "possible_difference"}
+    )
+    with SnapshotStore(tmp_path) as snapshot:
+        with pytest.raises(ValueError, match="Duplicate"):
+            compile_prior_art_dossier(
+                Catalog(snapshot),
+                run_id,
+                base.model_copy(update={"comparisons": base.comparisons + [renamed]}),
+            )
