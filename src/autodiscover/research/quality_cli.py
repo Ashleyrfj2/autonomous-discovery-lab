@@ -39,7 +39,9 @@ def evaluate_file(path: Path) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Offline research-quality screening")
-    parser.add_argument("input", type=Path, help="JSON containing findings, evidence, and optional bridge")
+    parser.add_argument(
+        "input", type=Path, help="JSON containing findings, evidence, and optional bridge"
+    )
     args = parser.parse_args(argv)
     try:
         result = evaluate_file(args.input)
