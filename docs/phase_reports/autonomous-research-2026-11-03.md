@@ -135,3 +135,18 @@ prose and permits 2,560 completion tokens. The revised gross estimate is $1.2102
 including all bounded attempts. The earlier run and its ledger remain available in
 `runtime/discovery-live-20261103-retry`. The revised configuration registers a
 distinct run. The revised live proposal has yet to be verified.
+
+## Revised live run and replay
+
+Run `discovery-9d86dedf2a48c9f787c13e5284e81b1a8e38e495ccfdbdd9e435723a8f144c4e`
+completed with packet SHA-256 `7259db666e6d4842df8f40eb66ab90ab07b217295812f56ab84359ffb934034e`.
+The ledger settled four calls across Spark 1.3, Spark 1.2 and Wonder 1.0 at
+$0.054628 in locally calculated standard-rate usage. It records 3,956 input and
+4,483 output tokens, including 1,443 reasoning tokens, and no uncertain charges.
+Three public searches returned five abstract records and five title-only records.
+Two proposals were generated. The cell-preservation proposal failed evidence
+binding and stopped before critique. The mechanical-wear proposal received a
+separate critique and was rejected with material evidence and measurement gaps.
+No revision ran. Read-only replay reproduced the packet with identical event
+anchors and zero external calls. The run verified live packet generation,
+accounting, and replay. The two-critique acceptance criterion was not met.
