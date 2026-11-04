@@ -164,7 +164,12 @@ def run(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
                 for sig, handler in handlers.items():
                     signal.signal(sig, handler)
         print(json.dumps({"artifact_digest": digest, **report.model_dump(mode="json")}, indent=2))
-    except (BudgetError, IntegrityError, ProviderError, StateError) as error:
+    except ProviderError as error:
+        code = error.code
+        if not (code.isascii() and code.replace("_", "").isalnum() and code.isupper()):
+            code = "UNKNOWN_PROVIDER_ERROR"
+        parser.exit(1, f"Discovery stopped ({code}). See the run ledger.\n")
+    except (BudgetError, IntegrityError, StateError) as error:
         parser.exit(1, f"Discovery stopped ({type(error).__name__}). See the run ledger.\n")
     except (ValidationError, OSError, TypeError, ValueError, AttributeError):
         parser.exit(2, "Invalid discovery configuration or inaccessible local files.\n")

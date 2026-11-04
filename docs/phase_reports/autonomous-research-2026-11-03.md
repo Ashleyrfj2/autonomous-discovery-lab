@@ -124,3 +124,14 @@ Durable registration, fencing, cross-process replay protection, checkpoint recov
 - A mocked transport test initially passed the wrong adapter constructor argument. Switching to the existing `api_key` argument corrected the test and exercised every stage's strict nested Meta schema locally. No live provider was contacted.
 - The shell GitHub CLI lacked authentication. The read-only GitHub connector independently confirmed the open draft and remote SHA.
 - Staged Gitleaks and exact-value scanning of locally configured credentials passed. The main worktree's untracked status report was preserved.
+
+## First foreground attempt
+
+The credential-loaded run completed planning and three searches. The first proposal
+returned `OUTPUT_TOKEN_LIMIT` with 1,536 output tokens including 292 reasoning
+tokens. Both requests settled locally at a combined $0.010793 in standard-rate
+usage. No partial proposal was accepted. The registered sample now requests shorter
+prose and permits 2,560 completion tokens. The revised gross estimate is $1.210240
+including all bounded attempts. The earlier run and its ledger remain available in
+`runtime/discovery-live-20261103-retry`. The revised configuration registers a
+distinct run. The revised live proposal has yet to be verified.

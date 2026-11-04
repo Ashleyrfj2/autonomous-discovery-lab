@@ -352,7 +352,7 @@ def test_review_role_identity_and_live_preflight(tmp_path):
     }
     estimate = preflight(DiscoverySpec.model_validate_json(OBJECTIVE.read_text()), configs)
     assert estimate["maximum_attempts"] == 14
-    assert estimate["conservative_gross_usd_estimate"] == "1.052544"
+    assert Decimal(estimate["conservative_gross_usd_estimate"]) == Decimal("1.210240")
 
 
 def test_remaining_material_flaw_rejects_revision(tmp_path):
@@ -499,7 +499,7 @@ def test_live_wire_simulation_exercises_every_nested_schema(tmp_path):
     def respond(request):
         assert str(request.url) == "https://api.meta.ai/v1/chat/completions"
         body = json.loads(request.content)
-        assert body["max_completion_tokens"] == 1536
+        assert body["max_completion_tokens"] == 2560
         assert body["reasoning_effort"] in {"minimal", "low"}
         schema = body["response_format"]["json_schema"]
         assert schema["strict"]
