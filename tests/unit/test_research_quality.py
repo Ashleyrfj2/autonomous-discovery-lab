@@ -82,7 +82,9 @@ def test_unowned_source_id_fails_closed():
 
 
 def test_unmatched_quote_fails_closed():
-    result = screen_evidence([finding()], [source(excerpt="A different observed effect under loads")])
+    result = screen_evidence(
+        [finding()], [source(excerpt="A different observed effect under loads")]
+    )
     assert result.status == "invalid_source"
 
 
@@ -136,12 +138,27 @@ def test_typed_recovery(failure, expected):
 
 
 def test_recovery_requires_distinct_evidence_for_revision():
-    assert decide_recovery("missing_target_evidence", revisions_used=0, distinct_new_source_count=1).action == "revise"
-    assert decide_recovery("missing_target_evidence", revisions_used=0, query_already_attempted=True).action == "inconclusive"
+    assert (
+        decide_recovery(
+            "missing_target_evidence", revisions_used=0, distinct_new_source_count=1
+        ).action
+        == "revise"
+    )
+    assert (
+        decide_recovery(
+            "missing_target_evidence", revisions_used=0, query_already_attempted=True
+        ).action
+        == "inconclusive"
+    )
 
 
 def test_recovery_never_exceeds_revision_bound():
-    assert decide_recovery("missing_target_evidence", revisions_used=1, distinct_new_source_count=1).action == "inconclusive"
+    assert (
+        decide_recovery(
+            "missing_target_evidence", revisions_used=1, distinct_new_source_count=1
+        ).action
+        == "inconclusive"
+    )
 
 
 def test_relabeling_rock_finding_as_target_evidence_does_not_prove_advantage():
