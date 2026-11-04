@@ -337,3 +337,15 @@ Removed application dollar admission while preserving usage accounting and bound
 | Discovery scheduling and unattended inference | Open | Validate the foreground run, independently score output, and qualify long-horizon operational controls. |
 
 [Phase evidence and recovery](phase_reports/autonomous-research-2026-11-03.md)
+
+## Research quality v1 integration · 2026-11-04
+
+- [x] Reconcile local and remote checkpoints on a separate integration branch.
+- [x] Integrate the evidence-first protocol with the existing discovery entry point.
+- [x] Replay the authentic saved failures and test their evidence and recovery paths.
+- [x] Execute the twelve frozen A/B/C cases and eight independently labeled structural holdouts.
+- [x] Recheck local regressions, CLI entry points and build.
+- [ ] Obtain blinded semantic review and preregister a live A/B/C study for explicit authorization.
+- [ ] Qualify unattended operation separately after the foreground and operational gates.
+
+[Phase report and recovery](phase_reports/research-quality-chat-20261104.md#integration-and-local-verification)

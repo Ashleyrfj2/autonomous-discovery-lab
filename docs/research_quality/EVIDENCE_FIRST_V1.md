@@ -130,3 +130,33 @@ Given a typed failure code, candidate revision lineage, prior searches and remai
 - [PaperBench](https://proceedings.mlr.press/v267/starace25a.html) (ICML 2025): detailed execution rubrics and separate reproduction/grading environments.
 
 **Research coverage limitation:** This is a focused synthesis from available abstracts, repositories and open research text, not a systematic review of every relevant paper. The protocol is a design recommendation requiring controlled comparison, not a proven optimal architecture.
+## Discovery integration · 2026-11-04
+
+`config/discovery-quality-v1.json` selects protocol `discovery-v2` in the existing
+`autodiscover discover` command. Existing `discovery-v1` specifications and
+saved packets remain readable and replayable. Prompt version `research-quality-v1`
+is bound to the new run registration and inference requests. The same three
+routes handle planning and evidence extraction, authorship and bridge analysis,
+and adversarial critique. The recovery decision is deterministic. Its prompt
+guides the critic's candidate query, and the controller enforces the policy.
+
+Captured source ownership, raw/text hashes, access scope, metadata and
+invalidation are checked against the catalog. Atomic findings preserve literal
+spans and known limitations. Metadata, wrong access scope and context rows
+cannot become empirical support. An empirical claim links to valid finding IDs
+and receives a separate critic judgment. Critique is advisory and unresolved
+material objections or empirical uncertainty prevent advancement. Factual
+claims of established advantage and independent replication require external
+verification. Proposals with plausible transfer can proceed to external
+review as testable, unverified hypotheses when the bridge, assumptions,
+comparator, outcome unit, prediction and falsifier are present.
+
+The run permits one targeted search and one revision attempt total across up
+to two candidate directions. It skips repeated queries and requires a distinct
+substantive source, an extracted new finding and its use in the revision. It
+stores original and revised typed attempts and recovery receipts. Unrecoverable
+or unresolved cases are rejected or marked inconclusive. Critique coverage
+counts distinct candidates with valid review and reports shortfalls against two.
+Per-stage usage and recovery calls remain traceable through the run's existing
+request ledger and checkpoint keys. The packet retains the original commercial
+and scientific authority boundaries.

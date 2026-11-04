@@ -97,3 +97,82 @@ Use the same held-out questions and source budgets where possible. Hold fixed mo
 ## Source and usage notes
 
 Grounding/evidence evaluations: [SciFact original paper](https://aclanthology.org/2020.emnlp-main.609/) and [released dataset](https://github.com/allenai/scifact). Citation fidelity: [ScholarQABench description](https://www.nature.com/articles/s41586-025-10072-4). Research agent evaluation: [ScienceAgentBench](https://proceedings.iclr.cc/paper_files/paper/2025/hash/f12b4df26344f3be803c06b555252efe-Abstract-Conference.html), [PaperBench](https://proceedings.mlr.press/v267/starace25a.html).<br />Scientific claim-verification datasets are domain-specific; use their structure as a model, not as a direct score proving cross-industry scientific novelty.
+## Executed offline comparison · 2026-11-04
+
+The frozen [case corpus](../../tests/fixtures/discovery/research-quality-v1.json) and
+[comparison harness](../../tests/integration/test_research_quality_benchmark.py)
+execute the twelve initial cases. A runs the production `discovery-v1` path from
+the local live checkpoint. B runs a single scripted extractor/author and the
+structural finding gate on the same captured sources. C runs the production
+`discovery-v2` path with the quality roles and bounded recovery. A and C share
+the same fixture plan and retrieval, role identities, request completion limit of
+2,560 tokens, retry limit of zero, and deterministic reviewer objections wherever
+both contracts can express them. B uses pre-captured initial sources and does no
+planning, retrieval or critique. Each scripted response declares 100 input and
+80 output tokens. These token counts are fixture inputs. Run the harness with
+`uv run pytest -q -s tests/integration/test_research_quality_benchmark.py` for
+the per-case JSON records.
+
+| Metric | A | B | C |
+| --- | ---: | ---: | ---: |
+| Critical false acceptance through the candidate gate | 0/6 | 4/6 | 0/6 |
+| Positive controls retained | 4/4 | 4/4 | 4/4 |
+| Exact proposal citation binding, including rejected proposals | 14/15 | 13/13 | 14/14 |
+| Retained candidates consistent with fixture expectations | 6/6 | 6/10 | 6/6 |
+| Prior-art signals recorded (equivalent and close baseline) | 1/2 | 0/2 | 2/2 |
+| Retained with comparator, metric and falsifier present | 6 | 10 | 6 |
+| Distinct candidates receiving valid scripted critique | 10 | 0 | 8 |
+| Retained candidates receiving valid scripted critique | 6 | 0 | 6 |
+| Targeted retrievals yielding an accepted revision | 1/1 | N/A | 1/1 |
+| Scripted requests | 35 | 22 | 45 |
+| Scripted input / output tokens | 3,500 / 2,800 | 2,200 / 1,760 | 4,500 / 3,600 |
+| Mock fetches | 62 | 0 (reused initial capture) | 62 |
+| Actual cost per critique-qualified proposal | $0.00 | N/A | $0.00 |
+| Exact persisted packet/ledger replay with zero dispatches/fetches | 12/12 | N/A | 12/12 |
+
+The six false-acceptance cases are NEG-01 through NEG-05 and NEG-07. Here
+“false acceptance” means an unsuitable candidate crossed the evaluated gate.
+Every condition kept scientific novelty unverified and commercial level at zero.
+NEG-06 exercises the commercial gate and NEG-08 exercises critique coverage, so
+both can retain a technically testable proposal.
+
+| Case | A | B | C |
+| --- | --- | --- | --- |
+| NEG-01 title evidence | Closed | Closed | Closed as inconclusive with typed title failure |
+| NEG-02 unsupported advantage | Rejected at critique | Passed structural gate | Screened before critique |
+| NEG-03 negated result | Rejected at critique | Passed structural gate | Rejected after typed contradiction judgment |
+| NEG-04 foreign reference | Rejected | Closed | Rejected before authorship, with separate invalidation test |
+| NEG-05 syndicated study | Rejected at critique | Passed structural gate | Screened before critique, retained shared study group |
+| NEG-06 synthetic buyer | Technical proposal retained, level 0 | Technical proposal retained, level 0 | Technical proposal retained, synthetic evidence excluded |
+| NEG-07 known equivalent | Rejected at critique | Passed structural gate | Rejected with source-bound prior-art decision |
+| NEG-08 insufficient coverage | 1 reviewed | No reviewer | 1/2, explicit shortfall |
+| POS-01 direct abstract finding | Retained | Retained | Retained with abstract scope and limitations |
+| POS-02 historical cross-literature question | Retained | Retained | Retained as exploratory and unverified |
+| POS-03 physically plausible transfer | Retained | Retained | Retained as exploratory and unverified |
+| POS-04 testable proposal with a close baseline | Revised and retained | Retained without critique | Recovered after distinct evidence, reviewed again and retained |
+
+The structural testability count checks field presence. Scientific adequacy and
+semantic support require separate judgment. C rejected two bad candidates before
+critique that A rejected after critique. C issued ten more scripted requests than
+A, retained the same four positives and recorded one additional prior-art signal.
+This result does not establish a scientific-quality or cost advantage over A.
+C passed the sentinel criteria and B exposed the limits of citation matching
+without adversarial interpretation. A separate control showed two reviews when
+two candidates qualify. No-new-evidence recovery stopped without a revision.
+
+### Independently labeled holdout
+
+The [frozen SciFact manifest](../../tests/fixtures/discovery/scifact-dev-holdout.json)
+selects the lowest four claim IDs in each labeled development class. Upstream
+annotations supply the labels and sentence locations. The local audit checked the
+release digest and confirmed that spans bind for all eight cases while the
+structural gate continues to report that independent semantic review is required.
+The selected texts and gold labels were kept out of model calls. The eight
+holdouts were used for structural auditing only. Blinded semantic assessment of
+A/B/C outputs remains open. [SciFact paper and evaluation data](https://aclanthology.org/2020.emnlp-main.609/)
+
+The synthetic cases and comparison harness were developed together. During the
+dry runs the questions were made case-specific and the scripted reviewer was
+aligned across the A and C schemas before the final measured rerun. The final
+sentinels are frozen regression inputs. Their labels and reviewer responses
+are authored fixtures, separate from the independently labeled SciFact subset.

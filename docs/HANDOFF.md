@@ -48,3 +48,11 @@ workflow passed the offline rehearsals and public-source probes. Start recovery 
 with `uv run python scripts/qualify_discovery.py runtime/new-discovery-rehearsal`.
 Next exact action after explicit approval is the single foreground command in the phase report.
 Use the same run ID for replay. Keep PR #2 draft and unattended inference disabled.
+
+## Research quality v1 continuation · 2026-11-04
+
+Resume on `integration/research-quality-v1`. The [phase report](phase_reports/research-quality-chat-20261104.md#integration-and-local-verification)
+records both sources, the verified implementation commit, historical replay
+inputs, benchmark results and exact recovery commands. Use the v2 objective for
+quality preflight and the v1 protocol for saved historical runs. Next work is
+blinded assessment and a preregistered authorization request for a live comparison.

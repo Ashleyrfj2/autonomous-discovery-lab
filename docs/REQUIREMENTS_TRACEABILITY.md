@@ -90,3 +90,12 @@ separate validation gates, process recovery, and cache-only replay have local ac
 was independently verified. The richer live model protocol, empirical novelty and usefulness,
 external market evidence, and unattended scheduling remain open.
 See [measured control results](phase_reports/autonomous-research-2026-11-03.md#offline-research-quality-results).
+
+## Research quality integration · 2026-11-04
+
+| Requirements | Evidence | Remaining gate |
+| --- | --- | --- |
+| REQ-002, REQ-003, REQ-019, REQ-020, REQ-021 | Versioned source/claim/bridge screen, advisory critique, 12 frozen cases, two authentic historical regressions, eight external structural holdouts | Blinded semantic and scientific review |
+| REQ-006, REQ-007, REQ-012, REQ-013, REQ-014, REQ-016 | Fenced quality checkpoints, strict v2 wire simulation, source invalidation, exact replay and token/cost accounting | Authorized live quality A/B/C and operational soak |
+
+[Verification and recovery](phase_reports/research-quality-chat-20261104.md#integration-and-local-verification)

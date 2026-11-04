@@ -57,3 +57,11 @@ entry point on the existing durable execution substrate. Ran the reviewed and on
 a two-candidate path, process-death recovery, public source probes, local validation, and preflight.
 The [qualification report](phase_reports/autonomous-research-2026-11-03.md) contains the artifact
 locations, scope limits, and live boundary.
+
+## 2026-11-04 — Research quality integration
+
+Preserved both source checkpoints in integration merge `5e04c23`. Wired the
+quality checks into discovery v2 and compared against discovery v1 and a single-role
+structural control. Scoped recursive strict wire schemas to the new response
+contracts after the full suite caught changes to older research-team contracts.
+[Phase evidence](phase_reports/research-quality-chat-20261104.md#integration-and-local-verification)

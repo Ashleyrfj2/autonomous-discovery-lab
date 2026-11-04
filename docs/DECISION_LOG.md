@@ -76,3 +76,14 @@ use substantive evidence and explicit falsifiers to decide what advances. An exa
 ground a claim for review. Semantic support, novelty, technical performance, and market demand
 require independent evidence. Retain immutable artifact addresses and verify the event chain
 against separately retained anchors. See the [research design and sources](phase_reports/autonomous-research-2026-11-03.md#research-methods-and-decisions).
+
+## DEC-024 — 2026-11-04 — Versioned evidence-first discovery and bounded recovery
+
+Keep the accepted `discovery-v1` protocol for historical continuation, replay and
+the A comparison. Use the same catalog, router, fenced checkpoints and packet
+for `discovery-v2`. Bind extracted findings to captured spans and make semantic
+review a separate typed advisory judgment. Record speculative transfer as
+unverified and make a new evidence-bound revision conditional on targeted
+retrieval yielding a distinct substantive source. Keep one recovery attempt
+per run and two valid critiques as the acceptance target. See the
+[method](research_quality/EVIDENCE_FIRST_V1.md) and [benchmark](research_quality/BENCHMARK_V1.md).
