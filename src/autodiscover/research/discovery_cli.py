@@ -33,7 +33,8 @@ def preflight(spec: DiscoverySpec, configurations: dict[str, ProviderConfig]) ->
     if contains_credential(spec.objective):
         raise ValueError("Objective contains recognizable credentials")
     hosts = {"api.crossref.org", EUROPE_PMC_HOST, *(seed_host(seed) for seed in spec.sources)}
-    calls: dict[str, int] = dict(zip(ROLES, (1, 3, 3), strict=True))
+    plan_calls = 4 if spec.protocol == "discovery-v2" else 1
+    calls: dict[str, int] = dict(zip(ROLES, (plan_calls, 3, 3), strict=True))
     total_input = total_output = 0
     total_cost = Decimal(0)
     roles = {}

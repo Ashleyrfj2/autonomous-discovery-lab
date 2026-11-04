@@ -5,25 +5,12 @@ or commercial validation. All model-extracted findings require independent revie
 No network, model or provider dispatch is performed here.
 """
 
-from typing import Literal
-
-from pydantic import Field
-
-from autodiscover.research.discovery_contracts import Citation, Evidence, Record
-
-EvidenceRelation = Literal["supports", "contradicts", "context", "unrelated"]
-RecoveryFailure = Literal[
-    "invalid_source",
-    "title_as_result",
-    "quote_not_in_source",
-    "semantic_mismatch",
-    "irrelevant_domain",
-    "missing_target_evidence",
-    "missing_measurement",
-    "known_prior_art",
-    "conflicting_findings",
-    "no_new_evidence",
-]
+from autodiscover.research.discovery_contracts import (
+    AtomicFinding as AtomicFinding,
+)
+from autodiscover.research.discovery_contracts import Evidence, EvidenceScreen, MechanismBridge
+from autodiscover.research.discovery_contracts import RecoveryDecision as RecoveryDecision
+from autodiscover.research.discovery_contracts import RecoveryFailure as RecoveryFailure
 
 EXTRACTOR_PROMPT_V1 = (
     "You extract atomic findings, not inventions. Read only the supplied source spans. "
@@ -62,61 +49,8 @@ RECOVERY_PROMPT_V1 = (
 )
 
 
-class AtomicFinding(Record):
-    """Unverified model-extracted finding tied to a literal source passage."""
-
-    finding_id: str = Field(min_length=3, max_length=64)
-    citation: Citation
-    location: Literal["abstract", "document"]
-    domain: str = Field(min_length=3, max_length=160)
-    method: str = Field(min_length=3, max_length=800)
-    observation: str = Field(min_length=3, max_length=800)
-    limitations: str = Field(min_length=3, max_length=800)
-    relation: EvidenceRelation = "supports"
-
-
-class MechanismBridge(Record):
-    """An explicitly provisional transfer from an observed source to a target."""
-
-    source_finding_ids: list[str] = Field(min_length=1, max_length=8)
-    source_domain: str = Field(min_length=3, max_length=160)
-    target_domain: str = Field(min_length=3, max_length=160)
-    shared_mechanism: str = Field(min_length=8, max_length=800)
-    domain_mismatches: list[str] = Field(min_length=1, max_length=8)
-    target_evidence_ids: list[str] = Field(default_factory=list, max_length=8)
-    target_outcome_metric: str = Field(min_length=3, max_length=200)
-    comparator: str = Field(min_length=3, max_length=200)
-    falsifier: str = Field(min_length=8, max_length=800)
-    established_advantage_claimed: bool = False
-
-
-class EvidenceScreen(Record):
-    status: Literal[
-        "invalid_source",
-        "needs_substantive_evidence",
-        "needs_target_evidence",
-        "needs_experiment_design",
-        "eligible_for_critique",
-    ]
-    codes: list[str]
-    source_bound_findings: int
-    semantic_entailment: Literal["independent_review_required"] = "independent_review_required"
-    novelty: Literal["unverified"] = "unverified"
-    technical_advantage: Literal["unverified"] = "unverified"
-    commercial_level: Literal[0] = 0
-
-    @property
-    def eligible_for_critique(self) -> bool:
-        return self.status == "eligible_for_critique"
-
-
-class RecoveryDecision(Record):
-    action: Literal["reject", "retrieve", "revise", "inconclusive", "record_prior_art"]
-    reason: str
-
-
 def _normalized(text: str) -> str:
-    return " ".join(text.casefold().split())
+    return " ".join(text.casefold().strip().rstrip(".?!:;").split())
 
 
 def _findings_screen(
@@ -148,6 +82,9 @@ def _findings_screen(
             continue
         if finding.relation in {"context", "unrelated"}:
             missing.append("finding_not_claim_support")
+            continue
+        if finding.relation == "contradicts":
+            missing.append("contradictory_finding")
             continue
         valid_ids.append(finding.finding_id)
     return len(valid_ids), fatal, missing
@@ -216,7 +153,7 @@ def decide_recovery(
     query_already_attempted: bool = False,
 ) -> RecoveryDecision:
     """Pure bounded recovery; does not dispatch retrieval or alter recorded evidence."""
-    if failure in {"invalid_source", "quote_not_in_source", "semantic_mismatch"}:
+    if failure in {"invalid_source", "invalid_review", "quote_not_in_source", "semantic_mismatch"}:
         return RecoveryDecision(action="reject", reason="Current evidence/claim is invalid")
     if failure == "known_prior_art":
         return RecoveryDecision(

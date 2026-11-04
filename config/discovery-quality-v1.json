@@ -1,0 +1,8 @@
+{
+  "objective": "Discover an overlooked, technically plausible opportunity by connecting evidence from multiple disciplines or industries. Investigate competing approaches, identify relevant prior work, and determine whether any opportunity merits further scientific or commercial validation.",
+  "protocol": "discovery-v2",
+  "seconds": 240,
+  "max_output_tokens": 2560,
+  "retry_limit": 1,
+  "mode": "reviewed"
+}

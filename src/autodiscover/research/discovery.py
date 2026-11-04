@@ -32,6 +32,8 @@ from autodiscover.research.discovery_contracts import (
     ScientificGate,
     SearchReceipt,
 )
+from autodiscover.research.discovery_quality import QUALITY_PROMPTS
+from autodiscover.research.discovery_quality import evaluate as evaluate_quality
 from autodiscover.research.discovery_sources import acquire, seed_host
 from autodiscover.research.retrieval import SourceFetcher
 from autodiscover.security.budget import Budget
@@ -68,15 +70,20 @@ def _journal(store: Store, run_id: str) -> tuple[dict[str, str], str | None]:
     return journal, finished
 
 
-def _bound_sources(catalog: Catalog, report: Report) -> set[str]:
-    owned = set(catalog.sources(report.run_id))
+def _bound_sources(catalog: Catalog, run_id: str, searches: list[SearchReceipt]) -> set[str]:
+    owned = set(catalog.sources(run_id))
     sources = set()
-    for search in report.searches:
+    for search in searches:
         for evidence in search.evidence:
             identifier = evidence.source_id
             if identifier not in owned:
                 raise IntegrityError("Discovery references an unowned source")
             source, text = catalog.source(identifier)
+            scope = (
+                ("title" if text == source.title else "abstract")
+                if source.source_kind == "publication_metadata"
+                else "document"
+            )
             if (
                 source.url != evidence.url
                 or source.title != evidence.title
@@ -84,6 +91,7 @@ def _bound_sources(catalog: Catalog, report: Report) -> set[str]:
                 or source.published_on != evidence.published_on
                 or source.retrieval_provenance != evidence.provenance
                 or evidence.excerpt not in text
+                or evidence.scope != scope
             ):
                 raise IntegrityError("Discovery excerpt or metadata mismatch")
             sources.add(identifier)
@@ -110,7 +118,7 @@ def replay(store: Store, run_id: str) -> tuple[str, Report]:
     report = Report.model_validate(artifacts.get_json(digest))
     if report.run_id != run_id:
         raise IntegrityError("Discovery report belongs to a different run")
-    _bound_sources(Catalog(store), report)
+    _bound_sources(Catalog(store), report.run_id, report.searches)
     if _usage(store, run_id) != report.usage:
         raise IntegrityError("Discovery usage does not match its request ledger")
     return digest, report
@@ -182,6 +190,8 @@ class Discovery:
             "live": all(live),
             "retrieval": self.allow_retrieval,
         }
+        if spec.protocol == "discovery-v2":
+            registration["quality_prompts"] = QUALITY_PROMPTS
         if contains_credential(canonical(registration)):
             raise ValueError("Discovery registration contains recognizable credentials")
         return registration
@@ -269,6 +279,8 @@ class Discovery:
             **context: Any,
         ) -> T:
             def produce() -> T:
+                if spec.protocol == "discovery-v2":
+                    context["prompt_version"] = QUALITY_PROMPTS
                 prompt = canonical({"task": key, "instruction": instruction, **context})
                 if contains_credential(prompt):
                     raise ValueError(
@@ -280,14 +292,14 @@ class Discovery:
                     role,
                     request,
                     schema,
-                    key=f"discovery-v1:{key}",
+                    key=f"{spec.protocol}:{key}",
                 )
                 return result
 
             return checkpoint(key, schema, produce)
 
         def search(key: str, direction: Direction, query: str, *, seeds: bool = False):
-            return checkpoint(
+            receipt = checkpoint(
                 key,
                 SearchReceipt,
                 lambda: acquire(
@@ -301,6 +313,9 @@ class Discovery:
                     lease=(owner, fence),
                 ),
             )
+            if spec.protocol == "discovery-v2":
+                _bound_sources(self.catalog, run_id, [receipt])
+            return receipt
 
         try:
             with cancellation_scope(stopped):
@@ -311,7 +326,13 @@ class Discovery:
                     "Propose three distinct cross-disciplinary questions "
                     "with compact bibliographic search queries. State evidence that would support "
                     "and falsify each idea. Score value, uncertainty and effort from 1 to 5. "
-                    "Do not assume an industry or result.",
+                    "Do not assume an industry or result."
+                    + (
+                        " Query the target-domain method and comparators where possible, "
+                        "including functional equivalents and contrary findings."
+                        if spec.protocol == "discovery-v2"
+                        else ""
+                    ),
                     objective=spec.objective,
                 )
                 order = sorted(
@@ -328,8 +349,15 @@ class Discovery:
                     )
                     for i in order
                 }
-                result = self._evaluate(plan, initial, order, generate, search)
-                candidates, followups, decisions = result
+                closed, coverage = None, None
+                if spec.protocol == "discovery-v2":
+                    candidates, followups, decisions, closed, coverage = evaluate_quality(
+                        plan, initial, order, generate, search, checkpoint, _evidence, ROLES
+                    )
+                else:
+                    candidates, followups, decisions = self._evaluate(
+                        plan, initial, order, generate, search
+                    )
                 report = Report(
                     run_id=run_id,
                     specification=spec,
@@ -340,8 +368,10 @@ class Discovery:
                     candidates=candidates,
                     decisions=decisions,
                     usage=_usage(self.store, run_id),
+                    quality_closed_directions=closed,
+                    critique_coverage=coverage,
                 )
-                sources = _bound_sources(self.catalog, report)
+                sources = _bound_sources(self.catalog, run_id, report.searches)
                 check()
                 digest = self.artifacts.put_json(report.model_dump(mode="json"))
                 with self.store.connection(write=True) as db:

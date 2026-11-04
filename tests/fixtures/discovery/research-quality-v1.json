@@ -1,0 +1,201 @@
+{
+  "sources": {
+    "cell-title": [
+      "10.9999/cell",
+      "Plant proteins and mammalian preservation during desiccation",
+      ""
+    ],
+    "phyllite": [
+      "10.9999/phyllite",
+      "Lab fracture response fixture",
+      "Frequency bands shifted during uniaxial phyllite compression as brittle cracks formed."
+    ],
+    "negation": [
+      "10.9999/negative",
+      "Controlled warming fixture",
+      "No improvement in cell viability was observed after warming compared with the sham control."
+    ],
+    "study": [
+      "10.9999/study",
+      "Controlled thaw fixture",
+      "Viability increased from 55% to 62% after rapid thaw in mouse fibroblasts under the reported conditions."
+    ],
+    "study-summary": [
+      "10.9999/summary",
+      "Secondary coverage of the same study",
+      "The same mouse fibroblast trial reported 62% viability after rapid thaw."
+    ],
+    "wear-2002": [
+      "10.1016/S0890-6955(01)00108-0",
+      "A brief review: acoustic emission method for tool wear monitoring during turning",
+      "This paper reviews briefly the research on AE sensing of tool wear condition in turning."
+    ],
+    "wear-2022": [
+      "10.3390/s22062206",
+      "Tool Condition Monitoring for High-Performance Machining Systems—A Review",
+      "including the occurrences of wear, cracks, chipping, and breakage"
+    ],
+    "fish-oil": [
+      "10.1056/NEJM198604103141501",
+      "In vivo indexes of platelet and vascular function during fish-oil administration in patients with atherosclerosis",
+      "These studies show that a high dose of eicosapentaenoate alters the pattern of synthesis of thromboxanes and prostacyclins."
+    ],
+    "raynaud": [
+      "10.3109/03009738509178639",
+      "Blood viscosity and finger systolic pressure in primary and traumatic vasospastic disease",
+      "FSP at 10 degrees C was significantly lower in both patient groups than in a normal reference group."
+    ],
+    "baseline": [
+      "10.9999/baseline",
+      "Current sham-controlled thaw method",
+      "A preregistered comparison used a sham heat ramp and blinded viability assessment at 24 hours."
+    ]
+  },
+  "cases": {
+    "NEG-01": {
+      "sources": [
+        "cell-title"
+      ],
+      "challenge": "title",
+      "expected_retained": false,
+      "question": "Do resurrection-plant protein studies report mammalian desiccation survival?",
+      "query": "plant LEA mammalian cell desiccation viability"
+    },
+    "NEG-02": {
+      "sources": [
+        "phyllite"
+      ],
+      "challenge": "advantage",
+      "expected_retained": false,
+      "domains": [
+        "rock fracture",
+        "machine wear"
+      ],
+      "question": "Do phyllite fracture measurements establish superior production wear alarms?",
+      "query": "phyllite acoustic emission machinery wear lead time"
+    },
+    "NEG-03": {
+      "sources": [
+        "negation"
+      ],
+      "challenge": "negated",
+      "expected_retained": false,
+      "question": "Does warming improve viability versus sham?",
+      "query": "warming sham cell viability"
+    },
+    "NEG-04": {
+      "sources": [
+        "study"
+      ],
+      "challenge": "foreign",
+      "expected_retained": false,
+      "question": "Can the supplied run-local evidence support a thaw finding?",
+      "query": "mouse fibroblast thaw viability"
+    },
+    "NEG-05": {
+      "sources": [
+        "study",
+        "study-summary"
+      ],
+      "challenge": "replication",
+      "expected_retained": false,
+      "question": "Did two independent experiments replicate a fibroblast thaw result?",
+      "query": "fibroblast thaw replication independent cohorts"
+    },
+    "NEG-06": {
+      "sources": [
+        "study"
+      ],
+      "challenge": "commercial",
+      "expected_retained": true,
+      "commercial_level": 0,
+      "question": "Can a synthetic buyer establish demand for a preservation process?",
+      "query": "cell preservation equipment adoption"
+    },
+    "NEG-07": {
+      "sources": [
+        "wear-2002",
+        "wear-2022"
+      ],
+      "challenge": "equivalent",
+      "expected_retained": false,
+      "prior_art_expected": true,
+      "question": "Was acoustic emission previously used for tool wear monitoring?",
+      "query": "acoustic emission turning tool wear monitoring prior art"
+    },
+    "NEG-08": {
+      "sources": [
+        "study"
+      ],
+      "challenge": "coverage",
+      "expected_retained": true,
+      "critique_coverage": 1,
+      "question": "Can two defensible preservation proposals be reviewed from this corpus?",
+      "query": "rapid thaw fibroblast viability methods"
+    },
+    "POS-01": {
+      "sources": [
+        "study"
+      ],
+      "challenge": "abstract",
+      "expected_retained": true,
+      "question": "What viability outcome does the supplied fibroblast abstract report?",
+      "query": "rapid thaw mouse fibroblast controlled viability"
+    },
+    "POS-02": {
+      "sources": [
+        "fish-oil",
+        "raynaud"
+      ],
+      "challenge": "historical",
+      "expected_retained": true,
+      "domains": [
+        "vascular nutrition",
+        "cold-induced vasospasm"
+      ],
+      "question": "Could vascular lipid mechanisms inform a historical cold-vasospasm hypothesis?",
+      "query": "fish oil thromboxane cold vasospasm finger systolic pressure",
+      "mechanism": "Investigate whether altered vasoactive mediators affect cold-induced finger perfusion.",
+      "metric": "Change in finger systolic pressure during controlled cold challenge in mmHg",
+      "comparator": "Matched control oil in the same cold challenge",
+      "falsifier": "Disconfirm if the between-arm change in finger systolic pressure is below the preregistered threshold.",
+      "units": "mmHg"
+    },
+    "POS-03": {
+      "sources": [
+        "phyllite"
+      ],
+      "challenge": "exploratory",
+      "expected_retained": true,
+      "domains": [
+        "rock fracture",
+        "machine wear"
+      ],
+      "question": "Could acoustic precursors generalize from rock fracture to machine wear?",
+      "query": "elastic acoustic emission rock fracture machine wear",
+      "mechanism": "Test acoustic frequency shifts produced by damage-related elastic waves.",
+      "metric": "Seconds of lead time at fixed false alarms per operating hour",
+      "comparator": "Vibration alarm at the same false-alarm rate on identical labeled wear events",
+      "falsifier": "Disconfirm if lead time is no better than vibration at the fixed false-alarm rate.",
+      "units": "seconds"
+    },
+    "POS-04": {
+      "sources": [
+        "study"
+      ],
+      "challenge": "recover",
+      "expected_retained": true,
+      "recovery_sources": [
+        "baseline"
+      ],
+      "prior_art_expected": true,
+      "question": "Can rapid thaw outperform a matched sham ramp on 24-hour viability?",
+      "query": "rapid thaw paired viability sham ramp",
+      "mechanism": "Test whether reduced exposure to recrystallization during thaw preserves cells.",
+      "metric": "Percentage-point difference in blinded 24-hour viable cells",
+      "comparator": "Sham ramp with matched batch, endpoint and operator",
+      "falsifier": "Disconfirm if viability gain is absent or if the inactive sham shows the same gain.",
+      "units": "percentage points"
+    }
+  }
+}

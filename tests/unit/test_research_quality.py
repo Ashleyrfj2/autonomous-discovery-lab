@@ -1,5 +1,7 @@
 """No-network evidence quality sentinels; these are synthetic fixtures, not the live packet."""
 
+from typing import Literal
+
 import pytest
 
 from autodiscover.research.discovery_contracts import Citation, Evidence
@@ -16,7 +18,13 @@ TITLE = "Acoustic emission for monitoring machine tool wear"
 QUOTE = "The measured acoustic response increased with crack growth under laboratory loads."
 
 
-def source(*, scope="abstract", excerpt=QUOTE, title=TITLE, source_id=SOURCE):
+def source(
+    *,
+    scope: Literal["title", "abstract", "document"] = "abstract",
+    excerpt=QUOTE,
+    title=TITLE,
+    source_id=SOURCE,
+):
     return Evidence(
         source_id=source_id,
         title=title,
@@ -32,7 +40,13 @@ def source(*, scope="abstract", excerpt=QUOTE, title=TITLE, source_id=SOURCE):
     )
 
 
-def finding(*, quote=QUOTE, source_id=SOURCE, location="abstract", relation="supports"):
+def finding(
+    *,
+    quote=QUOTE,
+    source_id=SOURCE,
+    location: Literal["abstract", "document"] = "abstract",
+    relation: Literal["supports", "contradicts", "context", "unrelated"] = "supports",
+):
     return AtomicFinding(
         finding_id="F-001",
         citation=Citation(source_id=source_id, quote=quote),
