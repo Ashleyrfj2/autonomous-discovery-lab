@@ -132,7 +132,7 @@ META-MEDIUM acceptance source: 48d080803dc1cde95af9066f5624749684360f5b, committ
 
 | Acceptance | Implementation and tests | Status / remaining boundary |
 | --- | --- | --- |
-| Separate need, mechanism and measured improvement | CapabilityFindingV2/CapabilityClaimV2; evidence_roles.py; saved-role mismatch controls | IMPLEMENTED_UNVERIFIED pending final acceptance; labels need independent semantic review |
+| Separate need, mechanism and measured improvement | CapabilityFindingV2/CapabilityClaimV2; evidence_roles.py; saved-role mismatch controls | VERIFIED locally; labels still need independent semantic review |
 | Relevant context informs gaps without causal/efficacy promotion | Versioned extraction prompt, context-aware provenance filter, role-specific empirical gates | Context/causality/mechanism/improvement positive/negative pipeline controls |
 | Reject placeholders and structural contradictions | Planning guard; extraction/gap/proposal/review checks; observed/AI/critic consistency | New placeholders/typed contradiction tests; general natural-language entailment remains open |
 | Meaningful units; explicit observed constraint | Conservative physical/rate/named-scale syntax, target role/ID/domain, exact claim, critic assessment | Unit negatives/positives and supported observed-constraint critique control |
@@ -140,3 +140,5 @@ META-MEDIUM acceptance source: 48d080803dc1cde95af9066f5624749684360f5b, committ
 | Provisional reaches critique; unsupported rejected | Full saved-passage Discovery-v2 controls, strict HTTP mocks, fresh CLI session/replay | Offline verification only; no paid qualification |
 
 Authority: current user brief, REQ-AI-002/003/006, REQ-003/014/019/021. Source/evidence: phase_reports/EVIDENCE_ROLES_REPAIR_2026-11-04.md. Historical acceptance rows remain scoped to their recorded versions.
+
+EVIDENCE-ROLES final source 0dfbcfc18529586bad4e7f816da0e4a8854ce91e: 433 full /249 focused /53 new, no skips/errors, lint/types/build pass. All six acceptance rows have passing recorded controls and exact saved packet replay/preservation. Full role/context/placeholder/observed-constraint/unit/open-science coverage and limitations: phase_reports/EVIDENCE_ROLES_REPAIR_2026-11-04.md and evidence-roles-local-acceptance.json.
