@@ -32,7 +32,7 @@ from autodiscover.research.discovery_contracts import (
     ScientificGate,
     SearchReceipt,
 )
-from autodiscover.research.discovery_quality import QUALITY_PROMPTS
+from autodiscover.research.discovery_quality import QUALITY_PROMPTS, ProposalAdmission
 from autodiscover.research.discovery_quality import evaluate as evaluate_quality
 from autodiscover.research.discovery_sources import acquire, seed_host
 from autodiscover.research.retrieval import SourceFetcher
@@ -222,6 +222,10 @@ class Discovery:
         run_id: str,
         *,
         stop_requested: Callable[[], bool] = lambda: False,
+        boundary_stop: Callable[[], bool] = lambda: False,
+        search_admission: Callable[[str, str], bool] | None = None,
+        session_id: str | None = None,
+        proposal_admission: ProposalAdmission | None = None,
     ) -> tuple[str, Report]:
         verify_chain(self.store)
         journal, finished = _journal(self.store, run_id)
@@ -229,6 +233,10 @@ class Discovery:
             return replay(self.store, run_id)
         registration = self.artifacts.get_json(journal["registered"])
         spec = DiscoverySpec.model_validate(registration["specification"])
+        if spec.session_context and (
+            session_id != spec.session_context.session_id or not self.router.budget.admission
+        ):
+            raise StateError("Managed discovery must be resumed through its session")
         if canonical(self._registration(spec)) != canonical(registration):
             raise StateError("Discovery configuration differs from its registration")
         owner = local_owner()
@@ -246,8 +254,8 @@ class Discovery:
                 or row["lease_until"] <= self.store.clock()
             )
 
-        def check() -> None:
-            if cancellation_requested():
+        def check(*, after_work: bool = False) -> None:
+            if cancellation_requested() or (not after_work and boundary_stop()):
                 raise StateError("Discovery interrupted; committed checkpoints remain resumable")
 
         def checkpoint[T: BaseModel](key: str, schema: type[T], produce: Callable[[], T]) -> T:
@@ -255,7 +263,7 @@ class Discovery:
             if key in journal:
                 return schema.model_validate(self.artifacts.get_json(journal[key]))
             result = produce()
-            check()
+            check(after_work=True)
             digest = self.artifacts.put_json(result.model_dump(mode="json"))
             with self.store.connection(write=True) as db:
                 self.store._lease(db, run_id, owner, fence)
@@ -299,10 +307,15 @@ class Discovery:
             return checkpoint(key, schema, produce)
 
         def search(key: str, direction: Direction, query: str, *, seeds: bool = False):
-            receipt = checkpoint(
-                key,
-                SearchReceipt,
-                lambda: acquire(
+            def retrieve() -> SearchReceipt:
+                if search_admission and not search_admission(key, query):
+                    return SearchReceipt(
+                        question=direction.question,
+                        query=query,
+                        evidence=[],
+                        failures=["SESSION_DUPLICATE_QUERY"],
+                    )
+                return acquire(
                     self.catalog,
                     run_id,
                     self.fetcher,
@@ -311,8 +324,9 @@ class Discovery:
                     [s for s in spec.sources if seeds and s.direction == int(key[-1])],
                     require_live=registration["live"],
                     lease=(owner, fence),
-                ),
-            )
+                )
+
+            receipt = checkpoint(key, SearchReceipt, retrieve)
             if spec.protocol == "discovery-v2":
                 _bound_sources(self.catalog, run_id, [receipt])
             return receipt
@@ -328,12 +342,25 @@ class Discovery:
                     "and falsify each idea. Score value, uncertainty and effort from 1 to 5. "
                     "Do not assume an industry or result."
                     + (
+                        " Use the investigation lane and recent evidence as bounded context. "
+                        "Prefer a distinct direction if the previous gap cannot be resolved. "
+                        "Favor source diversity, information gain, feasibility, potential effect "
+                        "and disconfirming evidence over speculative novelty. "
+                        if spec.session_context
+                        else ""
+                    )
+                    + (
                         " Query the target-domain method and comparators where possible, "
                         "including functional equivalents and contrary findings."
                         if spec.protocol == "discovery-v2"
                         else ""
                     ),
                     objective=spec.objective,
+                    **(
+                        {"session_context": spec.session_context.model_dump(mode="json")}
+                        if spec.session_context
+                        else {}
+                    ),
                 )
                 order = sorted(
                     range(3),
@@ -352,7 +379,15 @@ class Discovery:
                 closed, coverage = None, None
                 if spec.protocol == "discovery-v2":
                     candidates, followups, decisions, closed, coverage = evaluate_quality(
-                        plan, initial, order, generate, search, checkpoint, _evidence, ROLES
+                        plan,
+                        initial,
+                        order,
+                        generate,
+                        search,
+                        checkpoint,
+                        _evidence,
+                        ROLES,
+                        proposal_admission,
                     )
                 else:
                     candidates, followups, decisions = self._evaluate(

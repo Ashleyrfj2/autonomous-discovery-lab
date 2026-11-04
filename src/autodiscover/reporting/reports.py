@@ -16,6 +16,10 @@ from autodiscover.security.budget import Budget
 def build_report(store: Store, run_id: str) -> dict[str, Any]:
     checked = verify_chain(store)
     row = store.get_run(run_id)
+    if store.is_session(run_id):
+        from autodiscover.research.session import session_report
+
+        return session_report(store, run_id, dossiers=False)
     if store.is_discovery(run_id):
         from autodiscover.orchestrator.contracts import RunStatus
         from autodiscover.research.discovery import replay

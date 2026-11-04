@@ -118,6 +118,8 @@ class Lab:
         router: Router | None = None,
         stop_requested: Callable[[], bool] | None = None,
     ) -> None:
+        if self.store.is_session(run_id):
+            raise ValueError("Use session resume for research sessions")
         if self.store.is_discovery(run_id):
             raise ValueError("Use discover --run-id for discovery runs")
         verify_chain(self.store)

@@ -23,6 +23,8 @@ class Scheduler:
         self.store, self.owner = store, local_owner()
 
     def enqueue(self, run_id: str) -> None:
+        if self.store.is_session(run_id):
+            raise ValueError("Use session resume for research sessions")
         if self.store.is_discovery(run_id):
             raise ValueError("Use discover --run-id for discovery runs")
         verify_chain(self.store)

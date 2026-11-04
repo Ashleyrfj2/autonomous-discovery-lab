@@ -139,7 +139,14 @@ def main() -> None:
     commercial.add_argument("run_id")
     commercial.add_argument("direction", type=int)
     commercial.add_argument("observations", type=Path)
+    from autodiscover.research.session_cli import add_parser as add_session_parser
+    from autodiscover.research.session_cli import run as run_session
+
+    session = add_session_parser(sub)
     args = parser.parse_args()
+    if args.command == "session":
+        run_session(args, session)
+        return
     if args.command == "discovery-commercial":
         from autodiscover.research.discovery_cli import commercial_review
 

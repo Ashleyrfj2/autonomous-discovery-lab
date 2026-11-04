@@ -112,6 +112,7 @@ class Store:
         run_id: str | None = None,
         *,
         discovery_digest: str | None = None,
+        session_digest: str | None = None,
     ) -> str:
         from autodiscover.config import Limits
 
@@ -148,6 +149,8 @@ class Store:
                 self._event(
                     db, run_id, "discovery_registered", {"artifact_digest": discovery_digest}
                 )
+            if session_digest is not None:
+                self._event(db, run_id, "session_registered", {"artifact_digest": session_digest})
         self.checkpoint(run_id)
         return run_id
 
@@ -166,6 +169,12 @@ class Store:
                 ).fetchone()
                 is not None
             )
+
+    def is_session(self, run_id: str) -> bool:
+        with self.connection() as db:
+            return db.execute(
+                "SELECT 1 FROM events WHERE run_id=? AND kind='session_registered'", (run_id,)
+            ).fetchone() is not None
 
     def list_runs(self) -> list[dict[str, Any]]:
         with self.connection() as db:

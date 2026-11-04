@@ -34,6 +34,7 @@ from autodiscover.research.quality import (
 )
 
 QUALITY_PROMPTS = "research-quality-v1"
+ProposalAdmission = Callable[[str, QualityProposal, list[Evidence]], bool]
 
 
 def query_key(text: str) -> str:
@@ -230,6 +231,7 @@ def _attempt(
     *,
     original: QualityAttempt | None = None,
     new_source_ids: set[str] | None = None,
+    proposal_admission: ProposalAdmission | None = None,
 ) -> tuple[QualityAttempt, RecoveryFailure | None, str]:
     extraction: Extraction
     if evidence:
@@ -328,6 +330,12 @@ def _attempt(
         and not any(cite.source_id in new_source_ids for cite in proposal.hypothesis.evidence)
     ):
         failure, issues = "no_new_evidence", ["Revision does not cite distinct new evidence."]
+    if not failure and proposal_admission and not proposal_admission(key, proposal, evidence):
+        failure, issues, query = (
+            "duplicate_session_candidate",
+            ["Repeated candidate with no distinct evidence."],
+            "",
+        )
     valid_review = False
     if not failure:
         review = generate(
@@ -371,6 +379,7 @@ def evaluate(
     checkpoint: Callable[..., Any],
     combine: Callable[..., list[Evidence]],
     roles: tuple[str, str, str],
+    proposal_admission: ProposalAdmission | None = None,
 ) -> tuple[list[Candidate], list[SearchReceipt], list[str], dict[int, QualityTrace], int]:
     candidates: list[Candidate] = []
     closed: dict[int, QualityTrace] = {}
@@ -391,7 +400,14 @@ def evaluate(
     for index in ranked[:2]:
         direction = plan.directions[index]
         evidence = combine(initial[index])
-        original, failure, query = _attempt(direction, evidence, generate, str(index), roles)
+        original, failure, query = _attempt(
+            direction,
+            evidence,
+            generate,
+            str(index),
+            roles,
+            proposal_admission=proposal_admission,
+        )
         revised = None
         receipts = []
         if failure:
@@ -452,6 +468,7 @@ def evaluate(
                         roles,
                         original=original,
                         new_source_ids=new_ids,
+                        proposal_admission=proposal_admission,
                     )
                     if final_failure:
                         receipts.append(

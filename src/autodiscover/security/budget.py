@@ -1,8 +1,9 @@
 """Transactional nano-USD accounting and durable request reservations."""
 
-
 import hashlib
 import json
+import sqlite3
+from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import ROUND_CEILING, Decimal
 from typing import Any
@@ -25,8 +26,13 @@ def nano(amount: Decimal) -> int:
 
 
 class Budget:
-    def __init__(self, store: Store):
+    def __init__(
+        self,
+        store: Store,
+        admission: Callable[[sqlite3.Connection, str], None] | None = None,
+    ):
         self.store = store
+        self.admission = admission
 
     def reserve(
         self,
@@ -40,6 +46,8 @@ class Budget:
         reserved = nano(amount)
         day = datetime.fromtimestamp(self.store.clock(), UTC).date().isoformat()
         with self.store.connection(write=True) as db:
+            if self.admission:
+                self.admission(db, run_id)
             row = db.execute("SELECT status FROM runs WHERE id=?", (run_id,)).fetchone()
             if row is None or row["status"] != "ACTIVE":
                 raise BudgetError("Run not active")

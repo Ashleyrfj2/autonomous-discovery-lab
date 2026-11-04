@@ -54,6 +54,13 @@ class SourceSeed(Record):
     direction: int = Field(ge=0, le=2)
 
 
+class SessionContext(Record):
+    session_id: str = Field(pattern=r"^session-[a-f0-9]{32}$")
+    branch: int = Field(ge=0, lt=256)
+    investigation: Short
+    recent_evidence: list[Text] = Field(max_length=3)
+
+
 class DiscoverySpec(Record):
     objective: str = Field(min_length=12, max_length=1000)
     sources: list[SourceSeed] = Field(default_factory=list, max_length=6)
@@ -62,6 +69,7 @@ class DiscoverySpec(Record):
     max_output_tokens: int = Field(default=1536, ge=256, le=4096)
     retry_limit: int = Field(default=1, ge=0, le=2)
     mode: Literal["reviewed", "single_model"] = "reviewed"
+    session_context: SessionContext | None = Field(default=None, exclude_if=lambda v: v is None)
 
 
 class Direction(Record):
@@ -211,6 +219,7 @@ class EvidenceScreen(Record):
 RecoveryFailure = Literal[
     "invalid_source",
     "invalid_review",
+    "duplicate_session_candidate",
     "title_as_result",
     "quote_not_in_source",
     "semantic_mismatch",

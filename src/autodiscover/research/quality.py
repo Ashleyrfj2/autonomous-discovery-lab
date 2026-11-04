@@ -153,6 +153,8 @@ def decide_recovery(
     query_already_attempted: bool = False,
 ) -> RecoveryDecision:
     """Pure bounded recovery; does not dispatch retrieval or alter recorded evidence."""
+    if failure == "duplicate_session_candidate":
+        return RecoveryDecision(action="reject", reason="Duplicate in the session research history")
     if failure in {"invalid_source", "invalid_review", "quote_not_in_source", "semantic_mismatch"}:
         return RecoveryDecision(action="reject", reason="Current evidence/claim is invalid")
     if failure == "known_prior_art":

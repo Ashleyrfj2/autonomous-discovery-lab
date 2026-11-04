@@ -56,6 +56,8 @@ def verify_run_projections(
             )
         elif kind == "discovery_finished":
             expected[run].update(status="COMPLETED")
+        elif kind == "session_stopped":
+            expected[run].update(status=payload["status"])
         elif kind == "step_failed":
             expected[run].update(
                 failures=payload["attempt"],
