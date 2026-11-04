@@ -349,3 +349,18 @@ Removed application dollar admission while preserving usage accounting and bound
 - [ ] Qualify unattended operation separately after the foreground and operational gates.
 
 [Phase report and recovery](phase_reports/research-quality-chat-20261104.md#integration-and-local-verification)
+
+## Long-session readiness · 2026-11-04
+
+- [x] Recover published research-quality baseline and prior evidence.
+- [x] Implement session controller, profiles, usage limits and operator CLI.
+- [x] Run component ablations, historical and externally labeled source checks.
+- [x] Prepare the blinded review packet and score sheet.
+- [x] Run accelerated long-horizon and separate-process fault/control tests.
+- [x] Verify Meta catalog access and public retrieval without inference.
+- [ ] Obtain independent human scores.
+- [ ] Run operator-authorized controlled live qualification and reconcile billing.
+- [ ] Supervise initial multi-hour run after controlled live acceptance.
+
+[Phase report](phase_reports/LONG_SESSION_READINESS_2026-11-04.md) ·
+[Runbook](LONG_SESSION_RUNBOOK.md)

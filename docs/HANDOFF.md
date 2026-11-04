@@ -56,3 +56,13 @@ records both sources, the verified implementation commit, historical replay
 inputs, benchmark results and exact recovery commands. Use the v2 objective for
 quality preflight and the v1 protocol for saved historical runs. Next work is
 blinded assessment and a preregistered authorization request for a live comparison.
+
+## Long-session readiness · 2026-11-04
+
+Continue on `integration/long-session-readiness`. The controller, accelerated
+soak, process recovery and ablations are recorded in the
+[phase report](phase_reports/LONG_SESSION_READINESS_2026-11-04.md).
+The [runbook](LONG_SESSION_RUNBOOK.md) contains the exact qualification,
+resume and subsequent four-hour launch commands. The next external action is
+the operator-authorized short Meta qualification. Blinded human scoring and
+provider-confirmed billing remain pending. PR #2 remains draft and unmerged.

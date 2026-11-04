@@ -87,3 +87,13 @@ unverified and make a new evidence-bound revision conditional on targeted
 retrieval yielding a distinct substantive source. Keep one recovery attempt
 per run and two valid critiques as the acceptance target. See the
 [method](research_quality/EVIDENCE_FIRST_V1.md) and [benchmark](research_quality/BENCHMARK_V1.md).
+
+## DEC-025 — 2026-11-04 — Long sessions compose existing Discovery-v2 runs
+
+Use an event-backed parent session and bounded child runs under existing
+SQLite leases. The existing experiment scheduler advances trusted experiment
+stages and deliberately excludes Discovery. Use an application foreground
+controller for independent research branches. Admit by full-branch request,
+token and optional cost estimates. Stop on ambiguous dispatch rather than
+replaying it. Pause drains at a stage boundary. Use cross-branch query and
+proposal fingerprints before further retrieval or critique.

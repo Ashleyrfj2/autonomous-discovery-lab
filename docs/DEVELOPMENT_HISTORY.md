@@ -65,3 +65,12 @@ quality checks into discovery v2 and compared against discovery v1 and a single-
 structural control. Scoped recursive strict wire schemas to the new response
 contracts after the full suite caught changes to older research-team contracts.
 [Phase evidence](phase_reports/research-quality-chat-20261104.md#integration-and-local-verification)
+
+## 2026-11-04 — Long-session operational qualification
+
+Added a durable foreground controller around existing Discovery-v2 branches,
+bounded memory, duplicate admission guards, usage envelopes, status and
+recovery. Verified mock-wire qualification, accelerated multi-hour progress,
+separate-process controls and crash recovery. Published the operator runbook
+and preserved the blinded-review preparation separately from human scoring.
+[Phase evidence](phase_reports/LONG_SESSION_READINESS_2026-11-04.md)

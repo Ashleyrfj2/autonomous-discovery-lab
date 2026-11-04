@@ -99,3 +99,12 @@ See [measured control results](phase_reports/autonomous-research-2026-11-03.md#o
 | REQ-006, REQ-007, REQ-012, REQ-013, REQ-014, REQ-016 | Fenced quality checkpoints, strict v2 wire simulation, source invalidation, exact replay and token/cost accounting | Authorized live quality A/B/C and operational soak |
 
 [Verification and recovery](phase_reports/research-quality-chat-20261104.md#integration-and-local-verification)
+
+## Long-session readiness · 2026-11-04
+
+| Requirements | Evidence | Remaining gate |
+| --- | --- | --- |
+| REQ-003, REQ-008, REQ-019–021 | Source-bound child packets, duplicate queries and proposals, new evidence/stagnation metrics, comparative component ablations | Blinded human semantic ratings and broader discovery generalization |
+| REQ-006, REQ-007, REQ-012–016 | Session admission, stop controls, accelerated soak, process death and recovery, Meta catalog and mock HTTP qualification | Paid controlled live verification and billing reconciliation |
+
+[Exact verification](phase_reports/LONG_SESSION_READINESS_2026-11-04.md)

@@ -37,3 +37,19 @@ records model identities, exact excerpts, hypotheses, criticisms, decision reaso
 Read-only replay checks source validity and digest integrity without external access.
 Technical results, novelty, and independently attested commercial evidence have separate gates.
 See the [autonomous research qualification](phase_reports/autonomous-research-2026-11-03.md).
+
+## Long-session controller
+
+The `session` CLI sequences the existing bounded Discovery-v2 runs as
+session-owned branches. Session registration, branch intent, query and proposal
+admission, branch outcomes and stop reasons are SQLite events. Parent and child
+leases reuse existing fencing and recovery. A fixed admission envelope is
+calculated before each branch and reservation checks run under the writer lock.
+Session controls and branch state remain authoritative in SQLite. The reviewed
+experiment scheduler retains its existing responsibilities.
+
+The controller uses a bounded evidence-linked planning context, durable
+query fingerprints, cited-passage fingerprints and approximate mechanism
+matching. The complete source and candidate records stay in their child
+packets and content-addressed archives. The [runbook](LONG_SESSION_RUNBOOK.md)
+records the scope of offline and live acceptance.
