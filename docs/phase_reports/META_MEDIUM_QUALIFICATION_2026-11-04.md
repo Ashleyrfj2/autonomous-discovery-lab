@@ -50,3 +50,24 @@ The exact old reservation window is **2026-11-04 22:03:37.046029–22:04:07.0609
 Offline implementation/regression: PASS. New controlled Meta qualification: **prepared for separately authorized operator execution only, NOT RUN**. First investigate/document the old ambiguous request; if unconfirmed retain it as unresolved and disclose it before any new authorization. Require substantive real-provider independent critique, verified provenance, settled local usage, valid checkpoint/resume and exact replay for the new test. No automatic rerun if it produces no hypothesis or times out. 90-minute live session: DEFERRED, its frozen profile is unchanged. Unattended overnight: NO-GO.
 
 Real reasoning latency, completion sufficiency, source semantics, provider processing/billing, medium comparative quality and commercial/scientific validity remain unverified. Mocked HTTP and fixture critique establish executable structure/safety only. Exact Terminal commands for preflight, offline rehearsal, new-root launch, checkpoint, reasoning usage, uncertain requests, resume, all-child replay and final report are in [LONG_SESSION_RUNBOOK.md](../LONG_SESSION_RUNBOOK.md). Do not start a paid test during this repair.
+
+## Committed-state acceptance and handoff publication
+
+Exact verified implementation commit: **48d080803dc1cde95af9066f5624749684360f5b**. On that clean committed state, full pytest passed **380 tests in 38.80s**, zero failures/errors/skips; Ruff, Pyright and wheel/sdist build passed again. Focused196 already passed against identical code/config/test hashes. One existing Starlette/httpx warning. Raw committed logs/XML and their hashes are retained in the machine receipt. This acceptance/documentation follow-up changes no source/config/tests.
+
+Updated the existing [Notion recovery anchor](https://app.notion.com/p/40eec84d128b8133a0cbc94fb267d760) using the [Notion knowledge-capture skill](/Users/ashley/.codex/plugins/cache/openai-curated-remote/notion/3.0.5/skills/notion-knowledge-capture/SKILL.md), plus the main handoff navigation. The current checkpoint supersedes earlier launch settings and preserves prior content. A cosmetic targeted edit returned a no-match warning because Notion normalized code markup; fetched readback confirmed the key and exact session IDs, and the normalized edit succeeded without warnings. No content or qualification result was lost.
+
+Publication targets only `integration/ai-native-discovery`; normal push, no force/merge/deploy. Final published HEAD and remote equality are recorded in `runtime/meta-medium-preparation/final-published.json` and the append-only development checkpoint. The required next operator action remains investigation/documentation of the old uncertain request and separately authorized new-root qualification. Neither historical request is resumed, settled or cleared by publication.
+
+Reproduce the final full check with the preserved copies and frozen external holdout:
+
+```sh
+ADL_CONTROLLED_BASELINE_ROOT="$PWD/runtime/meta-medium-preparation/historical-copies/controlled-live" \
+ADL_TIMEOUT_BASELINE_ROOT="$PWD/runtime/meta-medium-preparation/historical-copies/controlled-capability-wRPtYg" \
+ADL_HISTORICAL_DISCOVERY_ROOT="$PWD/runtime/meta-medium-preparation/historical-discovery-retry" \
+ADL_SCIFACT_ARCHIVE="$PWD/runtime/meta-medium-preparation/scifact-data.tar.gz" \
+uv run pytest -q
+uv run ruff check .
+uv run pyright
+uv build
+```

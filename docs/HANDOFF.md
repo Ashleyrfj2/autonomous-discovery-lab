@@ -1,6 +1,6 @@
 # Recovery handoff
 
-Current recovery entry: **Active AI-native milestone** at the end of this file. Earlier chronological handoffs are historical.
+Current recovery entry: **Active Meta timeout repair** near the end of this file. Earlier chronological handoffs are historical.
 PROJECT: Autonomous Discovery Lab
 CURRENT BRANCH: main in /Users/ashley/Code/autonomous-discovery-lab
 LAST VERIFIED COMMIT: 281f5146ff0f2fb59d482f0aa5d9372f84174c02 — Phase9 read/auth/control/review backend; full Phase9 incomplete
@@ -88,8 +88,10 @@ RECOVERY: phase_reports/AI_NATIVE_DISCOVERY_2026-11-04.md, research_quality/CAPA
 
 BRANCH/BASE: integration/ai-native-discovery, recovered published 5f61cf5.
 TASK: prepare NEW low/medium qualification; next milestone is controlled live Meta test, not a 90-minute session.
-STATE: locally VERIFIED, 380 full /196 focused /10 new tests, Ruff/Pyright/build and fresh offline CLI/replay pass; no skipped checks. Original127 files and four profiles byte-identical. Final committed-state acceptance/publication is recorded below. See phase_reports/META_MEDIUM_QUALIFICATION_2026-11-04.md and current LONG_SESSION_RUNBOOK.md.
+STATE: locally VERIFIED, 380 full /196 focused /10 new tests, Ruff/Pyright/build and fresh offline CLI/replay pass; no skipped checks. Original 127 files and four profiles byte-identical. Final committed-state acceptance/publication is recorded below. See phase_reports/META_MEDIUM_QUALIFICATION_2026-11-04.md and current LONG_SESSION_RUNBOOK.md.
 DO NOT RESUME OR MODIFY: original session-4374c2fa7c8f44708fef506893831998 in runtime/controlled-live, or failed session-4c376b05f4e8440aab2d15c30a603ec8 in runtime/controlled-capability-wRPtYg. Retain UNCERTAIN reservation a0bca7a6-91a3-4b90-9e63-91b3b4afaa75 / $0.077408; 0 reported tokens does not imply no processing or charge.
 NEW FILES: config/discovery-capability-medium-v2.json, config/discovery-capability-meta-medium-v2.json, config/session-capability-qualification-medium-v2.json. Planning/extraction low; gap/proposal/critique medium. AI suitability/mechanistic analysis share proposal. Timeouts 90/45/60/90/90s; actual HTTP override matches caller, provider bound90. Completion caps unchanged4,096/8,192 inclusive of reasoning. Branch1,200s; qualification3,000s / two branches /26 attempts /1,403,648 tokens /$3.787648 conservative new maximum. No dollar caps restored.
 RECOVERY: runtime/meta-medium-preparation contains inventories, historical copies, logs and CLI rehearsal receipt. Initial full suite378 passed/two fixture setup errors corrected by selecting the required historical-retry copy. No product/source defect was inferred from that error. Repeat acceptance with all four optional evidence inputs, reconcile docs, commit/push and update Notion. No paid test, merge or deployment.
 NEXT EXTERNAL ACTION: account owner investigates prior timeout with exact UTC window/model/account in provider records; preserve outcome as unresolved if unconfirmed. Only the operator separately authorizes and launches a fresh-root medium-v2 qualification. Require valid checkpoint, substantive live critique, clean local accounting and exact replay before completion. No claim of medium superiority.
+
+META-MEDIUM FINAL VERIFIED IMPLEMENTATION: **48d080803dc1cde95af9066f5624749684360f5b**. Committed full 380 passed in 38.80s (no skips/errors), lint/types/build pass; focused 196 maps to identical source hashes. Docs/receipt follow-up changes no source/config/tests. Notion recovery anchor 40eec84d-128b-8133-a0cb-c94fb267d760 and main navigation updated/readback checked. Original unresolved hold remains unchanged. Publication is normal push to this integration branch; see runtime/meta-medium-preparation/final-published.json for final HEAD/remote equality. Exact commands and all qualification gates are in LONG_SESSION_RUNBOOK.md. Next step is owner investigation and an explicitly authorized controlled Meta test; no paid call was made here.

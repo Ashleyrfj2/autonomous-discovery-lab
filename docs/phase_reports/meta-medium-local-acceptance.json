@@ -1,1 +1,127 @@
-{"base_commit":"5f61cf52fbc8aad6e14e05a7663f7416b35fe58e","build":"wheel and sdist PASS","credentials_added_line_and_new_file_scan":"[REDACTED]","historical_preservation":{"controlled-capability-wRPtYg":{"all_sha256_match":true,"files":10,"inventory_sha256":"4cc47a1b68f46a75740add36d01bb536c66118a3eedc81033c5644e2b2dce660"},"controlled-live":{"all_sha256_match":true,"files":117,"inventory_sha256":"66d69b9a3454811e9c4c937c68f2e75fcbe9633bd0f6b2e5f2d90c093a865b6f"}},"historical_profiles_byte_identical":["config/discovery-capability-v1.json","config/discovery-capability-meta.json","config/session-capability-qualification.json","config/session-capability-ninety-minute.json"],"lint":"PASS","new_live_calls":0,"offline_rehearsal":{"all_child_replays":"PASS","branches_closed":2,"configured_live_duration_seconds":3000,"critiques_completed":1,"dry_run_duration_seconds":90,"evidence_anchor":{"hash":"ca21de321837331736fa55ca657da5ccc2feebee2156747978b710e237afe7e7","legacy_runs_without_topic_or_release_anchors":0,"seq":106,"trust_limit":"Tamper-evident relative to retained anchor; not immutable","verified_events":106},"hypotheses_generated":3,"network_calls":0,"paid_calls":0,"profile":"config/session-capability-qualification-medium-v2.json","root":"/Users/ashley/Documents/Codex/2026-11-04/codex-autonomous-discovery-lab-integrate-research/long-session/runtime/medium-v2-offline-wdvkw10n","session_id":"session-692f0ca9d6264ce2ae261ba09378e0cc","status":"COMPLETED","stop_reason":"BRANCH_LIMIT","usage":{"attempts_reporting_reasoning":12,"charged_usd":"0","input_tokens":1200,"output_tokens":960,"reasoning_tokens_reported":180,"requests":12,"reserved_usd":"0","settled_usd":"0","uncertain":0,"uncertain_usd":"0"}},"old_timeout_outcome":"UNRESOLVED; UNCERTAIN reservation unchanged","old_timeout_reserved_usd":"0.077408","pyright":"0 errors, 0 warnings","raw_evidence_root":"runtime/meta-medium-preparation","raw_log_sha256":{"build.log":"cca420cd3e66cade2d1fcec23fe486de28c20cb30b5a219d23af6047e4c5b7f0","focused.log":"5be96a21c5e0b97bcbb31cd7dca766d6e016caa3e57d3eb83d348cb4c6adc2d5","full-first-attempt.log":"4b9358dcf720dcdeb49cf409c2f389e9e9e5955e99a7755da803667a4486fe61","full.log":"f358fcb2936ded73bf5d6bf22da4af75b830561c0591e0414c91eaf414da3cc4","history-correction.log":"19e95f03931508bcb63d5f1f276741db94fd3f8f0399d2690ed306a73c3ba6c7","lint.log":"82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18","runbook-PY.log":"362727be63abb5d982212e8f2b980516f9591ba4718da44ee0a1dfc7ed3c5917","runbook-PYREPLAY.log":"6ae015ff71ee74f87592ffe06c17bf47c4d6fea94bbb22b7258a665431ac65fb","runbook-PYREVIEW.log":"47879ec51f48b4c04446e95a508a5acfef8dbe145c87a2865d5ea4dcb2a417be","runbook-PYUSAGE.log":"c7319968300184ae980e989b5f6151d57f5f149c474f890c6a559e55e3f6da9e","types.log":"6d88a1b220adb7a3d62092b6e38431f0b3fe8babe9864fab90e5849766260332"},"source_sha256":{"config/discovery-capability-medium-v2.json":"17f5b956077b4038aeac1e1db29d5de388ed62b85e58b00688eef77813e5d67e","config/discovery-capability-meta-medium-v2.json":"d1d4eb7a6cfcd120862055106e894add6b2823e84139d871359b57078e601582","config/session-capability-qualification-medium-v2.json":"321b9c7116304ba30f54f9e10c615b0d4cccdaf105dd296a1624309e764cc20d","src/autodiscover/models/providers.py":"cb21140a4a794fa5b406fe5f279eeed214c6d9c23a773fe65567dd75b7455c32","tests/integration/test_meta_medium_qualification.py":"474759803364f428a877ea5d3e2ae0615d37f2f7a6ae5e175577e202cb2c7799"},"status":"LOCALLY_VERIFIED","tests":{"focused":{"errors":"0","failures":"0","hostname":"Ashleys-Mac-mini.local","name":"pytest","skipped":"0","tests":"196","time":"22.796","timestamp":"2026-11-04T16:15:59.330127-06:00"},"full":{"errors":"0","failures":"0","hostname":"Ashleys-Mac-mini.local","name":"pytest","skipped":"0","tests":"380","time":"40.395","timestamp":"2026-11-04T16:15:59.329966-06:00"}}}
+{
+  "base_commit": "5f61cf52fbc8aad6e14e05a7663f7416b35fe58e",
+  "build": "wheel and sdist PASS",
+  "committed_checks": {
+    "build": "wheel and sdist PASS",
+    "pyright": "0 errors, 0 warnings",
+    "ruff": "PASS"
+  },
+  "committed_full": {
+    "errors": "0",
+    "failures": "0",
+    "hostname": "Ashleys-Mac-mini.local",
+    "name": "pytest",
+    "skipped": "0",
+    "tests": "380",
+    "time": "38.284",
+    "timestamp": "2026-11-04T16:18:48.107366-06:00"
+  },
+  "credentials_added_line_and_new_file_scan": "[REDACTED]",
+  "historical_preservation": {
+    "controlled-capability-wRPtYg": {
+      "all_sha256_match": true,
+      "files": 10,
+      "inventory_sha256": "4cc47a1b68f46a75740add36d01bb536c66118a3eedc81033c5644e2b2dce660"
+    },
+    "controlled-live": {
+      "all_sha256_match": true,
+      "files": 117,
+      "inventory_sha256": "66d69b9a3454811e9c4c937c68f2e75fcbe9633bd0f6b2e5f2d90c093a865b6f"
+    }
+  },
+  "historical_profiles_byte_identical": [
+    "config/discovery-capability-v1.json",
+    "config/discovery-capability-meta.json",
+    "config/session-capability-qualification.json",
+    "config/session-capability-ninety-minute.json"
+  ],
+  "implementation_commit": "48d080803dc1cde95af9066f5624749684360f5b",
+  "lint": "PASS",
+  "new_live_calls": 0,
+  "notion_handoff": "https://app.notion.com/p/40eec84d128b8133a0cbc94fb267d760",
+  "offline_rehearsal": {
+    "all_child_replays": "PASS",
+    "branches_closed": 2,
+    "configured_live_duration_seconds": 3000,
+    "critiques_completed": 1,
+    "dry_run_duration_seconds": 90,
+    "evidence_anchor": {
+      "hash": "ca21de321837331736fa55ca657da5ccc2feebee2156747978b710e237afe7e7",
+      "legacy_runs_without_topic_or_release_anchors": 0,
+      "seq": 106,
+      "trust_limit": "Tamper-evident relative to retained anchor; not immutable",
+      "verified_events": 106
+    },
+    "hypotheses_generated": 3,
+    "network_calls": 0,
+    "paid_calls": 0,
+    "profile": "config/session-capability-qualification-medium-v2.json",
+    "root": "/Users/ashley/Documents/Codex/2026-11-04/codex-autonomous-discovery-lab-integrate-research/long-session/runtime/medium-v2-offline-wdvkw10n",
+    "session_id": "session-692f0ca9d6264ce2ae261ba09378e0cc",
+    "status": "COMPLETED",
+    "stop_reason": "BRANCH_LIMIT",
+    "usage": {
+      "attempts_reporting_reasoning": 12,
+      "charged_usd": "0",
+      "input_tokens": 1200,
+      "output_tokens": 960,
+      "reasoning_tokens_reported": 180,
+      "requests": 12,
+      "reserved_usd": "0",
+      "settled_usd": "0",
+      "uncertain": 0,
+      "uncertain_usd": "0"
+    }
+  },
+  "old_timeout_outcome": "UNRESOLVED; UNCERTAIN reservation unchanged",
+  "old_timeout_reserved_usd": "0.077408",
+  "pyright": "0 errors, 0 warnings",
+  "raw_evidence_root": "runtime/meta-medium-preparation",
+  "raw_log_sha256": {
+    "build.log": "cca420cd3e66cade2d1fcec23fe486de28c20cb30b5a219d23af6047e4c5b7f0",
+    "committed-build.log": "cca420cd3e66cade2d1fcec23fe486de28c20cb30b5a219d23af6047e4c5b7f0",
+    "committed-full.log": "23299b6d85d0b6720f2835b641fe8692b2b5b841ca1e971d3a30f006cabd9742",
+    "committed-lint.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "committed-types.log": "6d88a1b220adb7a3d62092b6e38431f0b3fe8babe9864fab90e5849766260332",
+    "focused.log": "5be96a21c5e0b97bcbb31cd7dca766d6e016caa3e57d3eb83d348cb4c6adc2d5",
+    "full-first-attempt.log": "4b9358dcf720dcdeb49cf409c2f389e9e9e5955e99a7755da803667a4486fe61",
+    "full.log": "f358fcb2936ded73bf5d6bf22da4af75b830561c0591e0414c91eaf414da3cc4",
+    "history-correction.log": "19e95f03931508bcb63d5f1f276741db94fd3f8f0399d2690ed306a73c3ba6c7",
+    "lint.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "runbook-PY.log": "362727be63abb5d982212e8f2b980516f9591ba4718da44ee0a1dfc7ed3c5917",
+    "runbook-PYREPLAY.log": "6ae015ff71ee74f87592ffe06c17bf47c4d6fea94bbb22b7258a665431ac65fb",
+    "runbook-PYREVIEW.log": "47879ec51f48b4c04446e95a508a5acfef8dbe145c87a2865d5ea4dcb2a417be",
+    "runbook-PYUSAGE.log": "c7319968300184ae980e989b5f6151d57f5f149c474f890c6a559e55e3f6da9e",
+    "types.log": "6d88a1b220adb7a3d62092b6e38431f0b3fe8babe9864fab90e5849766260332"
+  },
+  "source_sha256": {
+    "config/discovery-capability-medium-v2.json": "17f5b956077b4038aeac1e1db29d5de388ed62b85e58b00688eef77813e5d67e",
+    "config/discovery-capability-meta-medium-v2.json": "d1d4eb7a6cfcd120862055106e894add6b2823e84139d871359b57078e601582",
+    "config/session-capability-qualification-medium-v2.json": "321b9c7116304ba30f54f9e10c615b0d4cccdaf105dd296a1624309e764cc20d",
+    "src/autodiscover/models/providers.py": "cb21140a4a794fa5b406fe5f279eeed214c6d9c23a773fe65567dd75b7455c32",
+    "tests/integration/test_meta_medium_qualification.py": "474759803364f428a877ea5d3e2ae0615d37f2f7a6ae5e175577e202cb2c7799"
+  },
+  "status": "LOCALLY_VERIFIED",
+  "tests": {
+    "focused": {
+      "errors": "0",
+      "failures": "0",
+      "hostname": "Ashleys-Mac-mini.local",
+      "name": "pytest",
+      "skipped": "0",
+      "tests": "196",
+      "time": "22.796",
+      "timestamp": "2026-11-04T16:15:59.330127-06:00"
+    },
+    "full": {
+      "errors": "0",
+      "failures": "0",
+      "hostname": "Ashleys-Mac-mini.local",
+      "name": "pytest",
+      "skipped": "0",
+      "tests": "380",
+      "time": "40.395",
+      "timestamp": "2026-11-04T16:15:59.329966-06:00"
+    }
+  }
+}
