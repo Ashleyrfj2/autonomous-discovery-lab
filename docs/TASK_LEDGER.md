@@ -326,3 +326,14 @@ Read-only local ledger reconstruction, current documentation review, offline bud
 ## META-LIVE-QUALIFICATION
 
 Removed application dollar admission while preserving usage accounting and bounded execution. Verified the live Meta ResearchTeam cycle with three distinct model IDs, typed evidence, and cache-only replay. See the [live qualification record](phase_reports/hackathon-model-qualification.md#live-meta-qualification-and-dollar-cap-removal).
+
+## Autonomous discovery · 2026-11-03
+
+| Task | Status | Evidence / next action |
+| --- | --- | --- |
+| Preserve live Meta baseline | Verified and committed | `839efd0221b8c0d96e8e9b89617433ed84d3acab`. Reproduced 245 tests and package builds. |
+| Bounded adaptive discovery and commercial gate | Verified locally | Three offline rehearsals, actual public retrieval probes, abrupt process recovery, read-only replay, strict HTTP fixtures, full suite. |
+| Foreground experiment | Ready for explicit approval | Execute only the registered preflight command and bound. |
+| Discovery scheduling and unattended inference | Open | Validate the foreground run, independently score output, and qualify long-horizon operational controls. |
+
+[Phase evidence and recovery](phase_reports/autonomous-research-2026-11-03.md)

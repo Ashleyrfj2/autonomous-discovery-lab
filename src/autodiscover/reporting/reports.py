@@ -16,6 +16,21 @@ from autodiscover.security.budget import Budget
 def build_report(store: Store, run_id: str) -> dict[str, Any]:
     checked = verify_chain(store)
     row = store.get_run(run_id)
+    if store.is_discovery(run_id):
+        from autodiscover.orchestrator.contracts import RunStatus
+        from autodiscover.research.discovery import replay
+
+        report = {
+            "run_id": run_id,
+            "status": row["status"],
+            "stage": "DISCOVERY",
+            "usage": Budget(store).totals(run_id),
+            "evidence": checked,
+        }
+        if row["status"] == RunStatus.COMPLETED:
+            digest, packet = replay(store, run_id)
+            report.update(discovery=packet.model_dump(mode="json"), artifact_digest=digest)
+        return report
     assessment = None
     market = None
     for step in store.outputs(run_id):

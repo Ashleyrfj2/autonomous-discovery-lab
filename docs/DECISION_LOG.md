@@ -67,3 +67,12 @@ The prior critique request selected DeepSeek, outside the model scope described 
 ## DEC-023 — Stabilize spend and restart fencing before any live test
 
 Keep terminal and paused state when delayed accounting settles, retain reservations on response model mismatches, and block live fallback after ambiguous dispatch. Test stable keys and daily cap admission across spawned processes and preserve open holds across process death. A four-call, single-source test design fits the local wire guards with mocks. Its Meta component alone exceeds current conservative headroom. See the [qualification report](phase_reports/hackathon-model-qualification.md).
+
+## Autonomous research decision · 2026-11-03
+
+Use a bounded, checkpointed controller with three existing Meta roles and a one-model comparison.
+Plan from the objective, fetch independently through public indexes and registered sources, then
+use substantive evidence and explicit falsifiers to decide what advances. An exact excerpt can
+ground a claim for review. Semantic support, novelty, technical performance, and market demand
+require independent evidence. Retain immutable artifact addresses and verify the event chain
+against separately retained anchors. See the [research design and sources](phase_reports/autonomous-research-2026-11-03.md#research-methods-and-decisions).

@@ -21,3 +21,19 @@ Inference caller deadlines/cancellation use trusted context local to a stage. Ne
 ## Reviewed cross-family extension (unmerged / unverified)
 
 An additive remote branch introduces a fixed `encoding-v1` / `allocation-v1` experiment registry with separate vetted worker/fixtures/evaluators, sharing the existing macOS fenced job supervisor and event chain. Director and Lab accept typed allocation hypotheses and assign family-aware allocations without comparing incomparable raw scores. Three opt-in, distinct model roles propose/explore/criticize as input to scientific work; critic assertions are not evaluator verdicts. Separate estimated-cost portfolio is advisory only and does not write to the scheduler or provider budget ledger. This section documents IMPLEMENTED_UNVERIFIED branch work, not a new accepted architecture gate or a replacement for the Phase9 dashboard.
+
+## Bounded autonomous discovery
+
+The foreground `discover` workflow registers a versioned objective and uses the existing Store,
+provider Router, cancellation scope, Catalog, and artifact store. It ranks a typed three-direction
+plan, captures bibliography and registered public sources, and advances up to two source-backed
+hypotheses. A separate model reviews each viable hypothesis. At most one targeted search and one
+revision follow when an objection and new evidence justify the additional work. A run can finish
+with zero surviving candidates.
+
+SQLite events checkpoint every stage with a content digest. Lease fencing controls publication.
+Stable request identities reuse the existing provider cache and accounting ledger. The packet
+records model identities, exact excerpts, hypotheses, criticisms, decision reasons, and usage.
+Read-only replay checks source validity and digest integrity without external access.
+Technical results, novelty, and independently attested commercial evidence have separate gates.
+See the [autonomous research qualification](phase_reports/autonomous-research-2026-11-03.md).

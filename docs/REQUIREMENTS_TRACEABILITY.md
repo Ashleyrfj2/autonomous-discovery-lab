@@ -81,3 +81,12 @@ Final stabilization adds scoped evidence for REQ-006, REQ-007, REQ-012 through R
 Provider reconciliation refreshed REQ-006/013/014/015/016/017 local evidence, including competing-process refusal and crash holds. Account billing, exact restricted entitlement, and live cycle acceptance remain open. See the [phase report](phase_reports/hackathon-model-qualification.md#2026-11-03-provider-reconciliation-and-draft-pr-readiness).
 
 The owner superseded dollar-based admission in REQ-006 for current execution. Cost accounting, historical reservation integrity, provider authorization, and bounded execution remain. REQ-004 and REQ-014 now have separate live Meta evidence for the four-call ResearchTeam path. See the [live qualification record](phase_reports/hackathon-model-qualification.md#live-meta-qualification-and-dollar-cap-removal).
+
+## Autonomous discovery qualification · 2026-11-03
+
+Planning, source provenance, falsifiable candidates, independent model roles, adaptive search,
+separate validation gates, process recovery, and cache-only replay have local acceptance in
+`tests/integration/test_discovery.py` and the exported offline controls. Live retrieval transport
+was independently verified. The richer live model protocol, empirical novelty and usefulness,
+external market evidence, and unattended scheduling remain open.
+See [measured control results](phase_reports/autonomous-research-2026-11-03.md#offline-research-quality-results).

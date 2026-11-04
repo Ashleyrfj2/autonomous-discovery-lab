@@ -124,7 +124,32 @@ def main() -> None:
         "serve", help="Foreground loopback operator read API; no background service"
     )
     serve.add_argument("--port", type=int, default=8765)
+    discover = sub.add_parser("discover", help="Run a bounded, checkpointed research experiment")
+    discover.add_argument("--spec", type=Path)
+    discover.add_argument("--providers", type=Path)
+    discover.add_argument("--run-id")
+    discovery_mode = discover.add_mutually_exclusive_group()
+    discovery_mode.add_argument("--preflight", action="store_true")
+    discovery_mode.add_argument("--cache-only", action="store_true")
+    discover.add_argument("--allow-live", action="store_true")
+    discover.add_argument("--allow-network", action="store_true")
+    commercial = sub.add_parser(
+        "discovery-commercial", help="Record independent commercial evidence for a candidate"
+    )
+    commercial.add_argument("run_id")
+    commercial.add_argument("direction", type=int)
+    commercial.add_argument("observations", type=Path)
     args = parser.parse_args()
+    if args.command == "discovery-commercial":
+        from autodiscover.research.discovery_cli import commercial_review
+
+        commercial_review(args, commercial)
+        return
+    if args.command == "discover":
+        from autodiscover.research.discovery_cli import run
+
+        run(args, discover)
+        return
     if args.command == "serve":
         import getpass
 

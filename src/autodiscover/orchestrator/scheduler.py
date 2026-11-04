@@ -23,6 +23,8 @@ class Scheduler:
         self.store, self.owner = store, local_owner()
 
     def enqueue(self, run_id: str) -> None:
+        if self.store.is_discovery(run_id):
+            raise ValueError("Use discover --run-id for discovery runs")
         verify_chain(self.store)
         with self.store.connection(write=True) as db:
             run = db.execute("SELECT status FROM runs WHERE id=?", (run_id,)).fetchone()

@@ -105,7 +105,14 @@ class Store:
         )
         return event_id
 
-    def create_run(self, topic: str, policy: dict[str, Any], run_id: str | None = None) -> str:
+    def create_run(
+        self,
+        topic: str,
+        policy: dict[str, Any],
+        run_id: str | None = None,
+        *,
+        discovery_digest: str | None = None,
+    ) -> str:
         from autodiscover.config import Limits
 
         policy = Limits.model_validate(policy).model_dump(mode="json")
@@ -137,6 +144,10 @@ class Store:
                 "run_created",
                 {"policy": policy, "topic_sha256": hashlib.sha256(topic.encode()).hexdigest()},
             )
+            if discovery_digest is not None:
+                self._event(
+                    db, run_id, "discovery_registered", {"artifact_digest": discovery_digest}
+                )
         self.checkpoint(run_id)
         return run_id
 
@@ -146,6 +157,15 @@ class Store:
         if row is None:
             raise StateError("Unknown run")
         return dict(row)
+
+    def is_discovery(self, run_id: str) -> bool:
+        with self.connection() as db:
+            return (
+                db.execute(
+                    "SELECT 1 FROM events WHERE run_id=? AND kind='discovery_registered'", (run_id,)
+                ).fetchone()
+                is not None
+            )
 
     def list_runs(self) -> list[dict[str, Any]]:
         with self.connection() as db:

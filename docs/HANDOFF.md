@@ -38,3 +38,13 @@ The existing repair and safety follow-up are committed locally. The [final quali
 ## Provider reconciliation handoff — 2026-11-03
 
 See the [dated reconciliation and PR audit](phase_reports/hackathon-model-qualification.md#2026-11-03-provider-reconciliation-and-draft-pr-readiness) and [account-owner checklist](ACCOUNT_OWNER_ACTION_CHECKLIST.md). The six local records reconcile against their retained events. Provider billing and restricted Baseten entitlement still require account evidence. The owner removed application dollar caps and authorized Meta credit use. The [live Meta qualification](phase_reports/hackathon-model-qualification.md#live-meta-qualification-and-dollar-cap-removal) passed. The exact Baseten entitlement and historical billing reconciliation remain open.
+
+## Autonomous research handoff · 2026-11-03
+
+Use PR #2's existing linked worktree and read the [phase report](phase_reports/autonomous-research-2026-11-03.md).
+The prior live Meta baseline is committed as `839efd0221b8c0d96e8e9b89617433ed84d3acab`. The new
+workflow passed the offline rehearsals and public-source probes. Start recovery at
+`runtime/checkpoints/development.json` and `runtime/autonomous-research-CTehXZ`. Reproduce artifacts
+with `uv run python scripts/qualify_discovery.py runtime/new-discovery-rehearsal`.
+Next exact action after explicit approval is the single foreground command in the phase report.
+Use the same run ID for replay. Keep PR #2 draft and unattended inference disabled.

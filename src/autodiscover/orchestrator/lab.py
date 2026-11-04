@@ -118,6 +118,8 @@ class Lab:
         router: Router | None = None,
         stop_requested: Callable[[], bool] | None = None,
     ) -> None:
+        if self.store.is_discovery(run_id):
+            raise ValueError("Use discover --run-id for discovery runs")
         verify_chain(self.store)
         row = self.store.get_run(run_id)
         if row["status"] == RunStatus.COMPLETED:

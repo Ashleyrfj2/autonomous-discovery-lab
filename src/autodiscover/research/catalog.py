@@ -64,6 +64,8 @@ class Catalog:
         url: str | None = None,
         published_on: str | None = None,
         doi: str | None = None,
+        supersede: bool = True,
+        lease: tuple[str, int] | None = None,
     ) -> str:
         raw = self.artifacts.put(fetched.body)
         extracted = self.artifacts.put(text.encode())
@@ -86,10 +88,12 @@ class Catalog:
         digest = self.artifacts.put_json(source.model_dump(mode="json"))
         identifier = "source-" + digest
         with self.store.connection(write=True) as db:
+            if lease is not None:
+                self.store._lease(db, run_id, *lease)
             prior = db.execute(
                 "SELECT l.source_id FROM source_locations l JOIN research_nodes n "
-                "ON n.id=l.source_id WHERE l.url=? AND l.raw_digest<>? AND n.valid=1",
-                (source.url, raw),
+                "ON n.id=l.source_id WHERE l.url=? AND l.raw_digest<>? AND n.valid=1 AND ?",
+                (source.url, raw, supersede),
             ).fetchall()
             affected: set[str] = set()
             for previous in prior:

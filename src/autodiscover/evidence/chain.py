@@ -92,7 +92,10 @@ def verify_chain(store: Store, anchor: dict[str, Any] | None = None) -> dict[str
     validity: dict[str, bool] = {}
     for event in events:
         payload = json.loads(event["payload_json"])
-        if event["kind"] == "research_team_reviewed":
+        if event["kind"] in (
+            "research_team_reviewed", "discovery_registered", "discovery_checkpoint",
+            "discovery_finished", "discovery_commercial_reviewed",
+        ):
             artifacts.get(payload["artifact_digest"])
         elif event["kind"] == "source_registered":
             validity.setdefault(payload["source_id"], True)
