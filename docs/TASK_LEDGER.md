@@ -322,3 +322,7 @@ Committed the existing qualification repair and follow-up dispatch, accounting, 
 ## PROVIDER-RECONCILIATION
 
 Read-only local ledger reconstruction, current documentation review, offline budget calculation, and draft PR synchronization audit. The account-level charge and exact restricted model entitlement remain blocked. See the [phase report](phase_reports/hackathon-model-qualification.md#2026-11-03-provider-reconciliation-and-draft-pr-readiness) and [owner actions](ACCOUNT_OWNER_ACTION_CHECKLIST.md).
+
+## META-LIVE-QUALIFICATION
+
+Removed application dollar admission while preserving usage accounting and bounded execution. Verified the live Meta ResearchTeam cycle with three distinct model IDs, typed evidence, and cache-only replay. See the [live qualification record](phase_reports/hackathon-model-qualification.md#live-meta-qualification-and-dollar-cap-removal).

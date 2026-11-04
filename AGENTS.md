@@ -13,7 +13,7 @@ Every meaningful task/decision/failure/refactor/session boundary requires an ato
 machine checkpoint and sanitized append-only JSONL event. Update the ledger,
 traceability, handoff, history and phase report. Preserve explicit unfinished gaps.
 Never store secrets in code, logs, artifacts, reports or commits. No live billable
-calls without configured authorization and spending limits; no deployments or merges
+calls without configured authorization and bounded execution; no deployments or merges
 without explicit user authorization. Mock tests do not establish live acceptance.
 Use only trusted allowlisted experiment workers; generated code is never executable.
 Keep technical success, discovery novelty, and external commercial evidence separate.

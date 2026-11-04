@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from autodiscover.config import Limits
 from autodiscover.evidence.chain import verify_chain
 from autodiscover.models.contracts import GenerationRequest
 from autodiscover.models.providers import MockProvider
@@ -61,7 +60,7 @@ def _die_after_dispatch(root: Path, run: str) -> None:
 def test_reservations_fence_competing_processes(tmp_path, same_request):
     context = multiprocessing.get_context("spawn")
     store = Store(tmp_path)
-    policy = Limits(max_cost_per_day_usd=Decimal("0.05")).model_dump()
+    policy = {"max_cost_per_day_usd": "0.05"}
     first = store.create_run("first", policy)
     second = first if same_request else store.create_run("second", policy)
     start, release, reports = context.Barrier(2), context.Event(), context.Queue()
@@ -72,18 +71,21 @@ def test_reservations_fence_competing_processes(tmp_path, same_request):
     for worker in workers:
         worker.start()
     try:
-        outcomes = dict(reports.get(timeout=10) for _ in workers)
-        assert set(outcomes) == {"dispatch", "denied"}
+        outcomes = [reports.get(timeout=10) for _ in workers]
         if same_request:
+            assert {kind for kind, _ in outcomes} == {"dispatch", "denied"}
             # The losing process can see the hold during the cache read or at reservation.
-            assert outcomes["denied"] in {
+            assert dict(outcomes)["denied"] in {
                 "Prior request incomplete or failed; explicit reconciliation required",
                 "Request already reserved; reconcile rather than replay",
             }
         else:
-            assert outcomes["denied"] == "DAY_BUDGET_EXHAUSTED"
+            assert set(outcomes) == {("dispatch", first), ("dispatch", second)}
         release.set()
-        assert reports.get(timeout=10) == ("completed", outcomes["dispatch"])
+        dispatched = {run for kind, run in outcomes if kind == "dispatch"}
+        assert {reports.get(timeout=10) for _ in dispatched} == {
+            ("completed", run) for run in dispatched
+        }
         for worker in workers:
             worker.join(timeout=10)
             assert worker.exitcode == 0
@@ -95,8 +97,8 @@ def test_reservations_fence_competing_processes(tmp_path, same_request):
             worker.join(timeout=5)
         reports.close()
     budget = Budget(store)
-    assert sum(budget.totals(run)["requests"] for run in {first, second}) == 1
-    assert budget.totals(outcomes["dispatch"])["settled_usd"] == "0.03"
+    assert sum(budget.totals(run)["requests"] for run in {first, second}) == len(dispatched)
+    assert all(budget.totals(run)["settled_usd"] == "0.03" for run in dispatched)
     verify_chain(store)
 
 

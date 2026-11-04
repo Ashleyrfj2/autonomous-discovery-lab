@@ -12,12 +12,13 @@ from autodiscover.security.redaction import sanitize
 
 def test_defaults_and_invalid_limits():
     limits = Limits()
-    assert str(limits.max_cost_per_run_usd) == "2"
+    legacy = Limits.model_validate({"max_cost_per_run_usd": "2", "max_cost_per_day_usd": "10"})
+    assert legacy == limits
+    assert not any(field.startswith("max_cost_per_") for field in limits.model_dump())
     assert limits.max_concurrent_experiments == 1
     assert not limits.allow_live_inference
     for invalid in (
         {"max_experiment_seconds": 0},
-        {"max_cost_per_run_usd": "NaN"},
         {"max_concurrent_experiments": -1},
         {"unknown": 1},
     ):

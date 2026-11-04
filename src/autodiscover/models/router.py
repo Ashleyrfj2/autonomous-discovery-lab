@@ -140,8 +140,6 @@ class Router:
                     amount,
                     provider.name,
                     provider.model,
-                    request_limit_usd=policy.max_cost_per_run_usd
-                    / max(2, policy.max_hypotheses_per_cycle),
                 )
                 attempts += 1
                 try:
@@ -155,8 +153,6 @@ class Router:
                     self._record_failure(
                         run_id, provider, error.code, attempts, uncertain=actual is None
                     )
-                    if actual is not None and actual > amount:
-                        raise ProviderError("RESERVATION_BOUND_EXCEEDED", uncertain=True) from None
                     last_error = error
                     ambiguous_live_outcome |= provider.is_live and error.uncertain
                     if error.code == "PROVIDER_CANCEL_REQUESTED":
@@ -178,9 +174,8 @@ class Router:
                 identity_matches = (result.provider, result.model) == (
                     provider.name, provider.model
                 )
-                within_bound = result.cost_usd <= amount
                 validation_failed = False
-                if identity_matches and within_bound:
+                if identity_matches:
                     try:
                         cleaned = validate(result.text) if validate else sanitize(result.text)
                         result = result.model_copy(update={"text": cleaned})
@@ -192,7 +187,7 @@ class Router:
                     usage=result.usage.model_dump(exclude_none=True),
                     result=(
                         result.model_dump(mode="json")
-                        if identity_matches and within_bound and not validation_failed
+                        if identity_matches and not validation_failed
                         else None
                     ),
                 )
@@ -202,8 +197,6 @@ class Router:
                         uncertain=provider.is_live,
                     )
                     raise ProviderError("PROVIDER_IDENTITY_MISMATCH", uncertain=provider.is_live)
-                if not within_bound:
-                    raise ProviderError("RESERVATION_BOUND_EXCEEDED", uncertain=True)
                 if validation_failed:
                     self._record_failure(
                         run_id, provider, "INVALID_STRUCTURED_RESPONSE", attempts, uncertain=False

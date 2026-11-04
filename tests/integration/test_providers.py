@@ -109,11 +109,16 @@ def test_live_authority_and_capabilities_fail_closed(tmp_path):
     assert Budget(store).totals(run)["requests"] == 0
 
 
-def test_cached_response_survives_new_router_without_duplicate_calls(tmp_path):
+def test_priced_result_survives_cache_replay_without_dollar_admission(tmp_path):
     store = Store(tmp_path)
     run = store.create_run("cache", {})
     request = GenerationRequest(prompt="propose")
-    first = Router(store, {"hypothesize": [MockProvider([{"prediction": "falsifiable"}])]})
+
+    class PricedMock(MockProvider):
+        def generate(self, request):
+            return super().generate(request).model_copy(update={"cost_usd": Decimal("15")})
+
+    first = Router(store, {"hypothesize": [PricedMock([{"prediction": "falsifiable"}])]})
     proposal, result = first.generate_structured(
         run, "hypothesize", request, Proposal, key="stable"
     )
@@ -124,7 +129,9 @@ def test_cached_response_survives_new_router_without_duplicate_calls(tmp_path):
         second.generate_structured(run, "hypothesize", request, Proposal, key="stable")[1] == result
     )
     assert proposal.prediction == "falsifiable"
-    assert Budget(store).totals(run)["requests"] == 1
+    totals = Budget(store).totals(run)
+    assert totals["requests"] == 1
+    assert totals["settled_usd"] == "15"
 
 
 def test_fallback_recorded_and_not_assumed_equivalent(tmp_path):
@@ -594,10 +601,8 @@ def test_role_separation_rejects_two_names_for_same_http_model(tmp_path):
 
 def test_mock_http_team_source_bound_packet_replays_without_dispatch(tmp_path):
     store = Store(tmp_path)
-    cap = Decimal("0.05")
     run = store.create_run("bounded research", Limits(
         allow_live_inference=True, max_retries_per_step=0, max_hypotheses_per_cycle=2,
-        max_cost_per_run_usd=cap, max_cost_per_day_usd=cap,
     ).model_dump())
     catalog = Catalog(store)
     url = "https://example.org/allocation-study"

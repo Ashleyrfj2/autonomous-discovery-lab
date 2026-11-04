@@ -54,8 +54,10 @@ def propose(
     available_source_ids: list[str],
     key: str,
     stage: Literal["RESEARCH_PROPOSALS", "EXPLORATORY"] = "RESEARCH_PROPOSALS",
+    max_output_tokens: int = 512,
 ) -> ResearchProposal:
     request = GenerationRequest(
+        max_output_tokens=max_output_tokens,
         prompt=canonical(
             {
                 "task": "Return one falsifiable theoretical cross-domain hypothesis. "

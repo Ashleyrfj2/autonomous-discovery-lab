@@ -3,92 +3,45 @@ from decimal import Decimal
 
 import pytest
 
-from autodiscover.config import Limits
 from autodiscover.evidence.chain import verify_chain
 from autodiscover.orchestrator.store import Store
-from autodiscover.security.budget import Budget, BudgetError, nano
+from autodiscover.security.budget import Budget, nano
 
 
 def test_reservations_unknown_usage_and_rounding(tmp_path):
     store = Store(tmp_path)
-    run = store.create_run(
-        "budget", Limits(max_cost_per_run_usd=Decimal("0.1")).model_dump(mode="json")
-    )
+    run = store.create_run("accounting", {})
     budget = Budget(store)
-    reserved = budget.reserve(run, "one", "fingerprint", Decimal("0.09"), "mock", "fixture")
-    budget.settle(reserved, None)
-    with pytest.raises(BudgetError, match="RUN_BUDGET"):
-        budget.reserve(run, "two", "fingerprint", Decimal("0.02"), "mock", "fixture")
-    assert budget.totals(run)["charged_usd"] == "0.09"
+    first = budget.reserve(run, "candidate:0", "fingerprint", Decimal("90"), "mock", "fixture")
+    budget.settle(first, None)
+    second = budget.reserve(run, "candidate:1", "fingerprint", Decimal("20"), "mock", "fixture")
+    budget.settle(second, Decimal("20"))
+    assert budget.totals(run)["charged_usd"] == "110"
+    assert budget.totals(run)["uncertain_usd"] == "90"
     assert nano(Decimal("0.0000000001")) == 1
     for invalid in (Decimal("NaN"), Decimal("-1")):
         with pytest.raises(ValueError):
             nano(invalid)
 
 
-def test_daily_limit_across_runs_and_concurrent_reservations(tmp_path):
+def test_concurrent_accounting_across_runs_ignores_legacy_daily_limit(tmp_path):
     store = Store(tmp_path)
-    policy = Limits(max_cost_per_day_usd=Decimal("0.1")).model_dump(mode="json")
+    policy = {"max_cost_per_run_usd": "0.1", "max_cost_per_day_usd": "0.1"}
+    with store.connection(write=True) as db:
+        day = db.execute("SELECT date('now')").fetchone()[0]
+        db.execute("INSERT INTO daily_limits VALUES (?,?)", (day, 1))
     runs = [store.create_run(str(i), policy) for i in range(8)]
     budget = Budget(store)
 
     def reserve(run):
-        try:
-            return budget.reserve(run, "key", run, Decimal("0.06"), "mock", "fixture")
-        except BudgetError:
-            return None
+        reservation = budget.reserve(run, "key", run, Decimal("6"), "mock", "fixture")
+        budget.settle(reservation, Decimal("7"))
 
     with ThreadPoolExecutor(max_workers=8) as pool:
-        assert len([r for r in pool.map(reserve, runs) if r is not None]) == 1
-    assert sum(Decimal(budget.totals(r)["charged_usd"]) for r in runs) == Decimal("0.06")
-
-
-def test_cost_overrun_pauses_run_and_keeps_actual_usage(tmp_path):
-    store = Store(tmp_path)
-    run = store.create_run("overrun", {})
-    budget = Budget(store)
-    identifier = budget.reserve(run, "one", "hash", Decimal("0.01"), "meta", "configured")
-    budget.settle(identifier, Decimal("0.02"), usage={"input_tokens": 5})
-    assert store.get_run(run)["status"] == "PAUSED"
-    assert budget.totals(run)["charged_usd"] == "0.02"
-    with pytest.raises(BudgetError):
-        budget.reserve(run, "two", "hash", Decimal("0"), "mock", "fixture")
-
-
-def test_one_request_cannot_consume_other_candidates_cost_allocation(tmp_path):
-    store = Store(tmp_path)
-    run = store.create_run("fair cost allocation", {})
-    budget = Budget(store)
-    first = budget.reserve(
-        run,
-        "candidate:0",
-        "hash",
-        Decimal("0.3"),
-        "mock",
-        "fixture",
-        request_limit_usd=Decimal("0.4"),
-    )
-    budget.settle(first, None)
-    with pytest.raises(BudgetError, match="REQUEST_ALLOCATION"):
-        budget.reserve(
-            run,
-            "candidate:1",
-            "hash",
-            Decimal("0.2"),
-            "mock",
-            "fixture",
-            request_limit_usd=Decimal("0.4"),
-        )
-    budget.reserve(
-        run,
-        "another-candidate:0",
-        "other",
-        Decimal("0.4"),
-        "mock",
-        "fixture",
-        request_limit_usd=Decimal("0.4"),
-    )
-    assert budget.totals(run)["charged_usd"] == "0.7"
+        list(pool.map(reserve, runs))
+    assert sum(Decimal(budget.totals(r)["charged_usd"]) for r in runs) == Decimal("56")
+    assert all(store.get_run(r)["status"] == "ACTIVE" for r in runs)
+    verify_chain(store)
 
 
 def test_late_cost_overrun_cannot_restore_a_cancelled_run(tmp_path):

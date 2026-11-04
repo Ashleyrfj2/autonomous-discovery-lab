@@ -73,7 +73,7 @@ class ResearchTeam:
 
     ROLES = ("RESEARCH_PROPOSALS", "EXPLORATORY", "CRITIQUE")
 
-    def __init__(self, router: Router):
+    def __init__(self, router: Router, *, max_output_tokens: int = 512):
         identities: dict[str, set[tuple[str, str]]] = {}
         for role in self.ROLES:
             providers = router.routes.get(role)
@@ -92,6 +92,7 @@ class ResearchTeam:
                         "Research roles must use distinct provider/model pairs"
                     )
         self.router = router
+        self.max_output_tokens = max_output_tokens
         self.requires_public_sources = any(
             provider.is_live for role in self.ROLES for provider in router.routes[role]
         )
@@ -106,6 +107,7 @@ class ResearchTeam:
         key: str,
     ) -> CriticalReview:
         request = GenerationRequest(
+            max_output_tokens=self.max_output_tokens,
             prompt=canonical(
                 {
                     "task": "Give one short item per risk, flaw and alternative explanation. "
@@ -162,6 +164,7 @@ class ResearchTeam:
                 available_source_ids=sources,
                 key=f"{key}:{role}:propose",
                 stage=role,
+                max_output_tokens=self.max_output_tokens,
             )
             with self.router.store.connection() as db:
                 _check_sources(db, run_id, sources)

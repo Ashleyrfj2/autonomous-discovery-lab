@@ -3,7 +3,6 @@ import sys
 import threading
 from decimal import Decimal
 
-from autodiscover.config import Limits
 from autodiscover.evidence.chain import verify_chain
 from autodiscover.models.providers import MockProvider
 from autodiscover.models.router import Router
@@ -74,19 +73,18 @@ def test_pause_resume_cancel_and_graceful_stop_preserve_queued_work(tmp_path):
     assert verify_chain(lab.store)["verified_events"] > 2
 
 
-def test_exhausted_budget_stops_before_provider_call_and_preserves_state(tmp_path):
+def test_unreconciled_request_stops_before_provider_call_and_preserves_state(tmp_path):
     lab = Lab(tmp_path)
-    run = lab.demo(limits=Limits(max_cost_per_run_usd=Decimal("0.1")), stop_after=2)
+    run = lab.demo(stop_after=2)
     budget = Budget(lab.store)
-    reserved = budget.reserve(run, "accounting-test", "fixture", Decimal("0.1"), "mock", "test")
-    budget.settle(reserved, Decimal("0.1"))  # Simulated ledger usage; no actual provider billing.
+    budget.reserve(run, "hypothesis:2:0", "fixture", Decimal("0.1"), "mock", "test")
 
     class PricedMock(MockProvider):
         def estimate_cost(self, request):
             return Decimal("0.001")
 
         def generate(self, request):
-            raise AssertionError("Exhaustion must reject before a provider call")
+            raise AssertionError("Ambiguous work must stop before a provider call")
 
     def routing(store):
         return Router(store, {"HYPOTHESIZE": [PricedMock()]})
@@ -96,7 +94,7 @@ def test_exhausted_budget_stops_before_provider_call_and_preserves_state(tmp_pat
     result = queue.run(max_steps=5, max_seconds=5, router_factory=routing)
     assert result["queue"][0]["status"] == "PAUSED"
     assert lab.store.get_run(run)["stage"] == "HYPOTHESIZE"
-    assert lab.director.tree(run)["stopped_reason"] == "RUN_BUDGET_EXHAUSTED"
+    assert lab.director.tree(run)["stopped_reason"] == "INFERENCE_RECONCILIATION_REQUIRED"
     assert len(lab.store.outputs(run)) == 2
 
 

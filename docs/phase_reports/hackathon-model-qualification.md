@@ -180,3 +180,21 @@ The first full run found one flaky assertion in the spawned-process duplicate-di
 | PR #2 merge | **NO-GO.** Draft synchronization is a fast-forward handoff for review. Merge authority and live acceptance remain separate. |
 
 See the [Account Owner Action Checklist](../ACCOUNT_OWNER_ACTION_CHECKLIST.md).
+
+### Live Meta qualification and dollar cap removal
+
+The owner authorized Meta API credit use for this project and removed the application dollar ceilings. The earlier $0.05 and smaller diagnostic estimates are historical. The runtime now admits authorized work without per-request, per-run, daily, or qualification dollar checks. Actual and estimated costs remain in the ledger. The validator accepts legacy dollar fields for compatibility, and existing SQLite rows and historical anchors are preserved. A cost estimate mismatch no longer pauses a run or discards valid output. Token and context limits, retries, cancellation, stage bounds, and durable duplicate-request protection still apply.
+
+The authenticated read-only Meta catalog returned the three selected model IDs. A foreground qualification used the existing archived public arXiv source `2405.13450v1`, the strict schemas, `minimal` reasoning, a 1,024 combined completion-token limit per call, one rate-limit retry at most, and a 110-second caller deadline. It completed with four successful responses and zero retries or errors. All four receipts reported zero cached input tokens.
+
+| Role | Model | Input tokens | Completion tokens | Reasoning subset | Gross cost at published rates |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Proposal | `muse-spark-1.3` | 723 | 700 | 503 | $0.00387875 |
+| Critique | `muse-wonder-1.0` | 465 | 400 | 109 | $0.00986000 |
+| Exploratory proposal | `muse-spark-1.2` | 328 | 616 | 419 | $0.00302800 |
+| Critique | `muse-wonder-1.0` | 478 | 282 | 52 | $0.00755200 |
+| Total | | 1,994 | 1,998 | 1,083 | $0.02431875 |
+
+The gross estimate uses provider-reported tokens. Credit deductions or billed charges require the account statement. [Meta pricing](https://dev.meta.ai/docs/pricing-rate-limits)
+
+Run `62ec32c1-04a9-477c-9b8d-f96e17c31d8f` persisted two source-bound proposal/critique pairs in typed packet `c8d658148560ee6f0abbda53a7544b5d8a4300a772426ad13686dd807d909dbc`. Cache-only replay returned the same packet and added zero provider dispatches, reservations, or evidence events. The retained chain verified 15 events. Results, receipts, and the anchor are in `runtime/meta-live-qualification-R29YYC/initial`. The separate restricted Baseten credential was absent and that route remains unqualified. The report establishes live Meta integration and replay. Scientific novelty, technical validation, and commercial results require independent evidence.

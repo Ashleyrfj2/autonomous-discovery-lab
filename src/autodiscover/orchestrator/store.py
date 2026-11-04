@@ -210,7 +210,6 @@ class Store:
             stage=Stage(row["stage"]),
             version=row["version"],
             predecessor_event=predecessor[0] if predecessor else None,
-            resource_limit_usd=json.loads(row["policy_json"])["max_cost_per_run_usd"],
         )
 
     def complete_step(

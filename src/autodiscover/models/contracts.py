@@ -13,6 +13,7 @@ BASETEN_HACKATHON_KEY_ENV = "BASETEN_HACKATHON_API_KEY"
 
 # Only the reasoning controls used by this integration are configured here.
 _REASONING_EFFORTS = {
+    ("meta", "muse-wonder-1.0"): {"minimal", "low"},
     ("meta", "muse-spark-1.2"): {"minimal", "low"},
     ("meta", "muse-spark-1.3"): {"minimal", "low"},
     ("baseten", "meta-models/muse-spark-open"): {"low"},

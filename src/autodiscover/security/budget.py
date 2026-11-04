@@ -1,4 +1,5 @@
-"""Transactional money reservations in integer nano-USD; unknown consumption remains charged."""
+"""Transactional nano-USD accounting and durable request reservations."""
+
 
 import hashlib
 import json
@@ -7,7 +8,6 @@ from decimal import ROUND_CEILING, Decimal
 from typing import Any
 from uuid import uuid4
 
-from autodiscover.config import Limits
 from autodiscover.orchestrator.durability import canonical
 from autodiscover.orchestrator.store import Store
 
@@ -36,51 +36,18 @@ class Budget:
         amount: Decimal,
         provider: str,
         model: str,
-        *,
-        request_limit_usd: Decimal | None = None,
     ) -> str:
         reserved = nano(amount)
         day = datetime.fromtimestamp(self.store.clock(), UTC).date().isoformat()
         with self.store.connection(write=True) as db:
-            row = db.execute("SELECT * FROM runs WHERE id=?", (run_id,)).fetchone()
+            row = db.execute("SELECT status FROM runs WHERE id=?", (run_id,)).fetchone()
             if row is None or row["status"] != "ACTIVE":
                 raise BudgetError("Run not active")
-            policy = Limits.model_validate_json(row["policy_json"])
-            # Persist the lowest configured daily ceiling for this UTC day across all runs.
-            ceiling = nano(policy.max_cost_per_day_usd)
-            db.execute(
-                "INSERT INTO daily_limits(day,ceiling_nano) VALUES(?,?) "
-                "ON CONFLICT(day) DO UPDATE SET "
-                "ceiling_nano=MIN(ceiling_nano,excluded.ceiling_nano)",
-                (day, ceiling),
-            )
-            ceiling = db.execute(
-                "SELECT ceiling_nano FROM daily_limits WHERE day=?", (day,)
-            ).fetchone()[0]
             existing = db.execute(
                 "SELECT * FROM reservations WHERE run_id=? AND request_key=?", (run_id, key)
             ).fetchone()
             if existing:
                 raise BudgetError("Request already reserved; reconcile rather than replay")
-            run_total = db.execute(
-                "SELECT COALESCE(SUM(charged_nano),0) FROM reservations WHERE run_id=?", (run_id,)
-            ).fetchone()[0]
-            day_total = db.execute(
-                "SELECT COALESCE(SUM(charged_nano),0) FROM reservations WHERE day=?", (day,)
-            ).fetchone()[0]
-            if request_limit_usd is not None:
-                request_group = key.rsplit(":", 1)[0]
-                request_total = db.execute(
-                    "SELECT COALESCE(SUM(charged_nano),0) FROM reservations "
-                    "WHERE run_id=? AND substr(request_key,1,length(?)+1)=? || ':'",
-                    (run_id, request_group, request_group),
-                ).fetchone()[0]
-                if request_total + reserved > nano(request_limit_usd):
-                    raise BudgetError("REQUEST_ALLOCATION_EXHAUSTED")
-            if run_total + reserved > nano(policy.max_cost_per_run_usd):
-                raise BudgetError("RUN_BUDGET_EXHAUSTED")
-            if day_total + reserved > ceiling:
-                raise BudgetError("DAY_BUDGET_EXHAUSTED")
             identifier = str(uuid4())
             db.execute(
                 """INSERT INTO reservations(id,run_id,request_key,fingerprint,day,
@@ -137,25 +104,6 @@ class Budget:
                     "usage": usage or {},
                 },
             )
-            if amount > row["reserved_nano"]:
-                # Persist actual usage before refusing further automatic progress.
-                paused = db.execute(
-                    "UPDATE runs SET status='PAUSED',owner=NULL,lease_until=NULL,"
-                    "fence=fence+1 WHERE id=? AND status='ACTIVE'",
-                    (row["run_id"],),
-                )
-                if not paused.rowcount:
-                    return  # Late usage cannot change an operator decision or terminal state.
-                self.store._event(
-                    db,
-                    row["run_id"],
-                    "run_budget_paused",
-                    {
-                        "status": "PAUSED",
-                        "reason": "RESERVATION_BOUND_EXCEEDED",
-                        "reservation": identifier,
-                    },
-                )
 
     def cached(self, run_id: str, key: str, fingerprint: str) -> dict[str, Any] | None:
         with self.store.connection() as db:

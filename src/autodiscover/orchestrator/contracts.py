@@ -146,4 +146,3 @@ class StepInput(Contract):
     stage: Stage
     version: int = Field(ge=0)
     predecessor_event: str | None = None
-    resource_limit_usd: str
