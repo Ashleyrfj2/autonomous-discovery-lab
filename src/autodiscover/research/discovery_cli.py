@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import os
 import signal
 import sys
 import threading
@@ -126,6 +127,18 @@ def run(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
                 return
             if not (args.allow_live and args.allow_network):
                 parser.error("Live discovery requires both --allow-live and --allow-network")
+            missing = sorted(
+                {
+                    config.api_key_env
+                    for config in configurations.values()
+                    if not os.environ.get(config.api_key_env, "").strip()
+                }
+            )
+            if missing:
+                parser.error(
+                    f"Missing provider credentials: {', '.join(missing)}. "
+                    "Export them or use uv run --env-file with your ignored local env file."
+                )
             store = Store(args.root)
             routes: dict[str, list[Provider]] = {}
             for role, config in configurations.items():
