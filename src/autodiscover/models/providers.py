@@ -199,7 +199,12 @@ class HTTPProvider:
         try:
             with (
                 self._client(body, key) as client,
-                client.stream(method, path, json=body) as response,
+                client.stream(
+                    method,
+                    path,
+                    json=body,
+                    timeout=timeout_seconds or self.config.timeout_seconds,
+                ) as response,
             ):
                 if time.monotonic() >= deadline:
                     raise ProviderError("PROVIDER_TIMEOUT", uncertain=True)

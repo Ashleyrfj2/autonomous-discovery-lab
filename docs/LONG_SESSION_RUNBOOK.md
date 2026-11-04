@@ -1,8 +1,8 @@
 # Long-session runbook
 
-Use branch `integration/ai-native-discovery` and the capability-v1 profiles below. These are the current AI-native milestone profiles. The older `session-qualification.json`, `session-four-hour.json`, `discovery-meta.json` and their historical estimates remain available for saved v2 sessions; do not substitute manifests when resuming any registered run.
+Use branch `integration/ai-native-discovery` and the capability-v1 profiles below. The current short qualification uses the new `*-medium-v2.json` profiles. Existing profiles remain frozen for historical registrations; the next milestone is the controlled Meta test, not the 90-minute session. The older `session-qualification.json`, `session-four-hour.json`, `discovery-meta.json` and their historical estimates remain available for saved v2 sessions; do not substitute manifests when resuming any registered run.
 
-**Preserve the first live qualification. Never resume or rerun `session-4374c2fa7c8f44708fef506893831998` in `runtime/controlled-live`.** Its zero-hypothesis packet is a regression baseline. New qualification and supervised runs each need a fresh root. No paid inference or 90-minute live run was executed by the repair task.
+**Preserve the first live qualification. Never resume or rerun `session-4374c2fa7c8f44708fef506893831998` in `runtime/controlled-live`.** Its zero-hypothesis packet is a regression baseline. **Also never resume `session-4c376b05f4e8440aab2d15c30a603ec8` in `runtime/controlled-capability-wRPtYg`.** Its first planning request timed out and remains UNCERTAIN with a $0.077408 local hold, no reported usage, and unknown provider billing/processing. Preserve both historical qualifications. New qualification and supervised runs each need a fresh root. This repair made no paid calls or live launches.
 
 ## Configuration, reasoning and usage
 
@@ -10,24 +10,53 @@ The current mission explicitly investigates gaps AI could newly make possible, w
 
 | Inference stage | Model | Reasoning | Completion cap including reasoning | Caller timeout |
 | --- | --- | --- | ---: | ---: |
-| Research planning | Spark 1.3 | medium | 4,096 | 30 s |
-| Atomic extraction / relevance | Spark 1.3 | low | 4,096 | 20 s |
-| Gap / constraint identification | Spark 1.2 | medium | 4,096 | 30 s |
-| AI suitability, mechanistic bridge and hypothesis | Spark 1.2 | high | 8,192 | 45 s |
-| Independent adversarial critique | Wonder 1.0 | high | 8,192 | 45 s |
+| Research planning | Spark 1.3 | low | 4,096 | 90 s |
+| Atomic extraction / relevance | Spark 1.3 | low | 4,096 | 45 s |
+| Gap / constraint identification | Spark 1.2 | medium | 4,096 | 60 s |
+| AI suitability and mechanistic analysis (shared proposal call) | Spark 1.2 | medium | 8,192 | 90 s |
+| Hypothesis generation (same proposal call, no extra request) | Spark 1.2 | medium | 8,192 | 90 s |
+| Independent adversarial critique | Wonder 1.0 | medium | 8,192 | 90 s |
 
-Retrieval admission, recovery routing and final report synthesis are deterministic local code and make no extra inference request. High reasoning is an experimental allocation, not an established optimum. Both 4,096 and 8,192 caps passed strict simulated HTTP contracts. Real high-reasoning output sufficiency, quality, latency and prices charged remain qualification measurements. Official support/rates: [Meta reasoning](https://dev.meta.ai/docs/reasoning), [models](https://dev.meta.ai/docs/models), [chat parameters](https://dev.meta.ai/docs/protocols/chat-completions), [pricing](https://dev.meta.ai/docs/pricing-rate-limits). Read-only catalog checks passed for all three model IDs during local acceptance.
+Retrieval admission, recovery routing and final report synthesis are deterministic local code and make no extra inference request. Medium is a candidate allocation, not demonstrated superior reasoning. Completion caps remain unchanged because the observed failure was timeout, not output exhaustion. Caps and billing include hidden reasoning; never add reasoning tokens to completion tokens a second time. Official [reasoning](https://dev.meta.ai/docs/reasoning) and [pricing](https://dev.meta.ai/docs/pricing-rate-limits) were rechecked for this repair; Spark input/output $1.25/$4.25 per million and Wonder $4/$20. No inference was made to verify latency, token sufficiency or charged prices.
 
-The provider manifest keeps three distinct model identities. Request-local overrides avoid changing other routes globally. Each adapter's 45-second upper timeout remains bounded by the branch deadline. A caller timeout is an ambiguous dispatch; the reservation stays unresolved and the controller refuses automatic retry/resume. A background transport may still finish and incur usage. Stage checkpoints renew the existing short fenced lease.
+Use `discovery-capability-medium-v2.json`, `session-capability-qualification-medium-v2.json` and `discovery-capability-meta-medium-v2.json` together. The embedded discovery spec matches the standalone file exactly. Provider reasoning defaults are unchanged; actual stages override them. Each provider manifest bound is 90s, within the adapter/request 120s maximum. Actual caller AND httpx connect/read/write/pool bounds are the stage values above. HTTP operation bounds do not guarantee server cancellation: a background transport can outlive cancellation and be billed. Keep holds, classify ambiguity and never automatically retry it. Stage checkpoints renew the existing 300s fenced lease.
 
-| Current profile | Wall-time upper bound | Branches | Attempts | Conservative total tokens | Gross standard-rate upper estimate |
+| Profile | Wall-time maximum | Branches | Attempts | Conservative tokens | Gross standard-rate estimate |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| `session-capability-qualification.json` | 1,500 s | 2 | 26 | 1,403,648 | $3.787648 |
-| `session-capability-ninety-minute.json` | 5,400 s | 24 | 312 | 16,843,776 | $45.451776 |
+| NEW `session-capability-qualification-medium-v2.json` | 3,000 s | 2 | 26 | 1,403,648 | $3.787648 |
+| Historical `session-capability-qualification.json` (do not reuse for new qualification) | 1,500 s | 2 | 26 | 1,403,648 | $3.787648 |
+| Existing `session-capability-ninety-minute.json` (separately gated; unchanged settings) | 5,400 s | 24 | 312 | 16,843,776 | $45.451776 |
 
-Each branch has 600 seconds, at most 13 model calls, seven searches (source/target/prior art for two directions plus one targeted recovery), and fourteen bibliographic fetches. Each role reserves 48,000 input tokens per attempt conservatively, plus its configured completion cap. Worst serial stage time is 450 seconds, with up to 112 seconds of indexed fetch timeout before local overhead and optional registered seeds. Deadline and cancellation can still interrupt a branch. Whole-branch admission is 701,824 tokens / $1.893824; no retries and one concurrent branch. These profile envelopes replace the historical $1.45552 qualification estimate. Duration, errors, stagnation and actual branch timing may stop far earlier than the count maxima. No per-call/run/day/qualification dollar caps are reinstated. An optional aggregate ceiling remains null. Credits/caching discounts are excluded; provider-confirmed billing is separate.
+A NEW qualification branch has 1,200s, at most 13 model calls, seven searches and fourteen bibliographic fetches. Worst serial model wait is 90 + 3×45 + 3×60 + 3×90 + 3×90 = 945s, plus fourteen 8s index-fetch bounds = 1,057s, leaving 143s for local work. There are no registered seed documents in this profile. Branch/session cancellation can stop earlier. Two full branch budgets plus 600s review/overhead fit 3,000s; paused time counts. Resume promptly and only from a valid checkpoint. Duration is a bound, not a promise to use every call.
 
-Paused time counts against the 1,500-second qualification deadline. Review and resume promptly. An expired qualification remains preserved; investigate before separately authorizing another fresh run. Do not alter its registered limits or automatically repeat settled calls.
+Per branch input maximum: 13×48,000 = 624,000. Inclusive completion maximum: 4,096 + 3×4,096 + 3×4,096 + 3×8,192 + 3×8,192 = 77,824. Total 701,824 tokens / $1.893824 per branch; twice for qualification. Spark accounts for 480,000 input + 53,248 completion; Wonder 144,000 + 24,576. No retries, one concurrent branch, no provider-managed web tools or paid search. Credits/cache discounts excluded. Cost estimate is unchanged despite the reasoning reduction because the hard token envelope is unchanged. No per-call/run/day/qualification dollar cap is restored; optional aggregate ceiling stays null. The prior $0.077408 uncertain hold and first session's $0.012262 locally calculated settled usage are separate historical liabilities, not part of the new estimate or proof of provider billing.
+
+## 0. Investigate the previous uncertain request before any paid test
+
+Do not resume, reconcile by editing, or modify the old root. Preserve the complete inactive root including SQLite WAL/SHM, checkpoints, logs and artifacts. Work on a copy for additional inspection:
+
+```sh
+cd /Users/ashley/Documents/Codex/2026-11-04/codex-autonomous-discovery-lab-integrate-research/long-session
+OLD_REVIEW=$(mktemp -d "$PWD/runtime/timeout-review-XXXXXX")
+cp -R runtime/controlled-capability-wRPtYg/. "$OLD_REVIEW/"
+uv run autodiscover --root "$OLD_REVIEW" session report \
+  session-4c376b05f4e8440aab2d15c30a603ec8 > "$OLD_REVIEW/report.json"
+uv run python - "$OLD_REVIEW" <<'PYREVIEW'
+import json, sys
+from pathlib import Path
+from autodiscover.orchestrator.store import SnapshotStore
+child = 'discovery-3c2fc77f741841abc9099e464276c8443abedc5e19abdbbc60a764e0b3cad4ad'
+with SnapshotStore(Path(sys.argv[1])) as store:
+    with store.connection() as db:
+        rows = db.execute("SELECT kind,timestamp,payload_json FROM events WHERE run_id=? AND kind IN ('cost_reserved','cost_settled','provider_failed') ORDER BY seq", (child,))
+        for row in rows:
+            print(json.dumps(dict(row)))
+PYREVIEW
+```
+
+Use the account owner's authenticated Meta billing/usage and request records, matching account/project, UTC dispatch window **2026-11-04 22:03:37.046–22:04:07.061 UTC** (allow for later remote completion), model `muse-spark-1.3`, planning request, 4,096 completion bound and endpoint `/v1/chat/completions`. Local reservation `a0bca7a6-91a3-4b90-9e63-91b3b4afaa75`, key `discovery-v2:plan:0`, is a local correlation ID, not a provider request ID. No provider response/request ID was retained for the timeout. If dashboard records cannot identify it, ask provider support to trace the exact window/account/model; do not send credentials or private prompt contents. Preserve sanitized exports or support findings with capture time and source. Explicit processing/completion, token/reasoning usage, and actual charge/no-charge evidence are distinct facts. A zero response count, absent immediate dashboard line or zero local tokens is insufficient.
+
+No account records were available in this repair; outcome remains **UNRESOLVED**. If investigation cannot confirm it, retain the hold and this uncertainty, and document that finding before separately authorizing a new root. Even provider-confirmed outcome does not authorize changing the preserved historical reservation in this task. The new qualification can measure its own outcome; it cannot retroactively reconcile the old request.
 
 ## 1. Enter the project and select the existing credential file
 
@@ -36,8 +65,9 @@ The commands expose the existing file's path only. Never print, copy into Git, o
 ```sh
 cd /Users/ashley/Documents/Codex/2026-11-04/codex-autonomous-discovery-lab-integrate-research/long-session
 ADL_ENV=/Users/ashley/Code/autonomous-discovery-lab/.env
-PROVIDERS=config/discovery-capability-meta.json
-QUAL_PROFILE=config/session-capability-qualification.json
+PROVIDERS=config/discovery-capability-meta-medium-v2.json
+LONG_PROVIDERS=config/discovery-capability-meta.json
+QUAL_PROFILE=config/session-capability-qualification-medium-v2.json
 LONG_PROFILE=config/session-capability-ninety-minute.json
 uv sync --locked
 ```
@@ -66,20 +96,20 @@ uv run autodiscover --root "$DRY_ROOT" session resume "$DRY_ID" --providers "$PR
 uv run autodiscover --root "$DRY_ROOT" session report "$DRY_ID" > "$DRY_ROOT/report.json"
 ```
 
-This uses authored synthetic sources and scripted models, costs zero and makes no network calls. It exercises the shared controller and capability contracts. It is not scientific, live-model or commercial evidence.
+This uses authored synthetic sources and scripted models, costs zero and makes no network calls. CLI dry-run shortens the duration to 90 seconds; it preserves stage settings and does not demonstrate 3,000 seconds of wall-time stability. It exercises the shared controller and capability contracts. It is not scientific, live-model or commercial evidence.
 
 ## 4. Start a NEW controlled Meta qualification (billable; operator action)
 
 `mktemp` guarantees a fresh root. Preserve the printed root and session ID; use `resume`, never another `start`, for continuation of this session.
 
 ```sh
-QUAL_ROOT=$(mktemp -d "$PWD/runtime/controlled-capability-XXXXXX")
+QUAL_ROOT=$(mktemp -d "$PWD/runtime/controlled-capability-medium-v2-XXXXXX")
 printf '%s\n' "$QUAL_ROOT"
 uv run --env-file "$ADL_ENV" autodiscover --root "$QUAL_ROOT" session start \
   --profile "$QUAL_PROFILE" --providers "$PROVIDERS" --authorize-live --allow-network
 ```
 
-After the first completed branch, expect `PAUSED` / `QUALIFICATION_CHECKPOINT`, unless an earlier safety boundary applies. Copy the printed session ID:
+These commands are for a separately authorized future operator action; do not run during the repair. Save the printed root and ID in your operator notes. After the first completed branch, expect `PAUSED` / `QUALIFICATION_CHECKPOINT`, unless an earlier safety boundary applies. Copy the printed session ID:
 
 ```sh
 QUAL_ID=session-PASTE_THE_NEW_ID
@@ -102,30 +132,61 @@ for d in r['dossiers']:
 PY
 ```
 
+Review per-request reasoning-token usage and uncertain holds through a read-only snapshot (inclusive completion usage already includes reasoning):
+
+```sh
+uv run python - "$QUAL_ROOT" <<'PYUSAGE'
+import json, sys
+from pathlib import Path
+from autodiscover.orchestrator.store import SnapshotStore
+with SnapshotStore(Path(sys.argv[1])) as store:
+    with store.connection() as db:
+        rows = db.execute("SELECT id,run_id,request_key,provider,model,status,reserved_nano,charged_nano,usage_json FROM reservations ORDER BY rowid")
+        for row in rows:
+            record = dict(row)
+            usage = json.loads(record.pop('usage_json') or '{}')
+            record['usage'] = usage
+            record['visible_completion_tokens_if_reported'] = (
+                usage['output_tokens'] - usage['reasoning_tokens']
+                if usage.get('reasoning_tokens') is not None else None
+            )
+            record['needs_reconciliation'] = record['status'] in {'RESERVED','UNCERTAIN'}
+            print(json.dumps(record))
+PYUSAGE
+```
+
+`reasoning_tokens` absent means unreported, not zero. `charged_nano` includes upper holds for uncertain requests and must not be described as an invoice. Inspect source verification, actual final content and critique substance as well as the token totals.
+
 An operational pass requires genuine Meta identities and inference, real substantive source/target coverage, recorded prior-art search (limitations allowed), at least one substantive valid independent critique, provisional labels, settled locally attributable requests, no unresolved reservations, correct direction associations, pause/resume and exact replay. A zero-hypothesis result can be scientifically appropriate, but does not complete the operational critique gate. Diagnose before deciding whether a separately authorized bounded question is warranted. Do not weaken the gates or auto-run another qualification.
 
-## 5. Resume and final qualification report
+## 5. Resume only after a valid checkpoint; cache-only replay and final report
+
+Confirm PAUSED / QUALIFICATION_CHECKPOINT, no attached worker, no unresolved RESERVED/UNCERTAIN request, valid source/evidence hashes and substantive independent critique. Only use the NEW root/ID and unchanged new manifest. Cache-only replay can be performed on each completed child before resume. An error/timeout checkpoint is not a valid continuation checkpoint. The historical sessions are forbidden even if a local report looks resumable.
 
 ```sh
 uv run --env-file "$ADL_ENV" autodiscover --root "$QUAL_ROOT" session resume "$QUAL_ID" \
   --providers "$PROVIDERS" --authorize-live --allow-network
 uv run autodiscover --root "$QUAL_ROOT" session report "$QUAL_ID" > "$QUAL_ROOT/final-report.json"
-CHILD_ID=$(uv run python -c 'import json,sys; print(json.load(open(sys.argv[1]))["dossiers"][0]["packet"]["run_id"])' "$QUAL_ROOT/final-report.json")
-uv run autodiscover --root "$QUAL_ROOT" discover --cache-only --run-id "$CHILD_ID"
+uv run python - "$QUAL_ROOT" "$QUAL_ROOT/final-report.json" <<'PYREPLAY'
+import json, subprocess, sys
+for dossier in json.load(open(sys.argv[2]))['dossiers']:
+    subprocess.run([sys.executable, '-m', 'autodiscover.cli', '--root', sys.argv[1],
+                    'discover', '--cache-only', '--run-id', dossier['packet']['run_id']], check=True)
+PYREPLAY
 ```
 
 Replay must preserve packet digest, request totals and evidence anchor with zero external calls. Compare local accounting against the provider ledger. Provider billing reconciliation and human semantic review remain external acceptance evidence. Any uncertain dispatch, incomplete critique, source integrity failure, manifest mismatch or unexplained charge leaves qualification pending/NO-GO.
 
-## 6. Supervised 90-minute launch only after qualification passes
+## 6. Historical supervised 90-minute commands — deferred beyond this milestone
 
-Use an attended Mac with power/network. `caffeinate -i` keeps the foreground process awake. No 90-minute run was launched during implementation.
+These unchanged 90-minute profiles use their original high/45s settings, not the new qualification settings. Do not infer readiness or silently retune saved sessions. A successful controlled live Meta qualification is the next milestone; fresh 90-minute configuration and separate authorization must be reviewed afterward. Use an attended Mac with power/network. `caffeinate -i` keeps the foreground process awake. No 90-minute run was launched during implementation.
 
 ```sh
-uv run autodiscover session preflight --profile "$LONG_PROFILE" --providers "$PROVIDERS"
+uv run autodiscover session preflight --profile "$LONG_PROFILE" --providers "$LONG_PROVIDERS"
 LONG_ROOT=$(mktemp -d "$PWD/runtime/discovery-capability-ninety-minute-XXXXXX")
 printf '%s\n' "$LONG_ROOT"
 caffeinate -i uv run --env-file "$ADL_ENV" autodiscover --root "$LONG_ROOT" session start \
-  --profile "$LONG_PROFILE" --providers "$PROVIDERS" --authorize-live --allow-network
+  --profile "$LONG_PROFILE" --providers "$LONG_PROVIDERS" --authorize-live --allow-network
 ```
 
 Copy the printed session ID into a second terminal with the same directory, environment-file path, manifest and root variables:
@@ -136,7 +197,7 @@ uv run autodiscover --root "$LONG_ROOT" session status "$LONG_ID"
 uv run autodiscover --root "$LONG_ROOT" session report "$LONG_ID" > "$LONG_ROOT/report.json"
 uv run autodiscover --root "$LONG_ROOT" session pause "$LONG_ID"
 uv run --env-file "$ADL_ENV" autodiscover --root "$LONG_ROOT" session resume "$LONG_ID" \
-  --providers "$PROVIDERS" --authorize-live --allow-network
+  --providers "$LONG_PROVIDERS" --authorize-live --allow-network
 uv run autodiscover --root "$LONG_ROOT" session cancel "$LONG_ID" --confirm
 ```
 

@@ -372,3 +372,11 @@ Implementation commit: 7ede05f9065f29cc7a6a58bb30da93632def78c4.
 Verification: 370 full tests, 180 focused tests, 46 capability checks; Ruff/Pyright/build; virtual 5,400-second run, separate-process recovery/controls and 30-CLI-process rehearsal. Exact first controlled-live packet and all 117 original files preserved. See phase_reports/AI_NATIVE_DISCOVERY_2026-11-04.md.
 Limits: no paid inference; live reasoning quality/latency/token sufficiency, independent human semantic review and provider billing remain pending. Qualification ready, 90-minute live launch conditional; unattended overnight NO-GO.
 Next action: operator runs fresh controlled qualification using LONG_SESSION_RUNBOOK.md, inspects substantive independent critique, replay and billing; only then separately authorizes the supervised 90-minute launch. Never resume the original controlled-live baseline.
+
+## META-MEDIUM-20261104
+Status: VERIFIED (local preparation only; paid qualification NOT RUN)
+Requirements: current timeout/medium qualification brief; REQ-AI-004/006; REQ-006/012/014–016.
+Recovery: clean latest integration/ai-native-discovery at 5f61cf5. Both historical roots inventoried/copied, including unresolved UNCERTAIN planning hold; neither may be resumed or modified.
+Acceptance/next action: version new profiles, align HTTP transport/stage timeout, execute HTTP fault and full offline session regressions, lint/types/full/focused/build, verify preservation; update runbook/Notion, commit and push. No paid calls. See phase_reports/META_MEDIUM_QUALIFICATION_2026-11-04.md.
+
+META-MEDIUM local acceptance: 380 full /196 focused /10 new tests; Ruff/Pyright/build pass. Fresh two-branch CLI rehearsal/replay, actual HTTP override/fault checks and both saved qualifications preserved byte-for-byte. Commit-state validation/publication follows; report and machine receipt are authoritative. Next external milestone: owner investigation and separately authorized fresh-root controlled Meta test.
