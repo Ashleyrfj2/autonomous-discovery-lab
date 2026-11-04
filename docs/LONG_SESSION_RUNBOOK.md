@@ -1,8 +1,12 @@
 # Long-session runbook
 
-Use branch `integration/ai-native-discovery` and the capability-v1 profiles below. The current short qualification uses the new `*-medium-v2.json` profiles. Existing profiles remain frozen for historical registrations; the next milestone is the controlled Meta test, not the 90-minute session. The older `session-qualification.json`, `session-four-hour.json`, `discovery-meta.json` and their historical estimates remain available for saved v2 sessions; do not substitute manifests when resuming any registered run.
+Use branch `integration/ai-native-discovery`. The current repaired short qualification uses `session-capability-qualification-evidence-v3.json` / `discovery-capability-evidence-v3.json`, the opt-in capability-v2 evidence-role protocol, and the unchanged `discovery-capability-meta-medium-v2.json` provider manifest. Existing profiles remain frozen for historical registrations; the next milestone is the controlled Meta test, not the 90-minute session. The older `session-qualification.json`, `session-four-hour.json`, `discovery-meta.json` and their historical estimates remain available for saved v2 sessions; do not substitute manifests when resuming any registered run.
 
 **Preserve the first live qualification. Never resume or rerun `session-4374c2fa7c8f44708fef506893831998` in `runtime/controlled-live`.** Its zero-hypothesis packet is a regression baseline. **Also never resume `session-4c376b05f4e8440aab2d15c30a603ec8` in `runtime/controlled-capability-wRPtYg`.** Its first planning request timed out and remains UNCERTAIN with a $0.077408 local hold, no reported usage, and unknown provider billing/processing. Preserve both historical qualifications. New qualification and supervised runs each need a fresh root. This repair made no paid calls or live launches.
+
+**Preserve the saved medium qualification too:** `session-af4a91eb5bc64536b220acfde11a00d5` in `runtime/controlled-capability-medium-v2-r6kNh7`. It reached the first checkpoint with six settled requests / $0.093511 locally calculated, one rejected proposal and zero critiques. It has no unresolved requests, but it did not pass the critique gate; provider billing remains unconfirmed. Never rewrite its packet or resume it to try the new contracts. The older $0.077408 uncertain request remains unresolved and separate. All three historical live roots are regression evidence.
+
+The evidence-v3 profile implements the [evidence-role repair](phase_reports/EVIDENCE_ROLES_REPAIR_2026-11-04.md). Relevant source-bound context can inform gap/target-need analysis without proving causality or efficacy. Need, mechanism, observed constraint and measured improvement have separate roles; empirical claims must bind matching supporting findings. An observed constraint needs explicit source/role/domain support, a registered claim and independent assessment. Placeholders, structural contradictions and non-units fail closed. Provisional hypotheses still require a defensible mechanism, independent target context, meaningful measurement and critique; measured superiority is not required or conferred. Labels and matching quotations are not a general semantic-entailment proof.
 
 ## Configuration, reasoning and usage
 
@@ -19,11 +23,11 @@ The current mission explicitly investigates gaps AI could newly make possible, w
 
 Retrieval admission, recovery routing and final report synthesis are deterministic local code and make no extra inference request. Medium is a candidate allocation, not demonstrated superior reasoning. Completion caps remain unchanged because the observed failure was timeout, not output exhaustion. Caps and billing include hidden reasoning; never add reasoning tokens to completion tokens a second time. Official [reasoning](https://dev.meta.ai/docs/reasoning) and [pricing](https://dev.meta.ai/docs/pricing-rate-limits) were rechecked for this repair; Spark input/output $1.25/$4.25 per million and Wonder $4/$20. No inference was made to verify latency, token sufficiency or charged prices.
 
-Use `discovery-capability-medium-v2.json`, `session-capability-qualification-medium-v2.json` and `discovery-capability-meta-medium-v2.json` together. The embedded discovery spec matches the standalone file exactly. Provider reasoning defaults are unchanged; actual stages override them. Each provider manifest bound is 90s, within the adapter/request 120s maximum. Actual caller AND httpx connect/read/write/pool bounds are the stage values above. HTTP operation bounds do not guarantee server cancellation: a background transport can outlive cancellation and be billed. Keep holds, classify ambiguity and never automatically retry it. Stage checkpoints renew the existing 300s fenced lease.
+Use `discovery-capability-evidence-v3.json`, `session-capability-qualification-evidence-v3.json` and `discovery-capability-meta-medium-v2.json` together. The earlier medium-v2 discovery/session profiles remain frozen and select capability-v1; do not edit or resume their saved qualification. New profiles change evidence contracts and prompt identity, not stage reasoning or timeout bounds. The embedded discovery spec matches the standalone file exactly. Provider reasoning defaults are unchanged; actual stages override them. Each provider manifest bound is 90s, within the adapter/request 120s maximum. Actual caller AND httpx connect/read/write/pool bounds are the stage values above. HTTP operation bounds do not guarantee server cancellation: a background transport can outlive cancellation and be billed. Keep holds, classify ambiguity and never automatically retry it. Stage checkpoints renew the existing 300s fenced lease.
 
 | Profile | Wall-time maximum | Branches | Attempts | Conservative tokens | Gross standard-rate estimate |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| NEW `session-capability-qualification-medium-v2.json` | 3,000 s | 2 | 26 | 1,403,648 | $3.787648 |
+| NEW `session-capability-qualification-evidence-v3.json` | 3,000 s | 2 | 26 | 1,403,648 | $3.787648 |
 | Historical `session-capability-qualification.json` (do not reuse for new qualification) | 1,500 s | 2 | 26 | 1,403,648 | $3.787648 |
 | Existing `session-capability-ninety-minute.json` (separately gated; unchanged settings) | 5,400 s | 24 | 312 | 16,843,776 | $45.451776 |
 
@@ -67,7 +71,7 @@ cd /Users/ashley/Documents/Codex/2026-11-04/codex-autonomous-discovery-lab-integ
 ADL_ENV=/Users/ashley/Code/autonomous-discovery-lab/.env
 PROVIDERS=config/discovery-capability-meta-medium-v2.json
 LONG_PROVIDERS=config/discovery-capability-meta.json
-QUAL_PROFILE=config/session-capability-qualification-medium-v2.json
+QUAL_PROFILE=config/session-capability-qualification-evidence-v3.json
 LONG_PROFILE=config/session-capability-ninety-minute.json
 uv sync --locked
 ```
@@ -103,7 +107,7 @@ This uses authored synthetic sources and scripted models, costs zero and makes n
 `mktemp` guarantees a fresh root. Preserve the printed root and session ID; use `resume`, never another `start`, for continuation of this session.
 
 ```sh
-QUAL_ROOT=$(mktemp -d "$PWD/runtime/controlled-capability-medium-v2-XXXXXX")
+QUAL_ROOT=$(mktemp -d "$PWD/runtime/controlled-capability-evidence-v3-XXXXXX")
 printf '%s\n' "$QUAL_ROOT"
 uv run --env-file "$ADL_ENV" autodiscover --root "$QUAL_ROOT" session start \
   --profile "$QUAL_PROFILE" --providers "$PROVIDERS" --authorize-live --allow-network

@@ -127,3 +127,16 @@ Verified source: `7ede05f9065f29cc7a6a58bb30da93632def78c4`. [Exact results and 
 Acceptance authority: the user's timeout-repair brief; no mission or scientific gate is removed. REQ-AI-004/006 and REQ-006/012/014–016 require new versioned configs, stage-local low/medium reasoning, consistent stage/provider/branch/session bounds, inclusive reasoning/output accounting, durable ambiguous holds, zero ambiguous retries, source verification and exact replay. Implementation: new medium-v2 profiles; models/providers.py transport override; tests/integration/test_meta_medium_qualification.py and existing provider/session/recovery suites. Status: VERIFIED (local preparation: 380 full /196 focused /10 new tests, lint/types/build, CLI rehearsal/replay and 127 historical files preserved). Committed-state validation/publication is recorded in the phase report. Both saved live roots and original profiles must remain byte-identical. Live latency/quality/billing and medium comparative benefit remain unverified; next milestone is a separately authorized controlled Meta qualification. Evidence: phase_reports/META_MEDIUM_QUALIFICATION_2026-11-04.md.
 
 META-MEDIUM acceptance source: 48d080803dc1cde95af9066f5624749684360f5b, committed 380 tests/38.80s; all optional inputs active, no skipped checks; lint/types/build pass. Focused196 and source/config/test hash equivalence recorded in meta-medium-local-acceptance.json. Operator runbook and Notion recovery current; ambiguity/real live critique/medium superiority/billing remain explicit external gates.
+
+## Evidence-role repair (six user requirements, 2026-11-04)
+
+| Acceptance | Implementation and tests | Status / remaining boundary |
+| --- | --- | --- |
+| Separate need, mechanism and measured improvement | CapabilityFindingV2/CapabilityClaimV2; evidence_roles.py; saved-role mismatch controls | IMPLEMENTED_UNVERIFIED pending final acceptance; labels need independent semantic review |
+| Relevant context informs gaps without causal/efficacy promotion | Versioned extraction prompt, context-aware provenance filter, role-specific empirical gates | Context/causality/mechanism/improvement positive/negative pipeline controls |
+| Reject placeholders and structural contradictions | Planning guard; extraction/gap/proposal/review checks; observed/AI/critic consistency | New placeholders/typed contradiction tests; general natural-language entailment remains open |
+| Meaningful units; explicit observed constraint | Conservative physical/rate/named-scale syntax, target role/ID/domain, exact claim, critic assessment | Unit negatives/positives and supported observed-constraint critique control |
+| Saved qualification unchanged and replayable | Frozen exact packet subset, schema hashes, copied-root replay, full original hash inventory | Three original live roots must remain byte-identical |
+| Provisional reaches critique; unsupported rejected | Full saved-passage Discovery-v2 controls, strict HTTP mocks, fresh CLI session/replay | Offline verification only; no paid qualification |
+
+Authority: current user brief, REQ-AI-002/003/006, REQ-003/014/019/021. Source/evidence: phase_reports/EVIDENCE_ROLES_REPAIR_2026-11-04.md. Historical acceptance rows remain scoped to their recorded versions.

@@ -5,6 +5,8 @@ or commercial validation. All model-extracted findings require independent revie
 No network, model or provider dispatch is performed here.
 """
 
+from collections.abc import Sequence
+
 from autodiscover.research.discovery_contracts import (
     AtomicFinding as AtomicFinding,
 )
@@ -54,7 +56,7 @@ def _normalized(text: str) -> str:
 
 
 def _findings_screen(
-    findings: list[AtomicFinding], evidence: list[Evidence]
+    findings: Sequence[AtomicFinding], evidence: list[Evidence], *, allow_context: bool = False
 ) -> tuple[int, list[str], list[str]]:
     sources = {s.source_id: s for s in evidence}
     valid_ids: list[str] = []
@@ -80,7 +82,7 @@ def _findings_screen(
         if source.scope != finding.location:
             missing.append("incorrect_document_access_scope")
             continue
-        if finding.relation in {"context", "unrelated"}:
+        if finding.relation == "unrelated" or (finding.relation == "context" and not allow_context):
             missing.append("finding_not_claim_support")
             continue
         if finding.relation == "contradicts":
@@ -91,12 +93,14 @@ def _findings_screen(
 
 
 def screen_evidence(
-    findings: list[AtomicFinding],
+    findings: Sequence[AtomicFinding],
     evidence: list[Evidence],
     bridge: MechanismBridge | None = None,
+    *,
+    allow_context: bool = False,
 ) -> EvidenceScreen:
     """Check provenance structure and transfer claims, not source truth/entailment."""
-    valid_count, fatal, missing = _findings_screen(findings, evidence)
+    valid_count, fatal, missing = _findings_screen(findings, evidence, allow_context=allow_context)
     codes = [*fatal, *missing]
     if bridge is not None:
         all_ids = {finding.finding_id for finding in findings}

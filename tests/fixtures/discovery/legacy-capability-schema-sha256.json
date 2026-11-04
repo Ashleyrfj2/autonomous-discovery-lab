@@ -1,0 +1,11 @@
+{
+  "source_commit": "c2fbbedd6905c33bae2a4f89fc6e0be4c3033ef3",
+  "schemas": {
+    "Extraction": "29e4d323433f96cc54c08bd6042a6bebeb71b2efff06a3c6d7464eb86e5b50fb",
+    "GapAnalysis": "5c18b0a70e8d059fcf0aeea7fd37ba1ddedccceb00626513d83c8d7cafb19c0b",
+    "ProposalResponse": "9d10143430628bfcbb4a898ba463b58a78db8b4e5b607e3e22799f5fb165aa4d",
+    "CapabilityResponse": "4c138cd9758bd3363734ab26af2a515cd7ce24f1d696f4b41a1b5aeb147c1ccc",
+    "CapabilityReview": "800dbd6c787cb1b9db7a7fd5a3567b654a3875cc14de1634e25a39afe8f01494",
+    "CapabilityPlan": "14f20a403103c9a043ed431d241e5c41103211b1efd436dd2ee67f03db8e958c"
+  }
+}

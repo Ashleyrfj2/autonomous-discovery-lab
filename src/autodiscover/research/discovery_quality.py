@@ -1,6 +1,6 @@
 """Evidence-first discovery on the existing fenced search and generation checkpoints."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from functools import partial
 from typing import Any
 
@@ -8,11 +8,14 @@ from autodiscover.research.discovery_contracts import (
     AtomicFinding,
     Candidate,
     CapabilityDirection,
+    CapabilityExtractionV2,
     CapabilityPlan,
     CapabilityPolicy,
     CapabilityProposal,
     CapabilityResponse,
+    CapabilityResponseV2,
     CapabilityReview,
+    CapabilityReviewV2,
     Direction,
     Evidence,
     EvidenceScreen,
@@ -28,6 +31,16 @@ from autodiscover.research.discovery_contracts import (
     Review,
     ScientificGate,
     SearchReceipt,
+)
+from autodiscover.research.evidence_roles import (
+    CRITIC_V2,
+    EXTRACTION_V2,
+    GAP_V2,
+    PROPOSAL_V2,
+    gap_issues,
+    placeholder_fields,
+    proposal_issues,
+    usable_findings,
 )
 from autodiscover.research.opportunity import (
     EXTRACTION,
@@ -59,6 +72,8 @@ def screen_proposal(
     proposal: QualityProposal,
     findings: list[AtomicFinding],
     evidence: list[Evidence],
+    *,
+    role_aware: bool = False,
 ) -> tuple[EvidenceScreen, RecoveryFailure | None]:
     hypothesis = proposal.hypothesis
     by_id = {finding.finding_id: finding for finding in findings}
@@ -67,7 +82,7 @@ def screen_proposal(
     if bridge:
         referenced.update(bridge.source_finding_ids + bridge.target_evidence_ids)
     selected = [finding for finding in findings if finding.finding_id in referenced]
-    result = screen_evidence(selected, evidence, bridge)
+    result = screen_evidence(selected, evidence, bridge, allow_context=role_aware)
     excerpts = {source.source_id: source.excerpt for source in evidence}
 
     def fail(status: str, code: str, failure: RecoveryFailure):
@@ -83,6 +98,14 @@ def screen_proposal(
         return fail("invalid_source", "unknown_finding_reference", "invalid_source")
     if result.status == "invalid_source":
         return result, "invalid_source"
+    if role_aware and isinstance(proposal, CapabilityProposal):
+        issues = proposal_issues(direction, proposal, findings)
+        if issues:
+            return EvidenceScreen(
+                status="needs_substantive_evidence",
+                codes=[*result.codes, *issues],
+                source_bound_findings=result.source_bound_findings,
+            ), "unsupported_empirical_claim"
     if any(
         c.quote not in excerpts.get(c.source_id, "")
         for c in hypothesis.evidence + hypothesis.prior_art
@@ -231,7 +254,7 @@ def assess_review(
     return [], None, ""
 
 
-def _dump(records: list[Evidence] | list[AtomicFinding]) -> list[dict[str, Any]]:
+def _dump(records: Sequence[Evidence | AtomicFinding]) -> list[dict[str, Any]]:
     return [record.model_dump(mode="json") for record in records]
 
 
@@ -247,13 +270,14 @@ def _attempt(
     proposal_admission: ProposalAdmission | None = None,
     capability: CapabilityPolicy | None = None,
 ) -> tuple[QualityAttempt, RecoveryFailure | None, str]:
-    extraction: Extraction
+    role_aware = capability is not None and capability.version == "capability-v2"
+    extraction: CapabilityExtractionV2 | Extraction
     if evidence:
         extraction = generate(
             f"extract-{key}",
             roles[0],
-            Extraction,
-            EXTRACTOR_PROMPT_V1
+            CapabilityExtractionV2 if role_aware else Extraction,
+            (EXTRACTION_V2 if role_aware else EXTRACTOR_PROMPT_V1)
             + (EXTRACTION if capability else "")
             + (
                 " Return at most six concise findings. If evidence is missing, "
@@ -268,7 +292,7 @@ def _attempt(
         )
     else:
         extraction = Extraction(findings=[], gap="No accessible sources returned.", query="")
-    extraction_screen = screen_evidence(extraction.findings, evidence)
+    extraction_screen = screen_evidence(extraction.findings, evidence, allow_context=role_aware)
     usable = [
         finding
         for finding in extraction.findings
@@ -281,7 +305,15 @@ def _attempt(
             if query_key(f.domain)
             in {query_key(direction.first_domain), query_key(direction.second_domain)}
         ]
-    result = screen_evidence(usable, evidence)
+    if role_aware:
+        usable = usable_findings(extraction.findings, evidence, direction)
+        invalid_fields = placeholder_fields(extraction.model_dump())
+        if invalid_fields:
+            extraction_screen = extraction_screen.model_copy(
+                update={"status": "needs_substantive_evidence", "codes": invalid_fields}
+            )
+            usable = []
+    result = screen_evidence(usable, evidence, allow_context=role_aware)
     if extraction_screen.status == "invalid_source" or not usable:
         return (
             QualityAttempt(
@@ -318,21 +350,43 @@ def _attempt(
             f"gap-{key}",
             roles[1],
             GapAnalysis,
-            GAP_PROMPT,
+            GAP_PROMPT + (GAP_V2 if role_aware else ""),
             direction=direction.model_dump(mode="json"),
             findings=_dump(usable),
         )
         if capability
         else None
     )
+    if role_aware and gap:
+        issues = gap_issues(direction, gap, usable)
+        if issues:
+            return (
+                QualityAttempt(
+                    extraction=extraction,
+                    proposal=None,
+                    screen=result.model_copy(
+                        update={"status": "needs_substantive_evidence", "codes": issues}
+                    ),
+                    review=None,
+                    extraction_screen=extraction_screen,
+                    issues=issues,
+                ),
+                "insufficient_information",
+                extraction.query,
+            )
     response = generate(
         f"hypothesis-{key}",
         roles[1],
-        CapabilityResponse if capability else ProposalResponse,
+        CapabilityResponseV2
+        if role_aware
+        else CapabilityResponse
+        if capability
+        else ProposalResponse,
         HYPOTHESIS_PROMPT_V1
         + " "
         + BRIDGE_PROMPT_V1
         + (PROPOSAL_PROMPT if capability else "")
+        + (PROPOSAL_V2 if role_aware else "")
         + " Give one proposal or null and a reason. Every empirical assertion, including rationale "
         "and factual premises, must have its own finding-linked claim. Use one short sentence "
         "per field. Use the exact domain names. If revising, cite a new-source finding "
@@ -354,6 +408,7 @@ def _attempt(
         **({"gap_analysis": gap.model_dump(mode="json")} if gap else {}),
     )
     proposal = response.proposal
+    response_placeholders = placeholder_fields(response.model_dump()) if role_aware else []
     if not proposal:
         return (
             QualityAttempt(
@@ -361,17 +416,28 @@ def _attempt(
                 proposal=None,
                 screen=result,
                 review=None,
-                issues=[response.reason or "No defensible proposal."],
+                issues=response_placeholders or [response.reason or "No defensible proposal."],
             ),
             "insufficient_information",
             extraction.query,
         )
-    result, failure = screen_proposal(direction, proposal, usable, evidence)
+    result, failure = (
+        screen_proposal(direction, proposal, usable, evidence, role_aware=True)
+        if role_aware
+        else screen_proposal(direction, proposal, usable, evidence)
+    )
+    if response_placeholders:
+        result = result.model_copy(
+            update={"status": "needs_substantive_evidence", "codes": response_placeholders}
+        )
+        failure = "unsupported_empirical_claim"
     review = None
     issues = result.codes if failure else []
     query = proposal.recovery_query
     if capability and not failure and isinstance(proposal, CapabilityProposal) and gap:
-        issues = opportunity_issues(direction, proposal, gap, usable, evidence)
+        issues = opportunity_issues(
+            direction, proposal, gap, usable, evidence, allow_context=role_aware
+        )
         if issues:
             failure = (
                 "known_prior_art"
@@ -403,7 +469,7 @@ def _attempt(
         review = generate(
             f"review-{key}",
             roles[2],
-            CapabilityReview if capability else QualityReview,
+            CapabilityReviewV2 if role_aware else CapabilityReview if capability else QualityReview,
             CRITIC_PROMPT_V1 + " Assess every empirical claim by index, even when uncertain. "
             "Audit the entire hypothesis for unregistered empirical or superiority claims and "
             "flag those as material objections. Check for shared underlying studies. "
@@ -418,13 +484,29 @@ def _attempt(
                 "for a plausible proposal. Unmeasured superiority stays unverified."
                 if capability
                 else ""
-            ),
+            )
+            + (CRITIC_V2 if role_aware else ""),
             direction=direction.model_dump(mode="json"),
             proposal=proposal.model_dump(mode="json"),
             findings=_dump(extraction.findings),
             sources=_dump(evidence),
         )
         issues, failure, query = assess_review(review, proposal, evidence)
+        if role_aware and isinstance(review, CapabilityReviewV2):
+            invalid_fields = placeholder_fields(review.model_dump())
+            if invalid_fields:
+                issues, failure = invalid_fields, "invalid_review"
+            elif gap and (
+                (gap.constraint_status == "observed" and review.constraint_support != "supports")
+                or (
+                    gap.constraint_status == "speculative"
+                    and review.constraint_support != "not_claimed"
+                )
+            ):
+                issues, failure = (
+                    ["unsupported_or_contradictory_constraint_review"],
+                    "invalid_review",
+                )
         if isinstance(review, CapabilityReview) and not failure:
             if review.bridge_plausibility == "unsupported":
                 issues, failure = (

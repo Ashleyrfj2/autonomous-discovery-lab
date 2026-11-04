@@ -1,6 +1,6 @@
 # Recovery handoff
 
-Current recovery entry: **Active Meta timeout repair** near the end of this file. Earlier chronological handoffs are historical.
+Current recovery entry: **Active evidence-role repair** near the end of this file. Earlier chronological handoffs are historical.
 PROJECT: Autonomous Discovery Lab
 CURRENT BRANCH: main in /Users/ashley/Code/autonomous-discovery-lab
 LAST VERIFIED COMMIT: 281f5146ff0f2fb59d482f0aa5d9372f84174c02 — Phase9 read/auth/control/review backend; full Phase9 incomplete
@@ -95,3 +95,11 @@ RECOVERY: runtime/meta-medium-preparation contains inventories, historical copie
 NEXT EXTERNAL ACTION: account owner investigates prior timeout with exact UTC window/model/account in provider records; preserve outcome as unresolved if unconfirmed. Only the operator separately authorizes and launches a fresh-root medium-v2 qualification. Require valid checkpoint, substantive live critique, clean local accounting and exact replay before completion. No claim of medium superiority.
 
 META-MEDIUM FINAL VERIFIED IMPLEMENTATION: **48d080803dc1cde95af9066f5624749684360f5b**. Committed full 380 passed in 38.80s (no skips/errors), lint/types/build pass; focused 196 maps to identical source hashes. Docs/receipt follow-up changes no source/config/tests. Notion recovery anchor 40eec84d-128b-8133-a0cb-c94fb267d760 and main navigation updated/readback checked. Original unresolved hold remains unchanged. Publication is normal push to this integration branch; see runtime/meta-medium-preparation/final-published.json for final HEAD/remote equality. Exact commands and all qualification gates are in LONG_SESSION_RUNBOOK.md. Next step is owner investigation and an explicitly authorized controlled Meta test; no paid call was made here.
+
+## Active evidence-role repair — 2026-11-04 (supersedes earlier next actions)
+
+Current branch integration/ai-native-discovery, base c2fbbed. Acceptance is the user's six evidence-role/context/placeholder/contradiction/unit/saved-packet/provisional-critique requirements. New capability-v2 contracts, new config/discovery-capability-evidence-v3.json and session-capability-qualification-evidence-v3.json; reuse immutable discovery-capability-meta-medium-v2.json. Original profiles remain unchanged. See phase_reports/EVIDENCE_ROLES_REPAIR_2026-11-04.md, DEC-029 and current LONG_SESSION_RUNBOOK.md.
+
+Preserve all three original live roots; never resume them in this repair. Latest saved session-af4a91eb5bc64536b220acfde11a00d5 / runtime/controlled-capability-medium-v2-r6kNh7: six locally settled requests/$0.093511, one rejected proposal/zero critiques, no unresolved holds, billing unknown. Its original #TODO, effect unit gap and contradictory observed constraint remain intact. Old timeout$0.077408 remains UNCERTAIN. All214 original files inventoried/copied before inspection. Recovery at runtime/evidence-role-repair and atomic development checkpoint/JSONL.
+
+Implementation and 53 new checks under final acceptance; no live calls. Initial full403 passed/22 equality failures exposed untagged empty extraction union ambiguity; explicit new extraction version and legacy-first parsing repair it. Affected ablations also required retaining the old function-call signature when v2 is absent; old tests remain unchanged. Continue existing saved logs/processes, finish full/focused acceptance, preservation audit, handoff/Notion and verified commit/push. New stage reasoning/timeouts/token envelope stay unchanged from medium qualification; no caps restored. Next external milestone remains a separately authorized fresh-root controlled live Meta test after documented prior ambiguity investigation, never a 90-minute launch here.

@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from autodiscover.config import Limits
 from autodiscover.evidence.artifacts import Artifacts, IntegrityError
 from autodiscover.evidence.chain import verify_chain
-from autodiscover.models.contracts import GenerationRequest
+from autodiscover.models.contracts import GenerationRequest, ProviderError
 from autodiscover.models.providers import HTTPProvider
 from autodiscover.models.router import Router
 from autodiscover.orchestrator.contracts import RunStatus
@@ -194,7 +194,7 @@ class Discovery:
         }
         if spec.protocol == "discovery-v2":
             registration["quality_prompts"] = (
-                "capability-v1" if spec.capability else QUALITY_PROMPTS
+                spec.capability.version if spec.capability else QUALITY_PROMPTS
             )
         if contains_credential(canonical(registration)):
             raise ValueError("Discovery registration contains recognizable credentials")
@@ -296,7 +296,7 @@ class Discovery:
             def produce() -> T:
                 if spec.protocol == "discovery-v2":
                     context["prompt_version"] = (
-                        "capability-v1" if spec.capability else QUALITY_PROMPTS
+                        spec.capability.version if spec.capability else QUALITY_PROMPTS
                     )
                 prompt = canonical({"task": key, "instruction": instruction, **context})
                 if contains_credential(prompt):
@@ -325,6 +325,11 @@ class Discovery:
                     schema,
                     key=f"{spec.protocol}:{key}",
                 )
+                if spec.capability and spec.capability.version == "capability-v2" and key == "plan":
+                    from autodiscover.research.evidence_roles import placeholder_fields
+
+                    if placeholder_fields(result.model_dump()):
+                        raise ProviderError("INVALID_PLAN_CONTENT")
                 return result
 
             return checkpoint(key, schema, produce)

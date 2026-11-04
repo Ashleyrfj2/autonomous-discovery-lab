@@ -51,6 +51,7 @@ class CapabilityArchive:
 class CapabilityProvider(RehearsalProvider):
     def answer(self, prompt: dict) -> dict:
         task = prompt["task"]
+        role_aware = prompt.get("prompt_version") == "capability-v2"
         if task == "plan":
             tracks = prompt.get("allowed_tracks", ["ai_native", "open_science"])
             directions = []
@@ -105,7 +106,18 @@ class CapabilityProvider(RehearsalProvider):
                         "limitations": "Synthetic; transfer and demand unmeasured.",
                     }
                 )
+                if role_aware:
+                    findings[-1]["evidence_roles"] = (
+                        ["mechanism"]
+                        if passage == SOURCE
+                        else ["unmet_need", "context"]
+                        if passage == TARGET
+                        else ["context"]
+                    )
+                    if passage != SOURCE:
+                        findings[-1]["relation"] = "context"
             return {
+                **({"version": "capability-extraction-v2"} if role_aware else {}),
                 "findings": findings,
                 "gap": "Transfer effectiveness remains untested.",
                 "query": "",
@@ -148,6 +160,12 @@ class CapabilityProvider(RehearsalProvider):
                 need_support="supports",
                 capability_rationale="Fixture supports an untested comparison.",
             )
+            if role_aware:
+                out["constraint_support"] = (
+                    "supports"
+                    if prompt["proposal"]["opportunity"]["gap"]["constraint_status"] == "observed"
+                    else "not_claimed"
+                )
             return out
         # Build the full contract, including an independent source and target finding.
         base = super().answer(prompt)
@@ -159,6 +177,11 @@ class CapabilityProvider(RehearsalProvider):
             {"text": f["observation"], "kind": "empirical", "finding_ids": [f["finding_id"]]}
             for f in [source, target]
         ]
+        if role_aware:
+            proposal["claims"][0]["evidence_role"] = "mechanism"
+            proposal["claims"][1].update(kind="inference", evidence_role=None)
+            proposal["minimum_effect_unit"] = "percentage points"
+            proposal["hypothesis"]["minimum_effect"] = 5
         proposal["hypothesis"].update(
             problem=prompt["gap_analysis"]["unmet_need"],
             evidence=[source["citation"], target["citation"]],

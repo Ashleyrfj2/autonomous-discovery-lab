@@ -124,6 +124,8 @@ def opportunity_issues(
     gap: GapAnalysis,
     findings: list[AtomicFinding],
     evidence: list[Evidence],
+    *,
+    allow_context: bool = False,
 ) -> list[str]:
     opportunity = proposal.opportunity
     by_id = {f.finding_id: f for f in findings}
@@ -144,10 +146,12 @@ def opportunity_issues(
         issues.append("unmet_need_without_target_evidence")
     if gap.constraint_status == "observed" and not gap.constraint_finding_ids:
         issues.append("observed_constraint_without_evidence")
-    if not screen_evidence([by_id[i] for i in ids], evidence).eligible_for_critique:
+    if not screen_evidence(
+        [by_id[i] for i in ids], evidence, allow_context=allow_context
+    ).eligible_for_critique:
         # Deduplicate IDs: a finding can ground both a need and its constraint.
         if not screen_evidence(
-            list({i: by_id[i] for i in ids}.values()), evidence
+            list({i: by_id[i] for i in ids}.values()), evidence, allow_context=allow_context
         ).eligible_for_critique:
             issues.append("invalid_opportunity_evidence")
     if ai_track:

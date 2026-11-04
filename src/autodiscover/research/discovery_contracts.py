@@ -71,7 +71,7 @@ class StageSettings(Record):
 
 
 class CapabilityPolicy(Record):
-    version: Literal["capability-v1"] = "capability-v1"
+    version: Literal["capability-v1", "capability-v2"] = "capability-v1"
     tracks: list[Track] = Field(min_length=1, max_length=2)
     stages: dict[str, StageSettings]
 
@@ -314,15 +314,30 @@ class Extraction(_QualityResponse):
     query: str = Field(max_length=220)
 
 
+EvidenceRole = Literal["unmet_need", "mechanism", "observed_constraint", "measured_improvement"]
+
+
+class CapabilityFindingV2(AtomicFinding):
+    # Extractor labels are proposals, not independently verified semantic entailment.
+    evidence_roles: list[EvidenceRole | Literal["context"]] = Field(min_length=1, max_length=5)
+
+
+class CapabilityExtractionV2(_QualityResponse):
+    version: Literal["capability-extraction-v2"] = "capability-extraction-v2"
+    findings: list[CapabilityFindingV2] = Field(max_length=6)
+    gap: str = Field(max_length=400)
+    query: str = Field(max_length=220)
+
+
 class ResearchClaim(Record):
     text: Short
     kind: Literal["empirical", "inference", "prediction"]
     finding_ids: list[str] = Field(max_length=6)
 
 
-class QualityProposal(Record):
+class QualityProposal[Claim: ResearchClaim](Record):
     hypothesis: Hypothesis
-    claims: list[ResearchClaim] = Field(min_length=1, max_length=6)
+    claims: list[Claim] = Field(min_length=1, max_length=6)
     bridge: MechanismBridge | None
     established_advantage_claimed: bool
     independent_replication_claimed: bool
@@ -382,8 +397,21 @@ class Opportunity(Record):
     validation_status: Literal["unverified_idea"]
 
 
-class CapabilityProposal(QualityProposal):
+class CapabilityProposal[Claim: ResearchClaim](QualityProposal[Claim]):
     opportunity: Opportunity
+
+
+class CapabilityClaimV2(ResearchClaim):
+    evidence_role: EvidenceRole | None
+
+
+class CapabilityProposalV2(CapabilityProposal[CapabilityClaimV2]):
+    pass
+
+
+class CapabilityResponseV2(_QualityResponse):
+    proposal: CapabilityProposalV2 | None
+    reason: str = Field(max_length=400)
 
 
 class CapabilityResponse(_QualityResponse):
@@ -415,6 +443,10 @@ class CapabilityReview(QualityReview):
     capability_rationale: Text
 
 
+class CapabilityReviewV2(CapabilityReview):
+    constraint_support: Literal["supports", "contradicts", "uncertain", "not_claimed"]
+
+
 class RecoveryReceipt(Record):
     failure: RecoveryFailure
     decision: RecoveryDecision
@@ -423,10 +455,10 @@ class RecoveryReceipt(Record):
 
 
 class QualityAttempt(Record):
-    extraction: Extraction
-    proposal: CapabilityProposal | QualityProposal | None
+    extraction: Extraction | CapabilityExtractionV2
+    proposal: CapabilityProposalV2 | CapabilityProposal | QualityProposal | None
     screen: EvidenceScreen
-    review: CapabilityReview | QualityReview | None
+    review: CapabilityReviewV2 | CapabilityReview | QualityReview | None
     valid_review: bool = False
     extraction_screen: EvidenceScreen | None = None
     issues: list[str] = Field(default_factory=list)

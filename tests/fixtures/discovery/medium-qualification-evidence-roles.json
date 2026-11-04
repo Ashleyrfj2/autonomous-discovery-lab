@@ -1,0 +1,335 @@
+{
+  "provenance": "Exact selected records from preserved live qualification; labels and positive controls are separate authored annotations.",
+  "session_id": "session-af4a91eb5bc64536b220acfde11a00d5",
+  "child_id": "discovery-26c7fde36ca65f25a499603ad41a97c06a81a9575704883dec91cca08d19eb60",
+  "packet_digest": "3a88751f5bf18d441710dc33bcf5463e7aa6dbec55b9d1ab8bba7f6da38c5015",
+  "evidence_anchor": {
+    "seq": 75,
+    "hash": "53fc30ccf00e1f7ecf877fc2a53a962023d4d4b76b8431b7b83dc10c39a8e822"
+  },
+  "direction": {
+    "question": "Can AI verification with retrieval reduce dispensing errors in informal drug shops?",
+    "first_domain": "AI verification retrieval and knowledge representation",
+    "second_domain": "informal pharmacy medication safety",
+    "query": "AI clinical verification dispensing error informal pharmacy low-resource",
+    "expected_support": "Observational studies linking verification support to fewer contraindicated dispenses versus usual care without workflow burden.",
+    "expected_falsifier": "Evidence that errors stem from stockouts or incentives, or that checklists and training match AI performance at lower cost.",
+    "value": 5,
+    "uncertainty": 3,
+    "search_effort": 3,
+    "track": "ai_native",
+    "track_reason": "Tests whether AI-enabled verification changes safety constraint beyond ordinary software, training, or regulation; focuses on unmet need.",
+    "source_query": "AI medication verification hallucination retrieval accuracy evaluation",
+    "target_query": "informal drug shop dispensing error antimicrobial review",
+    "prior_art_query": "electronic decision support pharmacy dispensing product trial",
+    "priority": {
+      "gap_importance": 5,
+      "gap_evidence": 4,
+      "ai_suitability": 4,
+      "distinctiveness": 3,
+      "plausibility": 3,
+      "information_gain": 4,
+      "experimental_feasibility": 4,
+      "prior_art_uncertainty": 3,
+      "usefulness": 5,
+      "research_cost": 3,
+      "historical_progress": 3,
+      "rationale": "Strong gap evidence on informal dispensing harm; priority hinges on testing AI verification against training and checklists, favoring feasibility and disconfirming evidence."
+    }
+  },
+  "extraction": {
+    "findings": [
+      {
+        "finding_id": "f1-rag-progress",
+        "citation": {
+          "source_id": "source-505a58eaef7886270d404ec3019fe6cb195f5a69afee5dd92b9a90dc1700e1a8",
+          "quote": "Since 2023, medical LLMs have demonstrated substantial progress in medical question answering, diagnostic reasoning in interactive clinical dialogue, patient communication, documentation support, and retrieval-augmented knowledge synthesis."
+        },
+        "location": "abstract",
+        "domain": "AI verification retrieval and knowledge representation",
+        "method": "Framework synthesis of medical LLM applications since 2023 across question answering, dialogue, communication, documentation and retrieval-augmented synthesis.",
+        "observation": "Substantial progress reported including retrieval-augmented knowledge synthesis, while noting prospective and randomized evaluations qualify performance-alone claims.",
+        "limitations": "Europe PMC abstract excerpt only; full text unavailable; prospective evaluation sentence truncated; no dispensing-error outcome in passage.",
+        "relation": "context",
+        "independence_group": "llm-stewardship-framework"
+      },
+      {
+        "finding_id": "f2-rag-mechanism",
+        "citation": {
+          "source_id": "source-9f0e6b637b292311df2c5a5d1f111fc6e7b1b5ea2760f2338e2753df78a5fe60",
+          "quote": "To address these gaps, Retrieval-Augmented Generation (RAG) can couple LLMs with external knowledge sources at inference time, producing responses that are more grounded, up-to-date"
+        },
+        "location": "abstract",
+        "domain": "AI verification retrieval and knowledge representation",
+        "method": "Overview of RAG-based and LLM-based approaches to personalization noting limited real-time knowledge access and safety concerns.",
+        "observation": "RAG couples LLMs with external knowledge sources at inference time to produce more grounded, up-to-date responses.",
+        "limitations": "Europe PMC abstract excerpt only; full text unavailable; no accuracy numbers or pharmacy evaluation in passage.",
+        "relation": "supports",
+        "independence_group": "rag-personalization-overview"
+      },
+      {
+        "finding_id": "f3-retail-need",
+        "citation": {
+          "source_id": "source-e18ca69074ac8e1704cc4ada618482b8d753015e3578d8530abebd4f18cfe800",
+          "quote": "Self-medication with antibiotics purchased from community retail drug outlets without valid prescriptions has emerged as a major contributor to antimicrobial resistance."
+        },
+        "location": "abstract",
+        "domain": "informal pharmacy medication safety",
+        "method": "Cross-sectional study of community retail drug outlets in Ghana; data from 158 dispensers collected April-July 2024 and analyzed with STATA descriptively.",
+        "observation": "Antibiotic self-medication from retail outlets without valid prescriptions is described as a major contributor to antimicrobial resistance.",
+        "limitations": "Crossref abstract excerpt only; full text unavailable; no verification intervention or error-rate outcome in passage.",
+        "relation": "context",
+        "independence_group": "ghana-retail-2024"
+      },
+      {
+        "finding_id": "f4-stewardship-method",
+        "citation": {
+          "source_id": "source-e18ca69074ac8e1704cc4ada618482b8d753015e3578d8530abebd4f18cfe800",
+          "quote": "This study evaluated antimicrobial stewardship practices related to antibiotic dispensing among community retail drug outlets in Ghana to identify current practices and inform targeted interventions to improve rational antibiotic use."
+        },
+        "location": "abstract",
+        "domain": "informal pharmacy medication safety",
+        "method": "Cross-sectional evaluation of stewardship practices and antibiotic dispensing patterns among retail outlets using dispenser survey data.",
+        "observation": "Study aim was to characterize current dispensing stewardship practices to inform targeted interventions for rational antibiotic use.",
+        "limitations": "Crossref abstract excerpt only; full text unavailable; patterns and intervention effects not reported in excerpt.",
+        "relation": "context",
+        "independence_group": "ghana-retail-2024"
+      }
+    ],
+    "gap": "No passage reports an observed outcome that AI verification with retrieval reduces dispensing errors or contraindicated dispenses in informal drug shops versus usual care, training, or checklists.",
+    "query": "informal drug shop retail outlet dispensing error verification decision support controlled evaluation"
+  },
+  "gap": {
+    "ai_advantage": "unknown",
+    "ai_advantage_reason": "Supplied findings contain no comparison of AI retrieval verification versus ordinary software, checklists, training, or human expertise for dispensing safety in informal shops. Whether RAG changes a binding safety constraint versus rule-based decision support is unverified. AI suitability is independent of novelty and demand.",
+    "ai_approaches": [
+      "Retrieval-augmented verification coupling LLM with curated formulary, contraindication and dosing knowledge sources at inference time (RAG) (mechanism described in f2-rag-mechanism, but no pharmacy accuracy evaluation in",
+      "Multimodal input (photo of prescription, package, handwritten label) plus text retrieval for verification, requires research on accuracy and hallucination rate",
+      "Agent workflow that retrieves, cites sources, and flags uncertainty for human shopkeeper review rather than autonomous dispensing",
+      "Simulations and world models of dispensing workflows to evaluate workflow burden and override rates before field study",
+      "Non-AI combinations: rule-based drug-interaction checker, structured checklist, and human training as comparator arms"
+    ],
+    "ai_capability": "Proposed research: Retrieval-augmented AI verification that checks a requested drug against external knowledge (contraindications, dosing, interactions) and provides grounded, cited guidance at dispensing time. Capability is speculative and must be tested against hallucination, retrieval accuracy, and workflow burden; not claimed as effective or novel.",
+    "constraint_finding_ids": [],
+    "constraint_status": "observed",
+    "current_workaround": "Unknown in supplied findings. Hypothesized workarounds (reliance on shopkeeper memory, informal consultation, paper references) are speculative and not evidenced in provided excerpts. Research needed to document actual workarounds.",
+    "demand_evidence": "Unknown. No supplied findings quantify demand, willingness to use, or willingness to pay for AI verification in informal drug shops. Unsupported demand remains unknown per instruction.",
+    "economic_buyer": "Unknown in supplied findings",
+    "frequency_and_severity": "Severity hypothesized as high if contraindicated dispensing causes harm, but no severity data in supplied findings. Frequency not evidenced in supplied excerpts. Direction notes gap importance 5 but this is not corroborated by supplied findings.",
+    "need_finding_ids": [],
+    "non_ai_alternatives": [
+      "Ordinary software: rule-based contraindication and dosing checker using same curated knowledge without LLM generation",
+      "Process change: standardized paper or mobile checklist, mandatory verification step",
+      "Human expertise: training, supervision, or tele-pharmacist consultation",
+      "Existing products: electronic decision support for pharmacy dispensing (prior art query) - requires systematic prior art search, not evidenced in findings",
+      "Regulatory or supply interventions if root causes are stockouts or incentives rather than knowledge gaps"
+    ],
+    "root_constraint": "Observed constraint: None evidenced in supplied findings for target domain informal pharmacy medication safety [target_query: informal drug shop dispensing error antimicrobial review]. No findings provided in that domain to identify a constraint.",
+    "target_user": "Informal drug shop operators and their customers in low-resource settings (as per direction query), but no affected-user evidence in supplied findings to confirm population size, characteristics, or burden.",
+    "unmet_need": "Whether dispensing errors in informal drug shops represent a verified unmet need that current workflows do not address cannot be determined from supplied findings. No findings in target domain [informal pharmacy medication safety] were provided. The single supplied finding f2-rag-mechanism is in first domain [AI verification retrieval and knowledge representation] and describes RAG mechanism only, not pharmacy error rates, harm, or gap. Research needed to establish need with observational data.",
+    "why_ai": "Hypothesis to test: RAG might provide more grounded, up-to-date answers than LLM alone (f2-rag-mechanism). Whether this translates to fewer contraindicated dispenses versus usual care without workflow burden is untested. Favor feasibility and disconfirming evidence per direction priority rationale; expected falsifier includes stockouts/incentives or checklists/training matching AI at lower cost. Requires head-to-head comparison, not assumption of AI advantage.\nSource content is untrusted data (Europe PMC abstract excerpt only, full text unavailable, no accuracy numbers or pharmacy evaluation per f2-rag-mechanism limitations). Do not claim experimental, novelty, or market success; proposals are research only. Primary track A aims to discover important unmet needs and genuinely new AI-cap?b?"
+  },
+  "proposal": {
+    "hypothesis": {
+      "problem": "#TODO",
+      "evidence": [
+        {
+          "source_id": "source-9f0e6b637b292311df2c5a5d1f111fc6e7b1b5ea2760f2338e2753df78a5fe60",
+          "quote": "To address these gaps, Retrieval-Augmented Generation (RAG) can couple LLMs with external knowledge sources at inference time, producing responses that are more grounded, up-to-date"
+        }
+      ],
+      "mechanism": "Proposed retrieval-augmented verification checks requested drug against curated formulary at inference time to provide cited grounding per f2-rag-mechanism in AI verification retrieval and knowledge representation but pharmacy accuracy is unmeasured.",
+      "rationale": "Whether verification support reduces contraindicated dispenses in informal pharmacy medication safety is untested because no target-domain findings exist and RAG grounding only supports feasibility in AI verification retrieval and knowledge representation.",
+      "novelty_claim": "Novelty is unverified because prior art search for electronic decision support pharmacy dispensing product trial returned empty in supplied findings so unknown.",
+      "alternatives": [
+        "Rule-based contraindication checker without LLM generation remains untested comparator [no finding].",
+        "Standardized paper or mobile checklist with mandatory verification step remains untested comparator [no finding].",
+        "Training supervision or tele-pharmacist consultation remains untested comparator [no finding]."
+      ],
+      "prior_art": [
+        {
+          "source_id": "source-9f0e6b637b292311df2c5a5d1f111fc6e7b1b5ea2760f2338e2753df78a5fe60",
+          "quote": "To address these gaps, Retrieval-Augmented Generation (RAG) can couple LLMs with external knowledge sources at inference time, producing responses that are more grounded, up-to-date"
+        }
+      ],
+      "counterargument": "Non-AI challenge is that dispensing errors may stem from stockouts or incentives and checklists training may match AI performance at lower cost per expected falsifier [no finding].",
+      "falsifier": "Falsifier is no reduction in contraindicated dispense rate with RAG versus usual care or checklist or harm persists due to non-knowledge factors in controlled vignette or standardized patient test [untested].",
+      "validation": "unverified_idea",
+      "metric": "Primary metric is proportion with contraindicated dispense per formulary review and secondary workflow time and override rate remain unmeasured in informal pharmacy medication safety [no finding].",
+      "comparator": "Comparator is usual care without verification and head-to-head non-AI rule-based checker or checklist in same informal pharmacy medication safety workflow [no finding].",
+      "minimum_effect": 0.08244354587001936,
+      "uncertainty": "Performance transfer from AI verification retrieval and knowledge representation grounding to informal pharmacy medication safety dispensing safety is untested and not established.",
+      "target_user": "Informal drug shop operators and customers in low-resource settings remain uncharacterized in supplied findings [no finding].",
+      "economic_buyer": "Economic buyer is unknown in supplied findings for informal pharmacy medication safety [no finding].",
+      "workaround_and_cost": "Current workarounds and workflow costs in informal pharmacy medication safety are unknown in supplied findings [no finding].",
+      "adoption_obstacles": "Adoption barriers of connectivity, device access, literacy, trust, and incentive misalignment in informal pharmacy medication safety are unmeasured [no finding].",
+      "commercial_test": "No market demand test is claimed because demand quantification is absent in informal pharmacy medication safety [no finding]."
+    },
+    "claims": [
+      {
+        "text": "RAG can couple LLMs with external knowledge sources at inference time producing more grounded up-to-date responses per f2-rag-mechanism in AI verification retrieval and knowledge representation.",
+        "kind": "empirical",
+        "finding_ids": [
+          "f2-rag-mechanism"
+        ]
+      },
+      {
+        "text": "Whether RAG grounding translates to fewer contraindicated dispenses in informal pharmacy medication safety without workflow burden is an untested inference.",
+        "kind": "inference",
+        "finding_ids": []
+      },
+      {
+        "text": "Prediction that AI verification with retrieval reduces dispensing errors in informal shops versus usual care remains unverified and requires controlled test.",
+        "kind": "prediction",
+        "finding_ids": []
+      }
+    ],
+    "bridge": {
+      "source_finding_ids": [
+        "f2-rag-mechanism"
+      ],
+      "source_domain": "AI verification retrieval and knowledge representation",
+      "target_domain": "informal pharmacy medication safety",
+      "shared_mechanism": "Shared causal mechanism is retrieval grounding where coupling LLMs with external knowledge at inference time produces more grounded up-to-date responses per f2-rag-mechanism in AI verification retrieval and knowledge representation.",
+      "domain_mismatches": [
+        "Material, environment, scale and confounders differ between AI verification retrieval and knowledge representation overview and informal pharmacy medication safety shops with handwritten labels, low connectivity, and incentive constraints [no finding in informal pharmacy medication safety]."
+      ],
+      "target_evidence_ids": [],
+      "target_outcome_metric": "Proportion of encounters with contraindicated dispense as judged by independent formulary review and time per encounter remain unmeasured in target domain [no finding in informal pharmacy medication}.",
+      "comparator": "Usual care without verification and non-AI alternatives of rule-based interaction checker, paper checklist, and training tele-consultation remain unverified comparators [no finding in informal rates].",
+      "falsifier": "RAG verification shows no reduction in contraindicated dispenses versus usual care, or checklist training matches RAG with lower cost or burden in controlled test [untested in informal pharmacy medication safety].",
+      "established_advantage_claimed": false,
+      "variables": [
+        "Drug, contraindication, interaction and dosing knowledge retrieved at inference time per f2-rag-mechanism in AI verification retrieval and knowledge representation.",
+        "Shopkeeper decision to dispense and patient presentation in informal pharmacy medication safety remains unobserved in supplied findings.",
+        "Grounding and recency of response per f2-rag-mechanism in AI verification retrieval and knowledge representation versus contraindicated dispense rate in informal pharmacy medication safety which is unmeasured."
+      ],
+      "alternative_explanations": [
+        "Stockouts, incentives, or time pressure drive dispensing errors independent of knowledge gaps [no finding in informal pharmacy medication safety].",
+        "Checklists, training, or rule-based checkers achieve same safety at lower cost than RAG [no finding in informal pharmacy medication safety]."
+      ],
+      "missing_target_evidence": "No findings provided in informal pharmacy medication safety to quantify dispensing error rate, harm severity, or current workarounds so target need remains unverified [no finding in informal pharmacy medication safety].",
+      "existing_approaches": [
+        "Electronic decision support pharmacy dispensing product trial prior art query found no evaluated product in supplied findings so novelty is unknown [no finding in informal pharmacy medication safety]."
+      ],
+      "measurable_prediction": "Provisional and unverified prediction that RAG verification would reduce contraindicated dispenses versus usual care without increasing workflow time depends on transfer that is untested [no finding in informal pharmacy medication safety]."
+    },
+    "established_advantage_claimed": false,
+    "independent_replication_claimed": false,
+    "minimum_effect_unit": "gap",
+    "recovery_query": "RAG retrieval accuracy hallucination rate pharmacy verification randomized trial workflow time informal drug shop low-resource constrained language literacy connectivity adoption trust supervision incentives stockouts vs",
+    "opportunity": {
+      "version": "ai-opportunity-v1",
+      "gap": {
+        "unmet_need": "Whether dispensing errors in informal drug shops represent a verified unmet need that current workflows do not address cannot be determined from supplied findings. No findings in target domain [informal pharmacy medication safety] were provided. The single supplied finding f2-rag-mechanism is in first domain [AI verification retrieval and knowledge representation] and describes RAG mechanism only, not pharmacy error rates, harm, or gap. Research needed to establish need with observational data.",
+        "need_finding_ids": [],
+        "current_workaround": "Unknown in supplied findings. Hypothesized workarounds (reliance on shopkeeper memory, informal consultation, paper references) are speculative and not evidenced in provided excerpts. Research needed to document actual workarounds.",
+        "root_constraint": "Observed constraint: None evidenced in supplied findings for target domain informal pharmacy medication safety [target_query: informal drug shop dispensing error antimicrobial review]. No findings provided in that domain to identify a constraint.",
+        "constraint_status": "observed",
+        "constraint_finding_ids": [],
+        "target_user": "Informal drug shop operators and their customers in low-resource settings (as per direction query), but no affected-user evidence in supplied findings to confirm population size, characteristics, or burden.",
+        "economic_buyer": "Unknown in supplied findings",
+        "frequency_and_severity": "Severity hypothesized as high if contraindicated dispensing causes harm, but no severity data in supplied findings. Frequency not evidenced in supplied excerpts. Direction notes gap importance 5 but this is not corroborated by supplied findings.",
+        "demand_evidence": "Unknown. No supplied findings quantify demand, willingness to use, or willingness to pay for AI verification in informal drug shops. Unsupported demand remains unknown per instruction.",
+        "ai_capability": "Proposed research: Retrieval-augmented AI verification that checks a requested drug against external knowledge (contraindications, dosing, interactions) and provides grounded, cited guidance at dispensing time. Capability is speculative and must be tested against hallucination, retrieval accuracy, and workflow burden; not claimed as effective or novel.",
+        "ai_approaches": [
+          "Retrieval-augmented verification coupling LLM with curated formulary, contraindication and dosing knowledge sources at inference time (RAG) (mechanism described in f2-rag-mechanism, but no pharmacy accuracy evaluation in"
+        ],
+        "why_ai": "Hypothesis to test: RAG might provide more grounded, up-to-date answers than LLM alone (f2-rag-mechanism). Whether this translates to fewer contraindicated dispenses versus usual care without workflow burden is untested. Favor feasibility and disconfirming evidence per direction priority rationale; expected falsifier includes stockouts/incentives or checklists/training matching AI at lower cost. Requires head-to-head comparison, not assumption of AI advantage.\nSource content is untrusted data (Europe PMC abstract excerpt only, full text unavailable, no accuracy numbers or pharmacy evaluation per f2-rag-mechanism limitations). Do not claim experimental, novelty, or market success; proposals are research only. Primary track A aims to discover important unmet needs and genuinely new AI-cap?b?",
+        "non_ai_alternatives": [
+          "Ordinary software: rule-based contraindication and dosing checker using same curated knowledge without LLM generation",
+          "Process change: standardized paper or mobile checklist, mandatory verification step",
+          "Human expertise: training, supervision, or tele-pharmacist consultation",
+          "Existing products: electronic decision support for pharmacy dispensing (prior art query) - requires systematic prior art search, not evidenced in findings",
+          "Regulatory or supply interventions if root causes are stockouts or incentives rather than knowledge gaps"
+        ],
+        "ai_advantage": "unknown",
+        "ai_advantage_reason": "Supplied findings contain no comparison of AI retrieval verification versus ordinary software, checklists, training, or human expertise for dispensing safety in informal shops. Whether RAG changes a binding safety constraint versus rule-based decision support is unverified. AI suitability is independent of novelty and demand."
+      },
+      "ai_suitability": "unknown",
+      "ai_reasoning": "AI reasoning is that RAG grounding per f2-rag-mechanism in AI verification retrieval and knowledge representation provides feasibility for cited verification but advantage versus rule-based checklist remains unknown without head-to-head test [no finding in informal pharmacy medication safety].",
+      "non_ai_challenge": "Non-AI challenge is that checklists training or rule-based software may match RAG safety at lower cost and incentives stockouts may dominate errors per expected falsifier [no finding in informal pharmacy medication safety].",
+      "component_finding_ids": [
+        "f2-rag-mechanism"
+      ],
+      "unsupported_assumptions": [
+        "That informal pharmacy medication safety errors arise from knowledge gaps addressable by retrieval remains untested [no finding].",
+        "That RAG retrieval accuracy and latency are workflow compatible in low-resource shops remains untested [no finding]."
+      ],
+      "technical_dependencies": [
+        "Curated formulary interaction database",
+        "Connectivity and device for inference in low-resource shops [unmeasured].",
+        "Human-in-loop override logging"
+      ],
+      "model_and_tool_requirements": "Model requires LLM with retrieval to curated formulary and citation with uncertainty flagging per f2-rag-mechanism but hallucination and retrieval accuracy remain unmeasured [limitation in f2-rag-mechanism].",
+      "data_requirements": "Data requirements are curated formulary contraindication dosing sources and observed dispensing encounters in informal pharmacy medication safety which are absent [no finding in informal pharmacy medication safety].",
+      "model_limitations": "Model limitations are hallucination retrieval accuracy and untested pharmacy evaluation per f2-rag-mechanism limits in AI verification retrieval and knowledge representation [f2-rag-mechanism limitations].",
+      "integration_and_deployment": "Integration requires photo and text input and cited flagging for human review in informal pharmacy medication safety workflow where feasibility is untested [no finding].",
+      "safety_and_reliability": "Safety requires hallucination control source citation and human override in informal pharmacy medication safety where failure modes are unmeasured [f2-rag-mechanism limitation].",
+      "verification_method": "Verification is independent formulary review of dispenses and source citation audit for RAG grounding per f2-rag-mechanism which is untested in pharmacy [f2-rag-mechanism limitation].",
+      "cost_considerations": "Cost considerations of inference retrieval curation and shopkeeper time in informal pharmacy medication safety are unknown [no finding in informal pharmacy medication safety].",
+      "existing_products_and_research": [
+        "Prior art query electronic decision support pharmacy dispensing product trial has no findings so equivalence is unknown [no finding in informal pharmacy medication safety]."
+      ],
+      "prior_art_evidence": [
+        {
+          "source_id": "source-9f0e6b637b292311df2c5a5d1f111fc6e7b1b5ea2760f2338e2753df78a5fe60",
+          "quote": "To address these gaps, Retrieval-Augmented Generation (RAG) can couple LLMs with external knowledge sources at inference time, producing responses that are more grounded, up-to-date"
+        }
+      ],
+      "prior_art_status": "unknown",
+      "differentiation": "Differentiation versus ordinary software remains untested because RAG versus rule-based checker has no comparative finding in AI verification retrieval and knowledge representation.",
+      "falsifiable_prediction": "Falsifiable prediction is that RAG verification reduces contraindicated dispenses versus usual care in informal pharmacy medication safety where falsifier is parity with checklist or persistence due to non-knowledge causes [untested].",
+      "evaluation_environment": "Evaluation environment of informal drug shops in low-resource settings lacks observational data in supplied findings [no finding in informal pharmacy medication safety].",
+      "comparator": "Comparator is usual care without verification and non-AI rule-based checker checklist and training remain unverified in informal pharmacy medication safety.",
+      "minimum_meaningful_improvement": "Minimum meaningful improvement is pre-specified reduction in contraindicated dispenses with non-inferior workflow time in informal pharmacy medication safety which lacks baseline data [no finding].",
+      "next_cheapest_experiment": "Cheapest controlled test is vignette and simulation randomized comparison of RAG versus rule-based checker and checklist measuring contraindicated dispense rate and time in informal pharmacy medication safety [untested].",
+      "adoption_barriers": "Adoption barriers of connectivity cost trust and incentives in informal pharmacy medication safety are unknown [no finding in informal pharmacy medication safety].",
+      "technical_feasibility": "untested",
+      "scientific_novelty": "unverified",
+      "commercial_validation": "unvalidated",
+      "validation_status": "unverified_idea"
+    }
+  },
+  "sources": [
+    {
+      "source_id": "source-505a58eaef7886270d404ec3019fe6cb195f5a69afee5dd92b9a90dc1700e1a8",
+      "title": "Embracing Large Language Models for Medical Applications, Part II: Building a Framework for Clinical Stewardship.",
+      "url": "https://doi.org/10.7759/cureus.115367",
+      "publisher": null,
+      "published_on": "2026-08-28",
+      "retrieved_at": "2026-11-04T22:40:40.318518+00:00",
+      "excerpt": "Embracing Large Language Models for Medical Applications, Part II: Building a Framework for Clinical Stewardship.. Large language models (LLMs) have moved rapidly from experimental demonstrations to early clinical, educational, and administrative use. The first phase of medical LLM discourse emphasized opportunities in transfer learning, domain adaptation, clinical decision support, education, privacy, fairness, and regulation. The next phase requires a more specific framework for clinical stewardship. Since 2023, medical LLMs have demonstrated substantial progress in medical question answering, diagnostic reasoning in interactive clinical dialogue, patient communication, documentation support, and retrieval-augmented knowledge synthesis. At the same time, prospective and randomized evaluations show that model performance alone does not g",
+      "category": "publication",
+      "provenance": "live_https",
+      "scope": "abstract",
+      "limitation": "Europe PMC abstract excerpt. Full text was unavailable."
+    },
+    {
+      "source_id": "source-9f0e6b637b292311df2c5a5d1f111fc6e7b1b5ea2760f2338e2753df78a5fe60",
+      "title": "Overview of RAG-based and LLM-based approaches to personalization in healthcare AI applications.",
+      "url": "https://doi.org/10.3389/frai.2026.1785766",
+      "publisher": null,
+      "published_on": "2026-07-29",
+      "retrieved_at": "2026-11-04T22:40:40.318518+00:00",
+      "excerpt": "Overview of RAG-based and LLM-based approaches to personalization in healthcare AI applications.. Recent advances in Large Language Models (LLMs), driven by transformer architectures such as Generative Pre-Trained Transformer (GPT), are opening new frontiers in healthcare Artificial Intelligence (AI) by enabling clinically relevant interactions between patients and clinicians. Yet persistent challenges-including limited real-time knowledge access, safety concerns and insufficient patient-centered contextualization-indicate that current systems often fall short in delivering efficient and reliably personalized responses (Li et al., 2025; Cascella et al., 2023). To address these gaps, Retrieval-Augmented Generation (RAG) can couple LLMs with external knowledge sources at inference time, producing responses that are more grounded, up-to-date",
+      "category": "publication",
+      "provenance": "live_https",
+      "scope": "abstract",
+      "limitation": "Europe PMC abstract excerpt. Full text was unavailable."
+    },
+    {
+      "source_id": "source-e18ca69074ac8e1704cc4ada618482b8d753015e3578d8530abebd4f18cfe800",
+      "title": "Antimicrobial stewardship practices and patterns of antibiotic dispensing among retail drug outlets in Ghana",
+      "url": "https://doi.org/10.21203/rs.3.rs-8815736/v1",
+      "publisher": "Springer Science and Business Media LLC",
+      "published_on": "2026-02-20",
+      "retrieved_at": "2026-11-04T22:40:40.672081+00:00",
+      "excerpt": "Antimicrobial stewardship practices and patterns of antibiotic dispensing among retail drug outlets in Ghana. Abstract Background Self-medication with antibiotics purchased from community retail drug outlets without valid prescriptions has emerged as a major contributor to antimicrobial resistance. This study evaluated antimicrobial stewardship practices related to antibiotic dispensing among community retail drug outlets in Ghana to identify current practices and inform targeted interventions to improve rational antibiotic use. Methods A cross-sectional study design was used. Data was collected from 158 dispensers, entered, and analyzed using STATA between April and July 2024. Descriptive statistics (mean, SD, median frequency, and percentages) were used to analyze antimicrobial stewardship practices, antibiotic types dispensed, associat",
+      "category": "publication",
+      "provenance": "live_https",
+      "scope": "abstract",
+      "limitation": "Crossref abstract excerpt. Full text was unavailable."
+    }
+  ]
+}
