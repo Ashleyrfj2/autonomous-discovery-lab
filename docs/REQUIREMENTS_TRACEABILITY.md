@@ -109,13 +109,15 @@ See [measured control results](phase_reports/autonomous-research-2026-11-03.md#o
 
 [Exact verification](phase_reports/LONG_SESSION_READINESS_2026-11-04.md)
 
-## AI-native repair milestone (user brief: AI_NATIVE_REQUIREMENTS.md)
+## AI-native repair milestone (AI_NATIVE_REQUIREMENTS.md; duration steering DEC-027)
 
-| ID | Requirement and acceptance | Status | Implementation / verification |
-| --- | --- | --- | --- |
-| REQ-AI-001 | Configurable AI-native and open-science tracks integrated in planning and candidate packets | IN_PROGRESS | capability-v1 additive policy; pending tests |
-| REQ-AI-002 | Both-domain findings plus explicit mechanism and falsifier admit unvalidated hypothesis; empirical superiority remains gated | IN_PROGRESS | staged retrieval and hypothesis tests pending |
-| REQ-AI-003 | Evidence-linked need, constraint, AI/non-AI challenge, feasibility, prior art and fixed validation statuses | IN_PROGRESS | versioned opportunity contract pending |
-| REQ-AI-004 | Per-stage reasoning/output/timeout controls with conservative admission and exact request identity | IN_PROGRESS | provider wire and accounting tests pending |
-| REQ-AI-005 | Direction-bound summaries and substantive research advancement; repeated/irrelevant papers stagnate | IN_PROGRESS | session regressions pending |
-| REQ-AI-006 | Twelve repair sentinels, A/B/C structural comparison, historical replay, accelerated four hours and fresh qualification instructions | IN_PROGRESS | local acceptance pending; no paid calls authorized |
+| ID | Requirement and acceptance | Local status | Implementation / verification | Remaining boundary |
+| --- | --- | --- | --- | --- |
+| REQ-AI-001 | Configurable AI-native and open-science tracks integrated in planning and candidate packets | VERIFIED | capability policy, versioned plan, mission prompt, track reason, progress context; capability tests | Broader live research quality |
+| REQ-AI-002 | Both supported domains plus explicit mechanism/falsifier admit unvalidated hypothesis; superiority remains gated | VERIFIED | independent staged retrieval, prompt repair, positive and negative controls, two-critique control | Live provisional-throughput/semantic assessment |
+| REQ-AI-003 | Evidence-linked need, constraint, AI/non-AI challenge, feasibility, prior art and fixed validation statuses | VERIFIED | GapAnalysis, Opportunity, CapabilityReview; no-need/no-AI/prior-art/status-forgery tests | Actual experiment/replication/commercial evidence |
+| REQ-AI-004 | Stage reasoning/output/timeout controls preserve conservative admission and request identity | VERIFIED | 4,096/8,192 strict Meta wire fixtures, timeout holds, identity conflict, provider/accounting tests | Real high reasoning and billing |
+| REQ-AI-005 | Correct direction associations and substantive research advancement; article IDs alone stagnate | VERIFIED | direction notes, historical report projection, reviewed progress, recovery relevance and negative controls | Semantic paraphrase/equivalence remains partly model judgment |
+| REQ-AI-006 | Twelve sentinels, matched A/B/C, exact history, accelerated 90 minutes and fresh qualification commands | VERIFIED (offline) | 370 full / 180 focused / 46 capability tests; build/types/lint; runbook; phase report | Paid qualification, supervised live session, blinded human review |
+
+Verified source: `7ede05f9065f29cc7a6a58bb30da93632def78c4`. [Exact results and limitations](phase_reports/AI_NATIVE_DISCOVERY_2026-11-04.md).

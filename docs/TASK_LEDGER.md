@@ -366,9 +366,9 @@ Removed application dollar admission while preserving usage accounting and bound
 [Runbook](LONG_SESSION_RUNBOOK.md)
 
 ## AI-NATIVE-20261104
-Status: IN_PROGRESS
-Requirements: docs/AI_NATIVE_REQUIREMENTS.md sections 3–12; REQ-AI-001–006 below.
-Acceptance: both-domain provisional proposal reaches independent critique without direct transfer proof; title/foreign/unsupported superiority fail closed; AI alternatives/prior art/commercial uncertainty remain explicit; summaries bind direction; retrieval volume alone cannot reset stagnation; full offline/provider/recovery/accelerated session tests; historical root unchanged; fresh qualification prepared without inference.
-Next action: additive capability-v1 contracts and stage controls, followed by focused regression and full acceptance.
-
-AI-NATIVE-20261104 scope steering: user now requests 90 minutes instead of four hours. Current long profile: config/session-capability-ninety-minute.json. Acceptance and operator commands must use 5,400 seconds; old four-hour controller tests remain regression evidence.
+Status: VERIFIED (offline implementation and 90-minute operating profile only)
+Requirements: AI_NATIVE_REQUIREMENTS.md; REQ-AI-001–006; DEC-026/027.
+Implementation commit: 7ede05f9065f29cc7a6a58bb30da93632def78c4.
+Verification: 370 full tests, 180 focused tests, 46 capability checks; Ruff/Pyright/build; virtual 5,400-second run, separate-process recovery/controls and 30-CLI-process rehearsal. Exact first controlled-live packet and all 117 original files preserved. See phase_reports/AI_NATIVE_DISCOVERY_2026-11-04.md.
+Limits: no paid inference; live reasoning quality/latency/token sufficiency, independent human semantic review and provider billing remain pending. Qualification ready, 90-minute live launch conditional; unattended overnight NO-GO.
+Next action: operator runs fresh controlled qualification using LONG_SESSION_RUNBOOK.md, inspects substantive independent critique, replay and billing; only then separately authorizes the supervised 90-minute launch. Never resume the original controlled-live baseline.

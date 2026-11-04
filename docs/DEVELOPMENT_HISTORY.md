@@ -76,3 +76,5 @@ and preserved the blinded-review preparation separately from human scoring.
 [Phase evidence](phase_reports/LONG_SESSION_READINESS_2026-11-04.md)
 
 2026-11-04 AI-native recovery: clean ba17f0d and remote heads reconciled; created integration/ai-native-discovery. Preserved full new brief and historical-root file hashes. Located cross-direction summary join and retrieval-volume progress defect. Meta official reasoning/models/pricing documentation reviewed; medium/high controls documented, inference behavior remains untested. No paid calls.
+
+2026-11-04 AI-native milestone verified at 7ede05f9065f29cc7a6a58bb30da93632def78c4: 370 full / 180 focused / 46 capability checks, lint/types/build, 90-minute virtual acceptance and exact historical preservation. User changed next supervised target to 90 minutes (DEC-027). New qualification prepared; zero paid inference, no live session/merge/deployment. Final docs and Notion handoff publication follow the committed acceptance.

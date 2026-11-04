@@ -1,4 +1,6 @@
 # Recovery handoff
+
+Current recovery entry: **Active AI-native milestone** at the end of this file. Earlier chronological handoffs are historical.
 PROJECT: Autonomous Discovery Lab
 CURRENT BRANCH: main in /Users/ashley/Code/autonomous-discovery-lab
 LAST VERIFIED COMMIT: 281f5146ff0f2fb59d482f0aa5d9372f84174c02 — Phase9 read/auth/control/review backend; full Phase9 incomplete
@@ -67,10 +69,17 @@ resume and subsequent four-hour launch commands. The next external action is
 the operator-authorized short Meta qualification. Blinded human scoring and
 provider-confirmed billing remain pending. PR #2 remains draft and unmerged.
 
-## Active AI-native repair — 2026-11-04 (supersedes next-action text above)
+## Active AI-native milestone — 2026-11-04 (supersedes earlier next actions)
 
-CURRENT BRANCH: integration/ai-native-discovery from ba17f0d; implementation acceptance IN_PROGRESS.
-CURRENT TASK: docs/AI_NATIVE_REQUIREMENTS.md and phase_reports/AI_NATIVE_DISCOVERY_2026-11-04.md.
-Implemented: additive capability-v1 tracks/plan/opportunity/independent review, staged source/target/prior-art retrieval, per-request reasoning/output/timeout, 600-second branch with short lease renewals, direction-bound summaries, reviewed-progress stagnation. Historical v1/v2 paths preserved.
-Evidence: runtime/ai-native; initial 17 sentinels passed, baseline 320 + 4 optional skipped. Expanded tests and full acceptance still required. Keep historical controlled-live root unchanged; analyze only copied historical-session root. No paid calls; provider billing and live qualification still pending.
-NEXT EXACT ACTION: `uv run pytest -q -s tests/integration/test_capability*.py`; inspect logs; then full checks with ADL_HISTORICAL_DISCOVERY_ROOT and ADL_SCIFACT_ARCHIVE configured. Do not resume original session.
+PROJECT: Autonomous Discovery Lab
+CURRENT BRANCH: integration/ai-native-discovery
+LAST VERIFIED IMPLEMENTATION COMMIT: 7ede05f9065f29cc7a6a58bb30da93632def78c4
+CURRENT PHASE/TASK: AI-native invention/research repair and 90-minute supervised-session preparation; offline implementation VERIFIED.
+COMPLETED AND VERIFIED: explicit dual tracks, gap/AI suitability and non-AI challenge, both-domain/prior-art retrieval, provisional hypotheses reaching independent critique, unchanged empirical/novelty/commercial gates, request-local reasoning/output/timeouts, direction-safe reports, meaningful-progress stagnation, exact historical replay and 117-file preservation, 5,400-second virtual acceptance, cross-process controls/recovery and CLI rehearsal.
+TESTS: 370 full / 180 focused / 46 capability checks passed, Ruff and Pyright clean, wheel/sdist built. One existing Starlette/httpx deprecation warning. Logs, source checkpoint, model catalog and public retrieval outputs: runtime/ai-native. Final recorded source is the implementation commit above; subsequent acceptance/documentation commit changes no source/config/tests.
+IMPLEMENTED BUT NOT LIVE-VERIFIED: medium/high Meta configuration, 8,192 completion sufficiency, semantic discovery quality, provider latency and billing. Independent human semantic review pending. No new paid calls or live long session.
+KNOWN FAILURES: no failing final checks. Historical zero-hypothesis qualification remains deliberately preserved; an actual index probe recorded HTTP 429 with other index records available. Bounded retrieval is not exhaustive prior art or product coverage.
+BUDGET / RESOURCE: qualification upper estimate $3.787648 / 26 attempts / 1,403,648 tokens / 1,500s; user-selected 90-minute upper estimate $45.451776 / 312 attempts / 16,843,776 tokens / 5,400s. No dollar caps reintroduced. Current live spend $0; historic $0.012262 is separate and provider-confirmed billing pending.
+NEXT EXACT ACTION: follow LONG_SESSION_RUNBOOK.md preflight and non-billable dry run. Only after operator authorization, start a NEW controlled-capability root, inspect substantive live critique/AI analysis, resume/replay and reconcile usage. After qualification passes, separately launch the supervised 90-minute profile. Fully unattended overnight remains NO-GO; PR #2 stays draft/unmerged.
+DO NOT RESUME: session-4374c2fa7c8f44708fef506893831998 in runtime/controlled-live. Analyze copied historical-session only.
+RECOVERY: phase_reports/AI_NATIVE_DISCOVERY_2026-11-04.md, research_quality/CAPABILITY_V1.md, AI_NATIVE_REQUIREMENTS.md (including latest duration steering), DEC-026/027, runtime/checkpoints/development.json and append-only development JSONL.

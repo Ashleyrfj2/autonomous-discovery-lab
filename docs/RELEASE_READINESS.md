@@ -30,3 +30,7 @@ The local provider and replay gate is covered by the [qualification report](phas
 Final stabilization passed 247 local tests. The committed offline scope is ready for review. The proposed complete live test exceeds current headroom before the exact Baseten price is known. Live testing, overnight operation and PR #2 merge are NO-GO. See [final stabilization](phase_reports/hackathon-model-qualification.md#final-stabilization-and-approval-boundary).
 
 Live Meta ResearchTeam qualification passed after the owner removed application dollar admission. The cycle used three Meta model identities and verified typed evidence plus cache-only replay. Restricted Baseten, overnight execution, and merge remain separate gates. [Live qualification record](phase_reports/hackathon-model-qualification.md#live-meta-qualification-and-dollar-cap-removal)
+
+## AI-native capability / 90-minute readiness — 2026-11-04
+
+Source 7ede05f9065f29cc7a6a58bb30da93632def78c4 is LOCALLY VERIFIED: 370 full and 180 focused tests, Ruff/Pyright/build and CLI/provenance/recovery passed. Controlled new Meta qualification is GO after explicit authorization; supervised 90 minutes is CONDITIONAL GO after live critique/replay/accounting/billing pass. Fully unattended overnight is NO-GO. No paid inference or live session was launched. See phase_reports/AI_NATIVE_DISCOVERY_2026-11-04.md and LONG_SESSION_RUNBOOK.md.
