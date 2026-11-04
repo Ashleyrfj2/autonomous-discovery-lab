@@ -23,7 +23,7 @@ Status: **OFFLINE IMPLEMENTATION COMMITTED ON ISOLATED BRANCH; NOT WIRED TO LIVE
 
 ## Verification boundary
 
-- **20 focused tests passed** on isolated Python 3.13/Pydantic 2.x in this chat's container with contract stand-ins matching the remote `Citation`, `Evidence` and `Record` fields; local Python compileall also passed.
+- **20 focused tests passed (initial and post-format isolated runs; final command used `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1` to disable unrelated globally installed pytest plugins)** on isolated Python 3.13/Pydantic 2.x in this chat's container with contract stand-ins matching the remote `Citation`, `Evidence` and `Record` fields; local Python compileall also passed.
 - Long lines were adjusted to at most 100 characters in the committed files.
 - This is **not** the full repo's Python 3.12/uv/Ruff/Pyright/full pytest/build acceptance. Those remain unexecuted.
 - Source files were fetched back from GitHub and confirmed present. No CI outcomes are used as proof.
