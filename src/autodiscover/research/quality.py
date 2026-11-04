@@ -171,7 +171,9 @@ def screen_evidence(
             codes.append("target_evidence_not_in_findings")
             fatal.append("target_evidence_not_in_findings")
     if fatal:
-        return EvidenceScreen(status="invalid_source", codes=codes, source_bound_findings=valid_count)
+        return EvidenceScreen(
+            status="invalid_source", codes=codes, source_bound_findings=valid_count
+        )
     if valid_count == 0 or missing:
         return EvidenceScreen(
             status="needs_substantive_evidence",
@@ -217,13 +219,19 @@ def decide_recovery(
     if failure in {"invalid_source", "quote_not_in_source", "semantic_mismatch"}:
         return RecoveryDecision(action="reject", reason="Current evidence/claim is invalid")
     if failure == "known_prior_art":
-        return RecoveryDecision(action="record_prior_art", reason="Retain prior art; narrow only with new evidence")
+        return RecoveryDecision(
+            action="record_prior_art", reason="Retain prior art; narrow only with new evidence"
+        )
     if revisions_used < 0 or maximum_revisions < 0 or distinct_new_source_count < 0:
         raise ValueError("Recovery counters cannot be negative")
     if revisions_used >= maximum_revisions:
         return RecoveryDecision(action="inconclusive", reason="Revision allowance exhausted")
     if distinct_new_source_count:
-        return RecoveryDecision(action="revise", reason="Distinct source evidence warrants one revision")
+        return RecoveryDecision(
+            action="revise", reason="Distinct source evidence warrants one revision"
+        )
     if query_already_attempted or failure == "no_new_evidence":
         return RecoveryDecision(action="inconclusive", reason="No new evidence; stop loop")
-    return RecoveryDecision(action="retrieve", reason="A distinct targeted query may resolve the gap")
+    return RecoveryDecision(
+        action="retrieve", reason="A distinct targeted query may resolve the gap"
+    )
