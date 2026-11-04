@@ -66,3 +66,11 @@ The [runbook](LONG_SESSION_RUNBOOK.md) contains the exact qualification,
 resume and subsequent four-hour launch commands. The next external action is
 the operator-authorized short Meta qualification. Blinded human scoring and
 provider-confirmed billing remain pending. PR #2 remains draft and unmerged.
+
+## Active AI-native repair — 2026-11-04 (supersedes next-action text above)
+
+CURRENT BRANCH: integration/ai-native-discovery from ba17f0d; implementation acceptance IN_PROGRESS.
+CURRENT TASK: docs/AI_NATIVE_REQUIREMENTS.md and phase_reports/AI_NATIVE_DISCOVERY_2026-11-04.md.
+Implemented: additive capability-v1 tracks/plan/opportunity/independent review, staged source/target/prior-art retrieval, per-request reasoning/output/timeout, 600-second branch with short lease renewals, direction-bound summaries, reviewed-progress stagnation. Historical v1/v2 paths preserved.
+Evidence: runtime/ai-native; initial 17 sentinels passed, baseline 320 + 4 optional skipped. Expanded tests and full acceptance still required. Keep historical controlled-live root unchanged; analyze only copied historical-session root. No paid calls; provider billing and live qualification still pending.
+NEXT EXACT ACTION: `uv run pytest -q -s tests/integration/test_capability*.py`; inspect logs; then full checks with ADL_HISTORICAL_DISCOVERY_ROOT and ADL_SCIFACT_ARCHIVE configured. Do not resume original session.

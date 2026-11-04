@@ -74,3 +74,5 @@ recovery. Verified mock-wire qualification, accelerated multi-hour progress,
 separate-process controls and crash recovery. Published the operator runbook
 and preserved the blinded-review preparation separately from human scoring.
 [Phase evidence](phase_reports/LONG_SESSION_READINESS_2026-11-04.md)
+
+2026-11-04 AI-native recovery: clean ba17f0d and remote heads reconciled; created integration/ai-native-discovery. Preserved full new brief and historical-root file hashes. Located cross-direction summary join and retrieval-volume progress defect. Meta official reasoning/models/pricing documentation reviewed; medium/high controls documented, inference behavior remains untested. No paid calls.

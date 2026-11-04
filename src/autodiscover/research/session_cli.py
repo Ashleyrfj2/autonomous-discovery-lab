@@ -138,6 +138,10 @@ def _factory(
     live: bool,
 ) -> Callable[[int], Discovery]:
     if not live:
+        if estimate["profile"]["discovery"].get("capability"):
+            from autodiscover.research.capability_rehearsal import rehearsal as capability_rehearsal
+
+            return lambda branch: capability_rehearsal(store, branch)
         return lambda branch: rehearsal(store, branch)
     clients = _clients(configs)
 

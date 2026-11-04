@@ -160,3 +160,5 @@ counts distinct candidates with valid review and reports shortfalls against two.
 Per-stage usage and recovery calls remain traceable through the run's existing
 request ledger and checkpoint keys. The packet retains the original commercial
 and scientific authority boundaries.
+
+The additive [capability-v1 policy](CAPABILITY_V1.md) repairs independent-domain retrieval and makes AI-native discovery explicit. Historical v1 prompt/benchmark records remain unchanged; current operator profiles are named `session-capability-*`.

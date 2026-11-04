@@ -86,8 +86,18 @@ class HTTPProvider:
         }
         cap_name = "max_completion_tokens" if self.config.kind == "meta" else "max_tokens"
         body[cap_name] = request.max_output_tokens
-        if self.config.reasoning_effort is not None:
-            body["reasoning_effort"] = self.config.reasoning_effort
+        effort = request.reasoning_effort or self.config.reasoning_effort
+        if request.reasoning_effort:
+            try:
+                ProviderConfig.model_validate(
+                    {**self.config.model_dump(), "reasoning_effort": effort}
+                )
+            except ValueError:
+                raise ProviderError("REASONING_CAPABILITY_EXCEEDED", known_zero_cost=True) from None
+        if request.timeout_seconds and request.timeout_seconds > self.config.timeout_seconds:
+            raise ProviderError("TIMEOUT_CAPABILITY_EXCEEDED", known_zero_cost=True)
+        if effort is not None:
+            body["reasoning_effort"] = effort
         if request.json_schema is not None:
             schema = request.json_schema
             if schema.get("additionalProperties") is False and "properties" in schema:
@@ -121,7 +131,13 @@ class HTTPProvider:
         ) / Decimal(1000000)
 
     def _request(
-        self, method: str, path: str, *, key: SecretStr, body: dict[str, Any] | None = None
+        self,
+        method: str,
+        path: str,
+        *,
+        key: SecretStr,
+        body: dict[str, Any] | None = None,
+        timeout_seconds: float | None = None,
     ) -> dict[str, Any]:
         # HTTP read timeouts are per operation, so isolate caller latency from a stalled server.
         # Timeout is an UNKNOWN remote outcome, never proof of server cancellation or free usage.
@@ -136,7 +152,14 @@ class HTTPProvider:
         def call() -> None:
             try:
                 try:
-                    results.put((self._request_sync(method, path, key=key, body=body), None))
+                    results.put(
+                        (
+                            self._request_sync(
+                                method, path, key=key, body=body, timeout_seconds=timeout_seconds
+                            ),
+                            None,
+                        )
+                    )
                 except ProviderError as error:
                     results.put((None, error))
                 except Exception:
@@ -145,7 +168,7 @@ class HTTPProvider:
                 _HTTP_INFLIGHT.release()
 
         threading.Thread(target=call, daemon=True, name="adl-provider-request").start()
-        deadline = time.monotonic() + self.config.timeout_seconds
+        deadline = time.monotonic() + (timeout_seconds or self.config.timeout_seconds)
         while True:
             if cancellation_requested():
                 raise ProviderError("PROVIDER_CANCEL_REQUESTED", uncertain=True)
@@ -164,13 +187,20 @@ class HTTPProvider:
         return result
 
     def _request_sync(
-        self, method: str, path: str, *, key: SecretStr, body: dict[str, Any] | None = None
+        self,
+        method: str,
+        path: str,
+        *,
+        key: SecretStr,
+        body: dict[str, Any] | None = None,
+        timeout_seconds: float | None = None,
     ) -> dict[str, Any]:
-        deadline = time.monotonic() + self.config.timeout_seconds
+        deadline = time.monotonic() + (timeout_seconds or self.config.timeout_seconds)
         try:
-            with self._client(body, key) as client, client.stream(
-                method, path, json=body
-            ) as response:
+            with (
+                self._client(body, key) as client,
+                client.stream(method, path, json=body) as response,
+            ):
                 if time.monotonic() >= deadline:
                     raise ProviderError("PROVIDER_TIMEOUT", uncertain=True)
                 if response.status_code != 200:
@@ -206,7 +236,9 @@ class HTTPProvider:
     def generate(self, request: GenerationRequest) -> Generation:
         body = self._body(request)
         key = self._credential()
-        data = self._request("POST", "chat/completions", key=key, body=body)
+        data = self._request(
+            "POST", "chat/completions", key=key, body=body, timeout_seconds=request.timeout_seconds
+        )
         try:
             reported = data["usage"]
             details = reported.get("completion_tokens_details")

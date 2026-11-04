@@ -39,6 +39,10 @@ class BranchIntent(Record):
 
 
 class BranchOutcome(Record):
+    direction_notes: list[dict] = Field(default_factory=list, exclude_if=lambda v: not v)
+    knowledge: list[str] = Field(default_factory=list, exclude_if=lambda v: not v)
+    critique_outcomes: list[str] = Field(default_factory=list, exclude_if=lambda v: not v)
+    useful_negatives: list[str] = Field(default_factory=list, exclude_if=lambda v: not v)
     number: int
     child_id: str
     packet_digest: str | None = None

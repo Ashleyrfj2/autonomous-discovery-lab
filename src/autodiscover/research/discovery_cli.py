@@ -19,6 +19,7 @@ from autodiscover.orchestrator.store import SnapshotStore, StateError, Store
 from autodiscover.research.discovery import ROLES, Discovery, _journal, replay
 from autodiscover.research.discovery_contracts import DiscoverySpec
 from autodiscover.research.discovery_sources import EUROPE_PMC_HOST, seed_host
+from autodiscover.research.opportunity import stage_envelope
 from autodiscover.research.retrieval import Fetcher
 from autodiscover.security.budget import BudgetError
 from autodiscover.security.redaction import contains_credential
@@ -35,6 +36,9 @@ def preflight(spec: DiscoverySpec, configurations: dict[str, ProviderConfig]) ->
     hosts = {"api.crossref.org", EUROPE_PMC_HOST, *(seed_host(seed) for seed in spec.sources)}
     plan_calls = 4 if spec.protocol == "discovery-v2" else 1
     calls: dict[str, int] = dict(zip(ROLES, (plan_calls, 3, 3), strict=True))
+    envelope = stage_envelope(spec.capability) if spec.capability else []
+    if envelope:
+        calls = {role: sum(n for _, r, n in envelope if r == role) for role in ROLES}
     total_input = total_output = 0
     total_cost = Decimal(0)
     roles = {}
@@ -45,7 +49,24 @@ def preflight(spec: DiscoverySpec, configurations: dict[str, ProviderConfig]) ->
             )
         attempts = calls[role] * (1 + spec.retry_limit)
         inputs = config.context_window * attempts
-        outputs = spec.max_output_tokens * attempts
+        stages = {}
+        if spec.capability:
+            for stage, stage_role, n in envelope:
+                if stage_role != role:
+                    continue
+                settings = spec.capability.stages[stage]
+                ProviderConfig.model_validate(
+                    {**config.model_dump(), "reasoning_effort": settings.reasoning_effort}
+                )
+                if settings.timeout_seconds > config.timeout_seconds:
+                    raise ValueError("Stage timeout exceeds provider manifest bound")
+                stages[stage] = {**settings.model_dump(), "maximum_logical_calls": n}
+        outputs = (
+            sum(s["max_output_tokens"] * s["maximum_logical_calls"] for s in stages.values())
+            * (1 + spec.retry_limit)
+            if stages
+            else (spec.max_output_tokens * attempts)
+        )
         cost = (
             inputs * config.input_usd_per_million + outputs * config.output_usd_per_million
         ) / Decimal(1_000_000)
@@ -64,6 +85,8 @@ def preflight(spec: DiscoverySpec, configurations: dict[str, ProviderConfig]) ->
             "gross_usd_estimate": str(cost),
             "pricing_source": config.pricing_source,
         }
+        if stages:
+            roles[role]["stages"] = stages
     return {
         "protocol": spec.protocol,
         "mode": spec.mode,
@@ -75,8 +98,8 @@ def preflight(spec: DiscoverySpec, configurations: dict[str, ProviderConfig]) ->
         "conservative_gross_usd_estimate": str(total_cost),
         "wall_seconds_per_invocation": spec.seconds,
         "retry_limit_per_logical_call": spec.retry_limit,
-        "searches_max": 4,
-        "bibliographic_fetches_max": 8,
+        "searches_max": 7 if spec.capability else 4,
+        "bibliographic_fetches_max": 14 if spec.capability else 8,
         "registered_document_fetches_max": len(spec.sources),
         "public_hosts": sorted(hosts),
         "stop_conditions": [

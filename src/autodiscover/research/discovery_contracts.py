@@ -2,7 +2,7 @@
 
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 Short = Annotated[str, Field(min_length=3, max_length=220)]
 Text = Annotated[str, Field(min_length=3, max_length=800)]
@@ -61,15 +61,53 @@ class SessionContext(Record):
     recent_evidence: list[Text] = Field(max_length=3)
 
 
+Track = Literal["ai_native", "open_science"]
+
+
+class StageSettings(Record):
+    reasoning_effort: Literal["minimal", "low", "medium", "high"]
+    max_output_tokens: int = Field(ge=256, le=8192)
+    timeout_seconds: float = Field(gt=0, le=120, allow_inf_nan=False)
+
+
+class CapabilityPolicy(Record):
+    version: Literal["capability-v1"] = "capability-v1"
+    tracks: list[Track] = Field(min_length=1, max_length=2)
+    stages: dict[str, StageSettings]
+
+    @model_validator(mode="after")
+    def complete(self):
+        if len(set(self.tracks)) != len(self.tracks):
+            raise ValueError("Duplicate discovery track")
+        if set(self.stages) != {"planning", "extraction", "gap", "proposal", "critique"}:
+            raise ValueError("Configure every capability stage exactly once")
+        return self
+
+
 class DiscoverySpec(Record):
+    capability: CapabilityPolicy | None = Field(default=None, exclude_if=lambda v: v is None)
     objective: str = Field(min_length=12, max_length=1000)
     sources: list[SourceSeed] = Field(default_factory=list, max_length=6)
     protocol: Literal["discovery-v1", "discovery-v2"] = "discovery-v1"
-    seconds: int = Field(default=120, ge=10, le=240)
-    max_output_tokens: int = Field(default=1536, ge=256, le=4096)
+    seconds: int = Field(default=120, ge=10, le=1200)
+    max_output_tokens: int = Field(default=1536, ge=256, le=8192)
     retry_limit: int = Field(default=1, ge=0, le=2)
     mode: Literal["reviewed", "single_model"] = "reviewed"
     session_context: SessionContext | None = Field(default=None, exclude_if=lambda v: v is None)
+
+    @model_validator(mode="after")
+    def capability_bounds(self):
+        if self.capability:
+            if self.protocol != "discovery-v2":
+                raise ValueError("Capability discovery requires Discovery-v2")
+            if any(
+                s.max_output_tokens > self.max_output_tokens or s.timeout_seconds >= self.seconds
+                for s in self.capability.stages.values()
+            ):
+                raise ValueError("Stage bounds exceed branch limits")
+        elif self.seconds > 240 or self.max_output_tokens > 4096:
+            raise ValueError("Extended branch bounds require capability policy")
+        return self
 
 
 class Direction(Record):
@@ -86,6 +124,34 @@ class Direction(Record):
 
 class Plan(Record):
     directions: list[Direction] = Field(min_length=3, max_length=3)
+
+
+class ResearchPriority(Record):
+    gap_importance: Score
+    gap_evidence: Score
+    ai_suitability: Score
+    distinctiveness: Score
+    plausibility: Score
+    information_gain: Score
+    experimental_feasibility: Score
+    prior_art_uncertainty: Score
+    usefulness: Score
+    research_cost: Score
+    historical_progress: Score
+    rationale: Text
+
+
+class CapabilityDirection(Direction):
+    track: Track
+    track_reason: Text
+    source_query: Short
+    target_query: Short
+    prior_art_query: Short
+    priority: ResearchPriority
+
+
+class CapabilityPlan(_QualityResponse):
+    directions: list[CapabilityDirection] = Field(min_length=3, max_length=3)
 
 
 class Citation(Record):
@@ -156,6 +222,8 @@ class Evidence(Record):
 
 
 class SearchReceipt(Record):
+    direction: int | None = Field(default=None, exclude_if=lambda v: v is None)
+    stage: str | None = Field(default=None, exclude_if=lambda v: v is None)
     question: str
     query: str
     evidence: list[Evidence]
@@ -262,6 +330,67 @@ class QualityProposal(Record):
     recovery_query: str = Field(max_length=220)
 
 
+class GapAnalysis(_QualityResponse):
+    unmet_need: Text
+    need_finding_ids: list[Short] = Field(max_length=6)
+    current_workaround: Text
+    root_constraint: Text
+    constraint_status: Literal["observed", "speculative"]
+    constraint_finding_ids: list[Short] = Field(max_length=6)
+    target_user: Text
+    economic_buyer: Text
+    frequency_and_severity: Text
+    demand_evidence: Text
+    ai_capability: Text
+    ai_approaches: list[Short] = Field(min_length=1, max_length=6)
+    why_ai: Text
+    non_ai_alternatives: list[Short] = Field(min_length=1, max_length=6)
+    ai_advantage: Literal["plausible", "unnecessary", "unknown"]
+    ai_advantage_reason: Text
+
+
+class Opportunity(Record):
+    version: Literal["ai-opportunity-v1"]
+    gap: GapAnalysis
+    ai_suitability: Literal["plausible", "unnecessary", "unknown"]
+    ai_reasoning: Text
+    non_ai_challenge: Text
+    component_finding_ids: list[Short] = Field(min_length=1, max_length=6)
+    unsupported_assumptions: list[Text] = Field(min_length=1, max_length=6)
+    technical_dependencies: list[Short] = Field(min_length=1, max_length=6)
+    model_and_tool_requirements: Text
+    data_requirements: Text
+    model_limitations: Text
+    integration_and_deployment: Text
+    safety_and_reliability: Text
+    verification_method: Text
+    cost_considerations: Text
+    existing_products_and_research: list[Short] = Field(min_length=1, max_length=6)
+    prior_art_evidence: list[Citation] = Field(max_length=4)
+    prior_art_status: Literal["equivalent", "close", "unknown"]
+    differentiation: Text
+    falsifiable_prediction: Text
+    evaluation_environment: Text
+    comparator: Short
+    minimum_meaningful_improvement: Text
+    next_cheapest_experiment: Text
+    adoption_barriers: Text
+    # Model output can never confer experimental, replication or commercial authority.
+    technical_feasibility: Literal["untested"]
+    scientific_novelty: Literal["unverified"]
+    commercial_validation: Literal["unvalidated"]
+    validation_status: Literal["unverified_idea"]
+
+
+class CapabilityProposal(QualityProposal):
+    opportunity: Opportunity
+
+
+class CapabilityResponse(_QualityResponse):
+    proposal: CapabilityProposal | None
+    reason: str = Field(max_length=400)
+
+
 class ProposalResponse(_QualityResponse):
     proposal: QualityProposal | None
     reason: str = Field(max_length=400)
@@ -279,6 +408,13 @@ class QualityReview(Review, _QualityResponse):
     prior_art_evidence: list[Citation] = Field(max_length=4)
 
 
+class CapabilityReview(QualityReview):
+    ai_necessity: Literal["plausible", "unnecessary", "uncertain"]
+    bridge_plausibility: Literal["plausible", "unsupported"]
+    need_support: Literal["supports", "contradicts", "uncertain"]
+    capability_rationale: Text
+
+
 class RecoveryReceipt(Record):
     failure: RecoveryFailure
     decision: RecoveryDecision
@@ -288,9 +424,9 @@ class RecoveryReceipt(Record):
 
 class QualityAttempt(Record):
     extraction: Extraction
-    proposal: QualityProposal | None
+    proposal: CapabilityProposal | QualityProposal | None
     screen: EvidenceScreen
-    review: QualityReview | None
+    review: CapabilityReview | QualityReview | None
     valid_review: bool = False
     extraction_screen: EvidenceScreen | None = None
     issues: list[str] = Field(default_factory=list)
@@ -315,6 +451,14 @@ class ScientificGate(Record):
 
 
 class Candidate(Record):
+    track: Track | None = Field(default=None, exclude_if=lambda v: v is None)
+    opportunity: Opportunity | None = Field(default=None, exclude_if=lambda v: v is None)
+    epistemic_state: Literal["testable_hypothesis"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    opportunity_status: Literal["unverified_idea", "evidence_grounded_hypothesis"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
     quality: QualityTrace | None = Field(default=None, exclude_if=lambda value: value is None)
     direction: int
     original: Hypothesis
@@ -332,7 +476,7 @@ class Report(Record):
     routes: dict[str, list[tuple[str, str]]]
     model_configuration: dict[str, dict[str, str | int | float | bool | None]]
 
-    plan: Plan
+    plan: CapabilityPlan | Plan
     searches: list[SearchReceipt]
     candidates: list[Candidate]
     decisions: list[str]

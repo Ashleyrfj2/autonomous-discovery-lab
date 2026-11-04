@@ -1,0 +1,88 @@
+{
+  "kind": "authentic_historical_qualification_metadata",
+  "session_id": "session-4374c2fa7c8f44708fef506893831998",
+  "child_id": "discovery-35b88ebd2384cff41452a1f58016364298052dda54b99aa7124a5ceae8ed60a8",
+  "packet_digest": "53d831b5e8bbf1d6ce10d0c443977103d6871bbb6665485e13092d77feffdf67",
+  "evidence_anchor": {
+    "seq": 109,
+    "hash": "eb6d1015976f72a3a4608a7edd47db70e9b6d1cd6d48f5a34320ade89825655f",
+    "verified_events": 109,
+    "trust_limit": "Tamper-evident relative to retained anchor; not immutable",
+    "legacy_runs_without_topic_or_release_anchors": 0
+  },
+  "usage": {
+    "attempts_reporting_reasoning": 4,
+    "charged_usd": "0.012262",
+    "input_tokens": 5733,
+    "output_tokens": 1199,
+    "reasoning_tokens_reported": 572,
+    "requests": 4,
+    "reserved_usd": "0",
+    "settled_usd": "0.012262",
+    "uncertain": 0,
+    "uncertain_usd": "0"
+  },
+  "directions": [
+    {
+      "question": "Can aviation incident taxonomy methods improve defect detection in discrete manufacturing?",
+      "first_domain": "Aviation safety investigation methods",
+      "second_domain": "Manufacturing quality control",
+      "query": "aviation incident taxonomy applied manufacturing quality defect detection effectiveness",
+      "expected_support": "Peer-reviewed studies showing structured cross-industry failure-mode transfer improves anomaly detection or reduces rework vs domain-standard methods.",
+      "expected_falsifier": "Controlled studies show no reduction in time-to-detection or false positives versus standard checklists, or gains disappear with blinding.",
+      "value": 4,
+      "uncertainty": 3,
+      "search_effort": 3
+    },
+    {
+      "question": "Do ecological sampling models outperform baselines for volatile demand forecasting?",
+      "first_domain": "Ecology population monitoring",
+      "second_domain": "Supply chain forecasting",
+      "query": "ecological capture-recapture forecasting applied supply chain demand variability comparison",
+      "expected_support": "Field evaluations where ecological monitoring techniques outperform baseline forecasting for demand variability or resource planning.",
+      "expected_falsifier": "Trials show equivalent or worse forecasting accuracy and adoption versus statistical baselines, or benefits limited to lab settings.",
+      "value": 3,
+      "uncertainty": 4,
+      "search_effort": 3
+    },
+    {
+      "question": "Can archival provenance standards improve traceability in decentralized clinical triage?",
+      "first_domain": "Archival science provenance",
+      "second_domain": "Healthcare operations triage",
+      "query": "archival provenance chain-of-custody applied clinical triage audit error reduction trial",
+      "expected_support": "Comparative studies where archival provenance methods improve traceability and error attribution versus conventional audit logs.",
+      "expected_falsifier": "Randomized comparisons find no improvement in diagnostic accuracy or time versus usual triage, or high false-alarm rates.",
+      "value": 4,
+      "uncertainty": 3,
+      "search_effort": 2
+    }
+  ],
+  "closed_directions": {
+    "0": {
+      "gap": "Supplied abstracts contain manufacturing defect ML/taxonomy work but no study applying aviation incident taxonomy methods to discrete manufacturing defect detection with observed comparative outcomes.",
+      "query": "aviation safety taxonomy HFACS ADREP applied manufacturing defect detection anomaly rework controlled comparison",
+      "findings_count": 0,
+      "effective_gap": "No supplied passage tests aviation incident taxonomy (e.g., HFACS) applied to manufacturing defect detection with comparative effectiveness outcomes; sources cover either aviation classification alone or manufacturing detection alone."
+    },
+    "2": {
+      "gap": "Supplied spans provide no comparative triage audit data: one abstract proposes a Biological Provenance Record for trace-DNA activity-level interpretation without observed outcomes, the other is title metadata only. No randomized or comparative error-reduction trial is evidenced.",
+      "query": "archival provenance chain-of-custody applied clinical triage audit error reduction trial",
+      "findings_count": 0,
+      "effective_gap": "Supplied spans provide no comparative triage audit data: one abstract proposes a Biological Provenance Record for trace-DNA activity-level interpretation without observed outcomes, the other is title metadata only. No randomized or comparative error-reduction trial is evidenced."
+    }
+  },
+  "source_ids": [
+    "source-013718508c2af43a0f069aabc7703cb9585c8e3ee2489f27f7ee048e06ad7e30",
+    "source-0ed4b0d4f2010e3b6f84cafc032d178cd48bd95741cdc217f7c1f5dc3467f5e2",
+    "source-2552cc307d3681ed91b684d514f929074c7f4b63318b44ee03e7278b16909a8b",
+    "source-37bcf867b0390b8dabecde20f3e49532ffd3f250b095d2a7d2fdcb4ab1a90837",
+    "source-3902fd33cb90cefa55c1a4cc7f75d7df2567a7ab26a803a0ae1753140028e92e",
+    "source-3fce30867d738539af20f1c3a8bca8569c26f9c7f52360a0fd94c20b03384c1a",
+    "source-71fc035746ac7caccfc701703692b6d2009669487757d81d14a24963b19f7234",
+    "source-8c05fe74eba849f5c9440d2d414b0f22c48e5087c371a4c569572e75ec3b852b",
+    "source-968566de887502ca2ae93b239bfa778cbd37bbf9ace71700970d7068c236deb8",
+    "source-c0f62b64c22af7d703308df8b00d8c3bd055fba22905d60ea05e857a6e1273bc",
+    "source-faef5b6209ec7e0ff412489ad51fa502950e6d698e34ed814559804d38ffcbc8"
+  ],
+  "limitation": "Historical outputs and source metadata only; not new semantic gold labels."
+}

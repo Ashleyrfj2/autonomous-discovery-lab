@@ -13,9 +13,9 @@ BASETEN_HACKATHON_KEY_ENV = "BASETEN_HACKATHON_API_KEY"
 
 # Only the reasoning controls used by this integration are configured here.
 _REASONING_EFFORTS = {
-    ("meta", "muse-wonder-1.0"): {"minimal", "low"},
-    ("meta", "muse-spark-1.2"): {"minimal", "low"},
-    ("meta", "muse-spark-1.3"): {"minimal", "low"},
+    ("meta", "muse-wonder-1.0"): {"minimal", "low", "medium", "high"},
+    ("meta", "muse-spark-1.2"): {"minimal", "low", "medium", "high"},
+    ("meta", "muse-spark-1.3"): {"minimal", "low", "medium", "high"},
     ("baseten", "meta-models/muse-spark-open"): {"low"},
 }
 
@@ -49,7 +49,7 @@ class ProviderConfig(BaseModel):
     output_limit: int = Field(ge=1, le=1000000)
     structured_output: bool = False
     profile: Literal["standard", "baseten_hackathon"] = "standard"
-    reasoning_effort: Literal["minimal", "low"] | None = None
+    reasoning_effort: Literal["minimal", "low", "medium", "high"] | None = None
     capability_source: str = Field(min_length=1)
     pricing_source: str = Field(min_length=1)
     verified_on: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
@@ -82,6 +82,12 @@ class GenerationRequest(BaseModel):
     prompt: str = Field(min_length=1, max_length=50000)
     max_output_tokens: int = Field(default=512, ge=1, le=100000)
     json_schema: dict[str, Any] | None = None
+    reasoning_effort: Literal["minimal", "low", "medium", "high"] | None = Field(
+        default=None, exclude_if=lambda v: v is None
+    )
+    timeout_seconds: float | None = Field(
+        default=None, gt=0, le=120, allow_inf_nan=False, exclude_if=lambda v: v is None
+    )
 
 
 class Usage(BaseModel):

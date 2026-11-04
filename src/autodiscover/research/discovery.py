@@ -21,6 +21,7 @@ from autodiscover.orchestrator.store import StateError, Store
 from autodiscover.research.catalog import Catalog
 from autodiscover.research.discovery_contracts import (
     Candidate,
+    CapabilityPlan,
     Citation,
     Direction,
     DiscoverySpec,
@@ -35,6 +36,7 @@ from autodiscover.research.discovery_contracts import (
 from autodiscover.research.discovery_quality import QUALITY_PROMPTS, ProposalAdmission
 from autodiscover.research.discovery_quality import evaluate as evaluate_quality
 from autodiscover.research.discovery_sources import acquire, seed_host
+from autodiscover.research.opportunity import MISSION, priority_score, repeated_query, stage_for
 from autodiscover.research.retrieval import SourceFetcher
 from autodiscover.security.budget import Budget
 from autodiscover.security.cancellation import cancellation_requested, cancellation_scope
@@ -191,7 +193,9 @@ class Discovery:
             "retrieval": self.allow_retrieval,
         }
         if spec.protocol == "discovery-v2":
-            registration["quality_prompts"] = QUALITY_PROMPTS
+            registration["quality_prompts"] = (
+                "capability-v1" if spec.capability else QUALITY_PROMPTS
+            )
         if contains_credential(canonical(registration)):
             raise ValueError("Discovery registration contains recognizable credentials")
         return registration
@@ -240,8 +244,9 @@ class Discovery:
         if canonical(self._registration(spec)) != canonical(registration):
             raise StateError("Discovery configuration differs from its registration")
         owner = local_owner()
-        fence = self.store.claim(run_id, owner, spec.seconds + 20)
+        fence = self.store.claim(run_id, owner, min(spec.seconds + 20, 300))
         deadline = time.monotonic() + spec.seconds
+        local_queries: list[str] = []
 
         def stopped() -> bool:
             if time.monotonic() >= deadline or stop_requested():
@@ -257,6 +262,8 @@ class Discovery:
         def check(*, after_work: bool = False) -> None:
             if cancellation_requested() or (not after_work and boundary_stop()):
                 raise StateError("Discovery interrupted; committed checkpoints remain resumable")
+            if spec.capability:
+                self.store.heartbeat(run_id, owner, fence, 300)
 
         def checkpoint[T: BaseModel](key: str, schema: type[T], produce: Callable[[], T]) -> T:
             check()
@@ -288,13 +295,29 @@ class Discovery:
         ) -> T:
             def produce() -> T:
                 if spec.protocol == "discovery-v2":
-                    context["prompt_version"] = QUALITY_PROMPTS
+                    context["prompt_version"] = (
+                        "capability-v1" if spec.capability else QUALITY_PROMPTS
+                    )
                 prompt = canonical({"task": key, "instruction": instruction, **context})
                 if contains_credential(prompt):
                     raise ValueError(
                         "Refusing to send recognizable credentials to discovery models"
                     )
-                request = GenerationRequest(prompt=prompt, max_output_tokens=spec.max_output_tokens)
+                settings = spec.capability.stages[stage_for(key)] if spec.capability else None
+                request = GenerationRequest(
+                    prompt=prompt,
+                    max_output_tokens=settings.max_output_tokens
+                    if settings
+                    else spec.max_output_tokens,
+                    **(
+                        {
+                            "reasoning_effort": settings.reasoning_effort,
+                            "timeout_seconds": settings.timeout_seconds,
+                        }
+                        if settings
+                        else {}
+                    ),
+                )
                 result, _ = self.router.generate_structured(
                     run_id,
                     role,
@@ -308,6 +331,13 @@ class Discovery:
 
         def search(key: str, direction: Direction, query: str, *, seeds: bool = False):
             def retrieve() -> SearchReceipt:
+                if spec.capability and repeated_query(query, local_queries):
+                    return SearchReceipt(
+                        question=direction.question,
+                        query=query,
+                        evidence=[],
+                        failures=["REPEATED_QUERY_NO_INFORMATION_GAIN"],
+                    )
                 if search_admission and not search_admission(key, query):
                     return SearchReceipt(
                         question=direction.question,
@@ -327,6 +357,7 @@ class Discovery:
                 )
 
             receipt = checkpoint(key, SearchReceipt, retrieve)
+            local_queries.append(query)
             if spec.protocol == "discovery-v2":
                 _bound_sources(self.catalog, run_id, [receipt])
             return receipt
@@ -336,11 +367,20 @@ class Discovery:
                 plan = generate(
                     "plan",
                     ROLES[0],
-                    Plan,
+                    CapabilityPlan if spec.capability else Plan,
                     "Propose three distinct cross-disciplinary questions "
                     "with compact bibliographic search queries. State evidence that would support "
                     "and falsify each idea. Score value, uncertainty and effort from 1 to 5. "
                     "Do not assume an industry or result."
+                    + (
+                        MISSION + " Use only configured tracks. Supply source_query for the first "
+                        "domain mechanism, target_query for the second domain need and baseline, "
+                        "and prior_art_query for equivalent combinations/products. These must be "
+                        "distinct useful searches. Score priority dimensions separately; give an "
+                        "ranking rationale; treat missing evidence cautiously."
+                        if spec.capability
+                        else ""
+                    )
                     + (
                         " Use the investigation lane and recent evidence as bounded context. "
                         "Prefer a distinct direction if the previous gap cannot be resolved. "
@@ -356,26 +396,66 @@ class Discovery:
                         else ""
                     ),
                     objective=spec.objective,
+                    **({"allowed_tracks": spec.capability.tracks} if spec.capability else {}),
                     **(
                         {"session_context": spec.session_context.model_dump(mode="json")}
                         if spec.session_context
                         else {}
                     ),
                 )
+                if (
+                    spec.capability
+                    and isinstance(plan, CapabilityPlan)
+                    and any(d.track not in spec.capability.tracks for d in plan.directions)
+                ):
+                    raise StateError("Planner selected an unconfigured track")
                 order = sorted(
                     range(3),
-                    key=lambda i: Fraction(
-                        plan.directions[i].value * plan.directions[i].uncertainty,
-                        plan.directions[i].search_effort,
+                    key=lambda i: (
+                        priority_score(plan.directions[i].priority, plan.directions[i].track)
+                        if isinstance(plan, CapabilityPlan)
+                        else Fraction(
+                            plan.directions[i].value * plan.directions[i].uncertainty,
+                            plan.directions[i].search_effort,
+                        )
                     ),
                     reverse=True,
                 )
-                initial = {
-                    i: search(
-                        f"search-{i}", plan.directions[i], plan.directions[i].query, seeds=True
-                    )
-                    for i in order
-                }
+                staged = []
+                if spec.capability and isinstance(plan, CapabilityPlan):
+                    initial = {}
+                    for i in order[:2]:
+                        direction = plan.directions[i]
+                        receipts = []
+                        for stage, query in (
+                            ("source", direction.source_query),
+                            ("target", direction.target_query),
+                            ("prior_art", direction.prior_art_query),
+                        ):
+                            receipt = search(
+                                f"search-{stage}-{i}", direction, query, seeds=stage == "source"
+                            )
+                            receipt = receipt.model_copy(update={"direction": i, "stage": stage})
+                            receipts.append(receipt)
+                        staged.extend(receipts)
+                        # Keep evidence from each domain and prior-art search in the model context.
+                        balanced = {s.source_id: s for r in receipts for s in r.evidence[:2]}
+                        initial[i] = SearchReceipt(
+                            direction=i,
+                            stage="combined",
+                            question=direction.question,
+                            query=direction.query,
+                            evidence=list(balanced.values()),
+                            failures=[f for r in receipts for f in r.failures],
+                        )
+                    order = order[:2]
+                else:
+                    initial = {
+                        i: search(
+                            f"search-{i}", plan.directions[i], plan.directions[i].query, seeds=True
+                        )
+                        for i in order
+                    }
                 closed, coverage = None, None
                 if spec.protocol == "discovery-v2":
                     candidates, followups, decisions, closed, coverage = evaluate_quality(
@@ -388,6 +468,7 @@ class Discovery:
                         _evidence,
                         ROLES,
                         proposal_admission,
+                        spec.capability,
                     )
                 else:
                     candidates, followups, decisions = self._evaluate(
@@ -399,7 +480,7 @@ class Discovery:
                     routes=registration["routes"],
                     model_configuration=registration["model_configuration"],
                     plan=plan,
-                    searches=[*initial.values(), *followups],
+                    searches=[*(staged or initial.values()), *followups],
                     candidates=candidates,
                     decisions=decisions,
                     usage=_usage(self.store, run_id),
@@ -430,7 +511,7 @@ class Discovery:
 
     @staticmethod
     def _evaluate(
-        plan: Plan,
+        plan: Plan | CapabilityPlan,
         initial: dict[int, SearchReceipt],
         order: list[int],
         generate: Callable[..., Any],

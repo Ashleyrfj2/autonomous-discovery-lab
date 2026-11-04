@@ -1,181 +1,149 @@
 # Long-session runbook
 
-The foreground Mac process runs the research controller independently of Codex.
-Use the controlled qualification profile first. Review its recorded evidence,
-replay and billing before starting a supervised four-hour session.
+Use branch `integration/ai-native-discovery` and the capability-v1 profiles below. These are the current AI-native milestone profiles. The older `session-qualification.json`, `session-four-hour.json`, `discovery-meta.json` and their historical estimates remain available for saved v2 sessions; do not substitute manifests when resuming any registered run.
 
-## Credentials and configuration
+**Preserve the first live qualification. Never resume or rerun `session-4374c2fa7c8f44708fef506893831998` in `runtime/controlled-live`.** Its zero-hypothesis packet is a regression baseline. New qualification and supervised runs each need a fresh root. No paid inference or 90-minute live run was executed by the repair task.
 
-Run commands from the repository checkout on `integration/long-session-readiness`.
-Use Python 3.12 through `uv sync --locked`. The standard Meta manifest reads
-`META_API_KEY` from the environment. Keep the key in an ignored, owner-readable
-dotenv file or export it in your terminal. Avoid copying it into any profile,
-command-line argument, output file or Git commit.
+## Configuration, reasoning and usage
+
+The current mission explicitly investigates gaps AI could newly make possible, with configurable `ai_native` and `open_science` tracks. Edit a copy of the profile before registration to select only one track or a new objective. Every planned direction records its selection/change reason. The default has no favored industry. Read the [method and twelve repair sentinels](research_quality/CAPABILITY_V1.md).
+
+| Inference stage | Model | Reasoning | Completion cap including reasoning | Caller timeout |
+| --- | --- | --- | ---: | ---: |
+| Research planning | Spark 1.3 | medium | 4,096 | 30 s |
+| Atomic extraction / relevance | Spark 1.3 | low | 4,096 | 20 s |
+| Gap / constraint identification | Spark 1.2 | medium | 4,096 | 30 s |
+| AI suitability, mechanistic bridge and hypothesis | Spark 1.2 | high | 8,192 | 45 s |
+| Independent adversarial critique | Wonder 1.0 | high | 8,192 | 45 s |
+
+Retrieval admission, recovery routing and final report synthesis are deterministic local code and make no extra inference request. High reasoning is an experimental allocation, not an established optimum. Both 4,096 and 8,192 caps passed strict simulated HTTP contracts. Real high-reasoning output sufficiency, quality, latency and prices charged remain qualification measurements. Official support/rates: [Meta reasoning](https://dev.meta.ai/docs/reasoning), [models](https://dev.meta.ai/docs/models), [chat parameters](https://dev.meta.ai/docs/protocols/chat-completions), [pricing](https://dev.meta.ai/docs/pricing-rate-limits). Read-only catalog checks passed for all three model IDs during local acceptance.
+
+The provider manifest keeps three distinct model identities. Request-local overrides avoid changing other routes globally. Each adapter's 45-second upper timeout remains bounded by the branch deadline. A caller timeout is an ambiguous dispatch; the reservation stays unresolved and the controller refuses automatic retry/resume. A background transport may still finish and incur usage. Stage checkpoints renew the existing short fenced lease.
+
+| Current profile | Wall-time upper bound | Branches | Attempts | Conservative total tokens | Gross standard-rate upper estimate |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `session-capability-qualification.json` | 1,500 s | 2 | 26 | 1,403,648 | $3.787648 |
+| `session-capability-ninety-minute.json` | 5,400 s | 24 | 312 | 16,843,776 | $45.451776 |
+
+Each branch has 600 seconds, at most 13 model calls, seven searches (source/target/prior art for two directions plus one targeted recovery), and fourteen bibliographic fetches. Each role reserves 48,000 input tokens per attempt conservatively, plus its configured completion cap. Worst serial stage time is 450 seconds, with up to 112 seconds of indexed fetch timeout before local overhead and optional registered seeds. Deadline and cancellation can still interrupt a branch. Whole-branch admission is 701,824 tokens / $1.893824; no retries and one concurrent branch. These profile envelopes replace the historical $1.45552 qualification estimate. Duration, errors, stagnation and actual branch timing may stop far earlier than the count maxima. No per-call/run/day/qualification dollar caps are reinstated. An optional aggregate ceiling remains null. Credits/caching discounts are excluded; provider-confirmed billing is separate.
+
+Paused time counts against the 1,500-second qualification deadline. Review and resume promptly. An expired qualification remains preserved; investigate before separately authorizing another fresh run. Do not alter its registered limits or automatically repeat settled calls.
+
+## 1. Enter the project and select the existing credential file
+
+The commands expose the existing file's path only. Never print, copy into Git, or pass the key value as an argument.
 
 ```sh
-ADL_ENV=/path/to/your/ignored/provider.env
-PROVIDERS=config/discovery-meta.json
+cd /Users/ashley/Documents/Codex/2026-11-04/codex-autonomous-discovery-lab-integrate-research/long-session
+ADL_ENV=/Users/ashley/Code/autonomous-discovery-lab/.env
+PROVIDERS=config/discovery-capability-meta.json
+QUAL_PROFILE=config/session-capability-qualification.json
+LONG_PROFILE=config/session-capability-ninety-minute.json
+uv sync --locked
 ```
 
-If `META_API_KEY` is already exported, omit `--env-file "$ADL_ENV"` from the
-commands below. Both profiles select Discovery-v2. Edit the nested
-`discovery.objective` in a copy of the chosen profile before launch. The objective
-may span industries. Registered `discovery.sources` may add allowlisted public
-HTTPS documents. The default allows Crossref and Europe PMC search and sends
-bounded public source excerpts to the configured standard-mode Meta models.
+If `META_API_KEY` is already exported, `--env-file "$ADL_ENV"` can be omitted. Configuration paths contain no secret values. All live commands require explicit authorization flags; their presence is the operator's spending authorization.
 
-The routes are Spark 1.3 for planning and extraction, Spark 1.2 for authorship and
-bridge analysis, and Wonder 1.0 for separate critique. The manifest pins the
-rates, timeout, native structured output and reasoning settings. Baseten is
-outside these profiles. The account model catalog establishes availability.
-Successful structured inference still needs the controlled qualification.
-
-## 1. Preflight and offline rehearsal
+## 2. Preflight (no inference)
 
 ```sh
-uv run autodiscover session preflight \
-  --profile config/session-qualification.json --providers "$PROVIDERS"
-
+uv run autodiscover session preflight --profile "$QUAL_PROFILE" --providers "$PROVIDERS"
 uv run --env-file "$ADL_ENV" autodiscover session preflight \
-  --profile config/session-qualification.json --providers "$PROVIDERS" \
-  --check-model-access --allow-network
+  --profile "$QUAL_PROFILE" --providers "$PROVIDERS" --check-model-access --allow-network
+```
 
+The second command performs authenticated catalog GET requests only. It does not test reasoning or inference.
+
+## 3. Non-billable dry run and resume
+
+```sh
 DRY_ROOT=$(mktemp -d)
 uv run autodiscover --root "$DRY_ROOT" session dry-run \
-  --profile config/session-qualification.json --providers "$PROVIDERS"
+  --profile "$QUAL_PROFILE" --providers "$PROVIDERS" > "$DRY_ROOT/start.json"
+DRY_ID=$(uv run python -c 'import json,sys; print(json.load(open(sys.argv[1]))["session_id"])' "$DRY_ROOT/start.json")
+uv run autodiscover --root "$DRY_ROOT" session status "$DRY_ID"
+uv run autodiscover --root "$DRY_ROOT" session resume "$DRY_ID" --providers "$PROVIDERS"
+uv run autodiscover --root "$DRY_ROOT" session report "$DRY_ID" > "$DRY_ROOT/report.json"
 ```
 
-The first command uses local configuration. The optional second command issues
-authenticated model-catalog GET requests. The third command uses the packaged
-fixture provider and archive, no credentials or external fetches. The
-qualification profile deliberately pauses after the first branch. Copy its
-printed session ID to `DRY_ID` and exercise resume.
+This uses authored synthetic sources and scripted models, costs zero and makes no network calls. It exercises the shared controller and capability contracts. It is not scientific, live-model or commercial evidence.
+
+## 4. Start a NEW controlled Meta qualification (billable; operator action)
+
+`mktemp` guarantees a fresh root. Preserve the printed root and session ID; use `resume`, never another `start`, for continuation of this session.
 
 ```sh
-uv run autodiscover --root "$DRY_ROOT" session resume "$DRY_ID" \
-  --providers "$PROVIDERS"
-uv run autodiscover --root "$DRY_ROOT" session report "$DRY_ID"
-```
-
-| Profile | Wall-time limit | Branches | Attempts | Upper token estimate, including reasoning | Gross standard-rate estimate |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| `session-qualification.json` | 720 seconds | 2 | 20 | 531,200 | $1.45552 |
-| `session-four-hour.json` | 14,400 seconds | 64 | 640 | 16,998,400 | $46.57664 |
-
-These are conservative admission estimates based on configured context,
-maximum completion and role rates. They describe the configured profiles
-and exclude credits and discounted caching. Billing confirmation comes from
-the provider. The stored output count includes reasoning when reported as
-part of completion usage. Reasoning is shown separately for visibility.
-
-Both profiles default to one concurrent branch, zero retries and no aggregate
-dollar ceiling. An optional `aggregate_cost_ceiling_usd` is applied before
-whole-branch admission using the conservative estimate. Configurable request
-and token ceilings reserve an entire branch's upper allowance at admission.
-A branch has a 240-second invocation bound and at most four searches. Paused
-wall time counts against the session deadline. Profile caps are upper bounds
-and may stop a session much earlier than its time limit.
-
-## 2. Controlled live qualification
-
-This command explicitly authorizes paid inference and public retrieval. Run it
-only when ready to incur the estimated usage above. Keep this terminal
-available. Save the printed `session-...` ID in `QUAL_ID`.
-
-```sh
-QUAL_ROOT=runtime/controlled-live
+QUAL_ROOT=$(mktemp -d "$PWD/runtime/controlled-capability-XXXXXX")
+printf '%s\n' "$QUAL_ROOT"
 uv run --env-file "$ADL_ENV" autodiscover --root "$QUAL_ROOT" session start \
-  --profile config/session-qualification.json --providers "$PROVIDERS" \
-  --authorize-live --allow-network
+  --profile "$QUAL_PROFILE" --providers "$PROVIDERS" --authorize-live --allow-network
 ```
 
-After the first branch closes, expect `PAUSED` with
-`QUALIFICATION_CHECKPOINT` if no earlier stop applied. Check that the branch
-has a source-bound packet and substantive advisory critique. Then resume from
-a separate invocation using the same root, manifest and authorization flags.
+After the first completed branch, expect `PAUSED` / `QUALIFICATION_CHECKPOINT`, unless an earlier safety boundary applies. Copy the printed session ID:
 
 ```sh
+QUAL_ID=session-PASTE_THE_NEW_ID
 uv run autodiscover --root "$QUAL_ROOT" session status "$QUAL_ID"
-uv run --env-file "$ADL_ENV" autodiscover --root "$QUAL_ROOT" session resume \
-  "$QUAL_ID" --providers "$PROVIDERS" --authorize-live --allow-network
-uv run autodiscover --root "$QUAL_ROOT" session report "$QUAL_ID"
+uv run autodiscover --root "$QUAL_ROOT" session report "$QUAL_ID" > "$QUAL_ROOT/checkpoint-report.json"
 ```
 
-Review `dossiers[].packet` for real public sources, exact evidence and an
-independent model critique. A justified recovery should leave a new source
-and revision receipt. A run without a recovery need can still qualify
-operationally, with recovery coverage limited to the offline tests. Select a
-completed child ID from the report and exercise cache-only replay.
+Inspect `usage`, unresolved reservations, direction notes, search stages and `dossiers[].packet`. Each packet contains stage settings, role/model identities, sources, findings, opportunity assessments, original/revised hypotheses, critiques and rejection reasons. For a concise local inspection:
 
 ```sh
+uv run python - "$QUAL_ROOT/checkpoint-report.json" <<'PY'
+import json, sys
+r = json.load(open(sys.argv[1]))
+print(json.dumps({k: r[k] for k in ['status', 'stop_reason', 'usage', 'unresolved_reservations']}, indent=2))
+for d in r['dossiers']:
+    p = d['packet']
+    print(json.dumps({'child_id': p['run_id'], 'routes': p['routes'],
+                     'stages': p['specification']['capability']['stages'],
+                     'hypotheses': p['candidates'], 'closed': p['quality_closed_directions']}, indent=2))
+PY
+```
+
+An operational pass requires genuine Meta identities and inference, real substantive source/target coverage, recorded prior-art search (limitations allowed), at least one substantive valid independent critique, provisional labels, settled locally attributable requests, no unresolved reservations, correct direction associations, pause/resume and exact replay. A zero-hypothesis result can be scientifically appropriate, but does not complete the operational critique gate. Diagnose before deciding whether a separately authorized bounded question is warranted. Do not weaken the gates or auto-run another qualification.
+
+## 5. Resume and final qualification report
+
+```sh
+uv run --env-file "$ADL_ENV" autodiscover --root "$QUAL_ROOT" session resume "$QUAL_ID" \
+  --providers "$PROVIDERS" --authorize-live --allow-network
+uv run autodiscover --root "$QUAL_ROOT" session report "$QUAL_ID" > "$QUAL_ROOT/final-report.json"
+CHILD_ID=$(uv run python -c 'import json,sys; print(json.load(open(sys.argv[1]))["dossiers"][0]["packet"]["run_id"])' "$QUAL_ROOT/final-report.json")
 uv run autodiscover --root "$QUAL_ROOT" discover --cache-only --run-id "$CHILD_ID"
 ```
 
-Check that replay yields the dossier digest and leaves request counts and
-event anchors unchanged. Compare locally calculated usage with the provider
-ledger. Pause the qualification decision if there is an unresolved reservation,
-missing substantive critique, invalid packet, manifest mismatch or unexplained
-provider charge. Operational qualification does not establish novelty or
-commercial viability.
+Replay must preserve packet digest, request totals and evidence anchor with zero external calls. Compare local accounting against the provider ledger. Provider billing reconciliation and human semantic review remain external acceptance evidence. Any uncertain dispatch, incomplete critique, source integrity failure, manifest mismatch or unexplained charge leaves qualification pending/NO-GO.
 
-## 3. Supervised four-hour launch
+## 6. Supervised 90-minute launch only after qualification passes
 
-After the controlled qualification passes, preflight the four-hour profile.
-Use a separate root and an attended Mac. `caffeinate -i` prevents idle system
-sleep while the process runs. Preserve power and network access. Start the
-process in a terminal and use another terminal for controls.
+Use an attended Mac with power/network. `caffeinate -i` keeps the foreground process awake. No 90-minute run was launched during implementation.
 
 ```sh
-uv run autodiscover session preflight \
-  --profile config/session-four-hour.json --providers "$PROVIDERS"
-
-LONG_ROOT=runtime/discovery-four-hour
+uv run autodiscover session preflight --profile "$LONG_PROFILE" --providers "$PROVIDERS"
+LONG_ROOT=$(mktemp -d "$PWD/runtime/discovery-capability-ninety-minute-XXXXXX")
+printf '%s\n' "$LONG_ROOT"
 caffeinate -i uv run --env-file "$ADL_ENV" autodiscover --root "$LONG_ROOT" session start \
-  --profile config/session-four-hour.json --providers "$PROVIDERS" \
-  --authorize-live --allow-network
+  --profile "$LONG_PROFILE" --providers "$PROVIDERS" --authorize-live --allow-network
 ```
 
-Copy the printed ID to `LONG_ID`. Expect the session to stop on the first
-applicable duration, branch, request, token, optional aggregate cost, provider
-error or stagnation boundary. A stalled session stops after five consecutive
-branches without newly bound substantive evidence or a unique provisional
-candidate. Any unresolved provider dispatch pauses for reconciliation.
-Up to the configured number of branch requests may already be in progress
-when a stop is detected. The supplied profiles run serially.
+Copy the printed session ID into a second terminal with the same directory, environment-file path, manifest and root variables:
 
 ```sh
+LONG_ID=session-PASTE_THE_NEW_ID
 uv run autodiscover --root "$LONG_ROOT" session status "$LONG_ID"
-uv run autodiscover --root "$LONG_ROOT" session pause "$LONG_ID"
-uv run --env-file "$ADL_ENV" autodiscover --root "$LONG_ROOT" session resume \
-  "$LONG_ID" --providers "$PROVIDERS" --authorize-live --allow-network
-uv run autodiscover --root "$LONG_ROOT" session cancel "$LONG_ID" --confirm
 uv run autodiscover --root "$LONG_ROOT" session report "$LONG_ID" > "$LONG_ROOT/report.json"
+uv run autodiscover --root "$LONG_ROOT" session pause "$LONG_ID"
+uv run --env-file "$ADL_ENV" autodiscover --root "$LONG_ROOT" session resume "$LONG_ID" \
+  --providers "$PROVIDERS" --authorize-live --allow-network
+uv run autodiscover --root "$LONG_ROOT" session cancel "$LONG_ID" --confirm
 ```
 
-Pause closes admission and lets active work reach a checkpoint boundary.
-Wait for `PAUSED` before resuming. SIGINT and SIGTERM request the same
-cooperative drain. Cancel fences off the session immediately and cannot be
-resumed. An in-flight network request may still execute or incur provider
-charges after cancellation. The ledger retains uncertain reservations.
+Pause closes admission and drains to a checkpoint; wait for PAUSED before resuming. SIGINT/SIGTERM use the same cooperative boundary. Cancel immediately fences the session and cannot be resumed. An already dispatched request can still finish and be billed. Five consecutive branches without reviewed knowledge, a distinct provisional candidate or a useful reviewed critique/negative result stop exploration; unrelated new papers cannot reset this counter. Direction changes and stop reasons remain auditable in packets and branch outcomes. The 90-minute duration is a maximum, never a requirement to keep spending without progress.
 
-## Evidence and recovery
+## Evidence and failure recovery
 
-- `$LONG_ROOT/lab.sqlite3` and its WAL contain the authoritative event and usage
-  records. Keep the root with its sidecars when copying an inactive session.
-- `$LONG_ROOT/artifacts/` holds content-addressed source snapshots, discovery
-  checkpoints and typed packets. `checkpoints/` and `logs/execution.jsonl` are
-  derived recovery aids.
-- `session report` lists progress by branch, provisional candidates, negative
-  decisions, source diversity, usage, failure receipts, packet digests and
-  suggested follow-ups. Partial children retain their checkpoint references.
-  Read-only reports and cache-only child replay issue no external requests.
-- After a process exit, inspect status first. Use the same root, session ID and
-  manifest to resume an active orphan or paused session. A changed provider
-  manifest is rejected. A settled response can be replayed even if the next
-  checkpoint was interrupted.
-- For `REQUEST_RECONCILIATION_REQUIRED`, preserve the root and reconcile the
-  listed reservation IDs, model, request key and time against the provider
-  usage ledger. Resume refuses unresolved reservations. Leave ambiguous rows
-  intact. There is no automated adjudication or ledger-override command.
-- A new session is a separate execution with a new ID and its own allowance.
-  Recover an existing ID through `resume` to avoid repeating work.
+SQLite `lab.sqlite3` plus WAL is authoritative; keep sidecars with an inactive root. `artifacts/` contains hashed captures/checkpoints/packets. Never edit reservations or their request identities to force continuation. `session report` and cache-only replay use read-only snapshots. After process death, inspect `status`, preserve the root and use the original ID/manifest for `resume`. Settled cached responses survive a crash before the next checkpoint. A changed stage policy or provider manifest cannot reuse the settled identity.
+
+`REQUEST_RECONCILIATION_REQUIRED` means preserve the listed IDs/model/time and reconcile with the provider. Resume refuses unresolved RESERVED/UNCERTAIN requests; no automatic adjudication command is provided. Local mock recovery and virtual 90-minute evidence do not qualify fully unattended overnight operation. That remains NO-GO pending supervised live behavior, charge reconciliation and an operator reconciliation procedure. PR #2 remains draft and unmerged.

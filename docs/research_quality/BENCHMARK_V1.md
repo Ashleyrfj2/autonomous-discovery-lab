@@ -176,3 +176,5 @@ dry runs the questions were made case-specific and the scripted reviewer was
 aligned across the A and C schemas before the final measured rerun. The final
 sentinels are frozen regression inputs. Their labels and reviewer responses
 are authored fixtures, separate from the independently labeled SciFact subset.
+
+A later [capability-v1 comparison and twelve repair sentinels](CAPABILITY_V1.md#comparative-evaluation) extend coverage without replacing the historical results above. New B/C runs use matched authored responses and do not establish a live high-reasoning improvement.

@@ -108,3 +108,14 @@ See [measured control results](phase_reports/autonomous-research-2026-11-03.md#o
 | REQ-006, REQ-007, REQ-012–016 | Session admission, stop controls, accelerated soak, process death and recovery, Meta catalog and mock HTTP qualification | Paid controlled live verification and billing reconciliation |
 
 [Exact verification](phase_reports/LONG_SESSION_READINESS_2026-11-04.md)
+
+## AI-native repair milestone (user brief: AI_NATIVE_REQUIREMENTS.md)
+
+| ID | Requirement and acceptance | Status | Implementation / verification |
+| --- | --- | --- | --- |
+| REQ-AI-001 | Configurable AI-native and open-science tracks integrated in planning and candidate packets | IN_PROGRESS | capability-v1 additive policy; pending tests |
+| REQ-AI-002 | Both-domain findings plus explicit mechanism and falsifier admit unvalidated hypothesis; empirical superiority remains gated | IN_PROGRESS | staged retrieval and hypothesis tests pending |
+| REQ-AI-003 | Evidence-linked need, constraint, AI/non-AI challenge, feasibility, prior art and fixed validation statuses | IN_PROGRESS | versioned opportunity contract pending |
+| REQ-AI-004 | Per-stage reasoning/output/timeout controls with conservative admission and exact request identity | IN_PROGRESS | provider wire and accounting tests pending |
+| REQ-AI-005 | Direction-bound summaries and substantive research advancement; repeated/irrelevant papers stagnate | IN_PROGRESS | session regressions pending |
+| REQ-AI-006 | Twelve repair sentinels, A/B/C structural comparison, historical replay, accelerated four hours and fresh qualification instructions | IN_PROGRESS | local acceptance pending; no paid calls authorized |

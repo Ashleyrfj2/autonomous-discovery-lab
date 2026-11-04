@@ -1,0 +1,53 @@
+{
+  "discovery": {
+    "objective": "Discover evidence-grounded gaps in what people and existing technology can accomplish, then investigate genuinely new AI-enabled capabilities that could change the underlying constraints. Challenge AI necessity, prior art, feasibility and usefulness. Preserve open scientific exploration across all industries; novelty and commercial demand remain unverified without independent evidence.",
+    "protocol": "discovery-v2",
+    "seconds": 600,
+    "max_output_tokens": 8192,
+    "retry_limit": 0,
+    "mode": "reviewed",
+    "capability": {
+      "version": "capability-v1",
+      "tracks": [
+        "ai_native",
+        "open_science"
+      ],
+      "stages": {
+        "planning": {
+          "reasoning_effort": "medium",
+          "max_output_tokens": 4096,
+          "timeout_seconds": 30
+        },
+        "extraction": {
+          "reasoning_effort": "low",
+          "max_output_tokens": 4096,
+          "timeout_seconds": 20
+        },
+        "gap": {
+          "reasoning_effort": "medium",
+          "max_output_tokens": 4096,
+          "timeout_seconds": 30
+        },
+        "proposal": {
+          "reasoning_effort": "high",
+          "max_output_tokens": 8192,
+          "timeout_seconds": 45
+        },
+        "critique": {
+          "reasoning_effort": "high",
+          "max_output_tokens": 8192,
+          "timeout_seconds": 45
+        }
+      }
+    }
+  },
+  "concurrency": 1,
+  "max_consecutive_errors": 2,
+  "max_stagnant_branches": 5,
+  "aggregate_cost_ceiling_usd": null,
+  "duration_seconds": 5400,
+  "max_branches": 24,
+  "max_model_calls": 312,
+  "max_total_tokens": 16843776,
+  "pause_after_first_branch": false
+}

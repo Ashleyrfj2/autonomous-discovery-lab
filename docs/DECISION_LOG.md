@@ -97,3 +97,11 @@ controller for independent research branches. Admit by full-branch request,
 token and optional cost estimates. Stop on ambiguous dispatch rather than
 replaying it. Pause drains at a stage boundary. Use cross-branch query and
 proposal fingerprints before further retrieval or critique.
+
+## DEC-026 — 2026-11-04 — Additive capability discovery, preserved historical baseline
+
+The new brief makes AI-native invention a primary track while preserving open scientific exploration. Extend Discovery-v2 with an opt-in `capability-v1` policy, versioned plan/proposal contracts, staged independent domain/prior-art retrieval and request-local reasoning. Keep the existing scheduler, catalog, provider ledger and replay. Historical protocols without this policy retain their prompt/schema path. The original controlled-live root is read-only evidence and will not be resumed. The summary defect comes from joining direction 0 with an arbitrary closed direction's gap; publication/excerpt volume also incorrectly resets stagnation. Replace those associations and count reviewed knowledge/critique outcomes rather than article IDs. Local fixtures can verify structure and safety only; live quality, latency, cost and billing need a separately authorized qualification.
+
+## DEC-027 — 2026-11-04 — User selects a 90-minute supervised session
+
+The user changed the next supervised duration from four hours to 1.5 hours during implementation. Select `session-capability-ninety-minute.json`: 5,400 seconds, 24 branches, 312 attempts and 16,843,776 conservative tokens. This proportionally scales the previous four-hour branch allowance without reinstating dollar caps. Qualification remains two branches/26 attempts; no live inference or launch is newly authorized. Preserve the prior verified four-hour profiles/tests as historical regression coverage. Run an updated accelerated 90-minute acceptance and publish matching commands and $45.451776 gross estimate.

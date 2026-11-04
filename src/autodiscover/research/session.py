@@ -26,6 +26,7 @@ from autodiscover.research.discovery_contracts import (
     Report,
     SessionContext,
 )
+from autodiscover.research.opportunity import repeated_query
 from autodiscover.research.session_contracts import BranchIntent, BranchOutcome, SessionProfile
 from autodiscover.security.budget import BudgetError
 from autodiscover.security.processes import coordinator_alive, local_owner
@@ -216,16 +217,67 @@ def _summarize(
         candidates.append(signature)
     sources = [source for search in packet.searches for source in search.evidence]
     substantive = [s for s in sources if s.scope != "title"]
-    negatives = [candidate.issues[0] for candidate in packet.candidates if candidate.issues]
-    negatives.extend(
-        trace.original.extraction.gap
-        for trace in (packet.quality_closed_directions or {}).values()
-        if trace.original.extraction.gap
+    notes, knowledge, critiques, negatives = [], [], [], []
+    traces = {c.direction: c.quality for c in packet.candidates if c.quality}
+    traces.update(packet.quality_closed_directions or {})
+    for index, trace in sorted(traces.items()):
+        if trace is None:
+            continue
+        attempt = trace.revised or trace.original
+        proposal = attempt.proposal
+        gap = attempt.extraction.gap or (attempt.issues[0] if attempt.issues else "")
+        note = {
+            "child_id": intent.child_id,
+            "direction": index,
+            "track": getattr(packet.plan.directions[index], "track", "legacy_unspecified"),
+            "track_reason": getattr(packet.plan.directions[index], "track_reason", ""),
+            "question": packet.plan.directions[index].question,
+            "gap": gap,
+            "issues": attempt.issues,
+            "source_ids": sorted({f.citation.source_id for f in attempt.extraction.findings}),
+            "outcome": trace.outcome,
+        }
+        notes.append(note)
+        if attempt.valid_review and attempt.review and proposal:
+            supported = {
+                identifier
+                for assessment in attempt.review.claim_assessments
+                if assessment.judgment == "supports"
+                for identifier in proposal.claims[assessment.claim_index].finding_ids
+            }
+            knowledge.extend(
+                fingerprint(" ".join(words(f.domain + " " + f.observation)))
+                for f in attempt.extraction.findings
+                if f.finding_id in supported
+            )
+            critiques.append(
+                fingerprint(
+                    canonical(
+                        {
+                            "mechanism": words(proposal.hypothesis.mechanism),
+                            "judgments": [a.judgment for a in attempt.review.claim_assessments],
+                            "prior_art": attempt.review.prior_art_status,
+                            "outcome": trace.outcome,
+                        }
+                    )
+                )
+            )
+            if trace.outcome == "rejected":
+                negatives.append(
+                    fingerprint(
+                        canonical(
+                            {
+                                "mechanism": words(proposal.hypothesis.mechanism),
+                                "issues": attempt.issues,
+                            }
+                        )
+                    )
+                )
+    note_text = " | ".join(
+        f"Track {n['track']}, direction {n['direction']}: {n['question']} Gap: {n['gap']} "
+        f"Source IDs: {','.join(n['source_ids'][:2])}."
+        for n in notes
     )
-    question = packet.plan.directions[0].question
-    note = f"{question} First unresolved issue: {negatives[0]}" if negatives else question
-    if substantive:
-        note += f" Captured source {substantive[0].source_id}."
     return BranchOutcome(
         number=intent.number,
         child_id=intent.child_id,
@@ -234,7 +286,15 @@ def _summarize(
         proposed=len(packet.candidates),
         reviewed=packet.critique_coverage or 0,
         rejected=sum(c.disposition == "rejected" for c in packet.candidates),
-        revised=sum(bool(c.quality and c.quality.revised) for c in packet.candidates),
+        revised=sum(
+            bool(
+                c.quality
+                and c.quality.revised
+                and c.quality.revised.proposal
+                and c.quality.revised.valid_review
+            )
+            for c in packet.candidates
+        ),
         prior_art=sum(c.scientific_gate.prior_art_identified for c in packet.candidates),
         duplicate_queries=sum("SESSION_DUPLICATE_QUERY" in s.failures for s in packet.searches),
         source_failures=sum(
@@ -251,7 +311,11 @@ def _summarize(
         candidates=candidates,
         qualified_directions=qualified,
         duplicate_directions=duplicates,
-        next_evidence=note[:700],
+        direction_notes=notes,
+        knowledge=sorted(set(knowledge)),
+        critique_outcomes=sorted(set(critiques)),
+        useful_negatives=sorted(set(negatives)),
+        next_evidence=note_text[:700],
     )
 
 
@@ -259,12 +323,23 @@ def _progress(outcomes: list[BranchOutcome]) -> tuple[list[dict], int, int]:
     series, stagnant, errors = [], 0, 0
     publications: set[str] = set()
     excerpts: set[str] = set()
+    knowledge: set[str] = set()
+    critiques: set[str] = set()
+    negatives: set[str] = set()
     for outcome in outcomes:
         new_publications = set(outcome.publications) - publications
         new_excerpts = set(outcome.excerpts) - excerpts
         publications.update(outcome.publications)
         excerpts.update(outcome.excerpts)
-        progress = bool((new_publications and new_excerpts) or outcome.qualified_directions)
+        new_knowledge = set(outcome.knowledge) - knowledge
+        new_critiques = set(outcome.critique_outcomes) - critiques
+        new_negatives = set(outcome.useful_negatives) - negatives
+        knowledge.update(outcome.knowledge)
+        critiques.update(outcome.critique_outcomes)
+        negatives.update(outcome.useful_negatives)
+        progress = bool(
+            new_knowledge or new_critiques or new_negatives or outcome.qualified_directions
+        )
         stagnant = 0 if progress else stagnant + 1
         errors = errors + 1 if outcome.provider_error else 0
         series.append(
@@ -273,6 +348,12 @@ def _progress(outcomes: list[BranchOutcome]) -> tuple[list[dict], int, int]:
                 "new_publications": len(new_publications),
                 "new_substantive_excerpts": len(new_excerpts),
                 "provisional_candidates": len(outcome.qualified_directions),
+                "new_review_supported_findings": len(new_knowledge),
+                "new_critique_outcomes": len(new_critiques),
+                "useful_negative_results": len(new_negatives),
+                "reason": "Reviewed knowledge or distinct critique outcome"
+                if progress
+                else "No reviewed knowledge, new provisional hypothesis or useful negative result",
                 "stagnant": not progress,
             }
         )
@@ -386,6 +467,17 @@ class Session:
                         if old:
                             entry = json.loads(old[0])
                             return entry["child_id"] == intent.child_id and entry["key"] == key
+                        if intent.specification.capability:
+                            previous = [
+                                json.loads(row[0]).get("text", "")
+                                for row in db.execute(
+                                    "SELECT payload_json FROM events WHERE run_id=? "
+                                    "AND kind='session_query'",
+                                    (session_id,),
+                                )
+                            ]
+                            if repeated_query(query, [q for q in previous if q]):
+                                return False
                         store._event(
                             db,
                             session_id,
@@ -394,6 +486,7 @@ class Session:
                                 "query": query_digest,
                                 "child_id": intent.child_id,
                                 "key": key,
+                                **({"text": query} if intent.specification.capability else {}),
                             },
                         )
                     return True
@@ -575,6 +668,17 @@ class Session:
     ) -> BranchIntent:
         number = len(intents)
         memory = [item.next_evidence for item in reversed(outcomes) if item.next_evidence][:3]
+        if profile.discovery.capability:
+            progress, _, _ = _progress(outcomes)
+            memory = [
+                (
+                    f"Progress: reviewed findings={p['new_review_supported_findings']}, "
+                    f"new critiques={p['new_critique_outcomes']}, stagnant={p['stagnant']}. "
+                    + o.next_evidence
+                )[:800]
+                for o, p in reversed(list(zip(outcomes, progress, strict=True)))
+                if o.next_evidence
+            ][:3]
         context = SessionContext(
             session_id=session_id,
             branch=number,
@@ -720,6 +824,7 @@ def session_report(store: Store, session_id: str, *, dossiers: bool = True) -> d
     }
     if dossiers:
         packets = []
+        displayed = []
         for outcome in outcomes:
             if outcome.packet_digest:
                 try:
@@ -731,9 +836,13 @@ def session_report(store: Store, session_id: str, *, dossiers: bool = True) -> d
                 if digest != outcome.packet_digest:
                     raise IntegrityError("Session branch packet digest mismatch")
                 packets.append({"digest": digest, "packet": packet.model_dump(mode="json")})
+                if not outcome.direction_notes:
+                    intent = next(i for i in intents if i.child_id == outcome.child_id)
+                    outcome = _summarize(intent, digest, packet, [])
+            displayed.append(outcome)
         result.update(
             progress=series,
-            branches=[o.model_dump(mode="json") for o in outcomes],
+            branches=[o.model_dump(mode="json") for o in displayed],
             controls=[
                 {"event": k, "record": p, "timestamp": t}
                 for k, p, t in events
@@ -760,6 +869,6 @@ def session_report(store: Store, session_id: str, *, dossiers: bool = True) -> d
                 )
                 and store.is_discovery(intent.child_id)
             ],
-            next_research=[o.next_evidence for o in outcomes[-3:] if o.next_evidence],
+            next_research=[o.next_evidence for o in displayed[-3:] if o.next_evidence],
         )
     return result

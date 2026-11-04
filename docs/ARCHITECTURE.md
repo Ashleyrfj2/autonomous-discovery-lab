@@ -53,3 +53,7 @@ query fingerprints, cited-passage fingerprints and approximate mechanism
 matching. The complete source and candidate records stay in their child
 packets and content-addressed archives. The [runbook](LONG_SESSION_RUNBOOK.md)
 records the scope of offline and live acceptance.
+
+## Capability-v1 extension
+
+The current optional `DiscoverySpec.capability` policy selects typed track-aware planning, balanced source/target/prior-art retrieval, gap and AI/non-AI analysis, versioned opportunity proposals and independent capability critique within the same Discovery-v2 engine. Per-stage GenerationRequest reasoning/output/timeout fields are part of request identity; absent fields preserve historical identity serialization. Extended branches renew the existing short lease at checkpoints. Candidate validation remains provisional; experiment and commercial authorities remain separate. Direction notes are associated by trace index, including read-only projections of old reports. Stagnation uses reviewed findings/critique/negative outcomes and distinct candidates rather than retrieval volume. See research_quality/CAPABILITY_V1.md for contracts and limitations, and LONG_SESSION_RUNBOOK.md for the current profiles and bounds.
