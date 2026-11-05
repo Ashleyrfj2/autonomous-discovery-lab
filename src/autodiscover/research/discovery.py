@@ -362,7 +362,7 @@ class Discovery:
                     relevance_gate=bool(
                         registration["live"]
                         and spec.capability
-                        and spec.capability.version == "capability-v2"
+                        and spec.capability.relevance_screen
                     ),
                 )
 
