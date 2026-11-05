@@ -323,6 +323,39 @@ def _summarize(
     )
 
 
+def _research_memory(outcomes: list[BranchOutcome]) -> list[str]:
+    """Bounded, durable research leads for the next branch, not validated facts."""
+    memory: list[str] = []
+    seen_questions: set[str] = set()
+    for outcome in reversed(outcomes):
+        for note in outcome.direction_notes:
+            question = note.get("question", "")
+            key = question.casefold().strip()
+            if not key or key in seen_questions:
+                continue
+            seen_questions.add(key)
+            issues = ", ".join(note.get("issues", [])[:3]) or "missing evidence"
+            hint = note.get("next_query", "")
+            label = note.get("evidence_tier", "unreviewed")
+            memory.append(
+                (
+                    f"Prior question: {question}. Outcome: {note.get('outcome', 'unknown')}; "
+                    f"evidence status: {label}; gap: {note.get('gap', '')[:180]}; "
+                    f"issues: {issues[:120]}; next targeted query: {hint[:160]}. "
+                    "Treat unreviewed material as leads, never validated findings."
+                )[:800]
+            )
+            if len(memory) == 3:
+                break
+        if len(memory) == 3:
+            break
+    if not memory:
+        memory = [
+            item.next_evidence[:800] for item in reversed(outcomes) if item.next_evidence
+        ][:3]
+    return memory
+
+
 def _progress(outcomes: list[BranchOutcome]) -> tuple[list[dict], int, int]:
     series, stagnant, errors = [], 0, 0
     publications: set[str] = set()
@@ -673,35 +706,7 @@ class Session:
         number = len(intents)
         memory = [item.next_evidence for item in reversed(outcomes) if item.next_evidence][:3]
         if profile.discovery.capability:
-            # The event-backed notes carry exact failed questions and targeted
-            # search queries into the next branch. They are explicitly labeled
-            # unreviewed unless an independent critique actually succeeded.
-            memory = []
-            seen_questions: set[str] = set()
-            for outcome in reversed(outcomes):
-                for note in outcome.direction_notes:
-                    question = note.get("question", "")
-                    key = question.casefold().strip()
-                    if not key or key in seen_questions:
-                        continue
-                    seen_questions.add(key)
-                    issues = ", ".join(note.get("issues", [])[:3]) or "missing evidence"
-                    hint = note.get("next_query", "")
-                    label = note.get("evidence_tier", "unreviewed")
-                    memory.append(
-                        (
-                            f"Prior question: {question}. Outcome: {note.get('outcome', 'unknown')}; "
-                            f"evidence status: {label}; gap: {note.get('gap', '')[:180]}; "
-                            f"issues: {issues[:120]}; next targeted query: {hint[:160]}. "
-                            "Treat unreviewed material as leads, never validated findings."
-                        )[:800]
-                    )
-                    if len(memory) == 3:
-                        break
-                if len(memory) == 3:
-                    break
-            if not memory:
-                memory = [item.next_evidence[:800] for item in reversed(outcomes) if item.next_evidence][:3]
+            memory = _research_memory(outcomes)
         context = SessionContext(
             session_id=session_id,
             branch=number,
