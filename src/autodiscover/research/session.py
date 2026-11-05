@@ -234,6 +234,10 @@ def _summarize(
             "question": packet.plan.directions[index].question,
             "gap": gap,
             "issues": attempt.issues,
+            "next_query": (
+                (proposal.recovery_query if proposal else attempt.extraction.query) or ""
+            )[:220],
+            "evidence_tier": "independently_reviewed" if attempt.valid_review else "unreviewed",
             "source_ids": sorted({f.citation.source_id for f in attempt.extraction.findings}),
             "outcome": trace.outcome,
         }
@@ -669,16 +673,35 @@ class Session:
         number = len(intents)
         memory = [item.next_evidence for item in reversed(outcomes) if item.next_evidence][:3]
         if profile.discovery.capability:
-            progress, _, _ = _progress(outcomes)
-            memory = [
-                (
-                    f"Progress: reviewed findings={p['new_review_supported_findings']}, "
-                    f"new critiques={p['new_critique_outcomes']}, stagnant={p['stagnant']}. "
-                    + o.next_evidence
-                )[:800]
-                for o, p in reversed(list(zip(outcomes, progress, strict=True)))
-                if o.next_evidence
-            ][:3]
+            # The event-backed notes carry exact failed questions and targeted
+            # search queries into the next branch. They are explicitly labeled
+            # unreviewed unless an independent critique actually succeeded.
+            memory = []
+            seen_questions: set[str] = set()
+            for outcome in reversed(outcomes):
+                for note in outcome.direction_notes:
+                    question = note.get("question", "")
+                    key = question.casefold().strip()
+                    if not key or key in seen_questions:
+                        continue
+                    seen_questions.add(key)
+                    issues = ", ".join(note.get("issues", [])[:3]) or "missing evidence"
+                    hint = note.get("next_query", "")
+                    label = note.get("evidence_tier", "unreviewed")
+                    memory.append(
+                        (
+                            f"Prior question: {question}. Outcome: {note.get('outcome', 'unknown')}; "
+                            f"evidence status: {label}; gap: {note.get('gap', '')[:180]}; "
+                            f"issues: {issues[:120]}; next targeted query: {hint[:160]}. "
+                            "Treat unreviewed material as leads, never validated findings."
+                        )[:800]
+                    )
+                    if len(memory) == 3:
+                        break
+                if len(memory) == 3:
+                    break
+            if not memory:
+                memory = [item.next_evidence[:800] for item in reversed(outcomes) if item.next_evidence][:3]
         context = SessionContext(
             session_id=session_id,
             branch=number,

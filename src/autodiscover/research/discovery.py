@@ -359,6 +359,11 @@ class Discovery:
                     [s for s in spec.sources if seeds and s.direction == int(key[-1])],
                     require_live=registration["live"],
                     lease=(owner, fence),
+                    relevance_gate=bool(
+                        registration["live"]
+                        and spec.capability
+                        and spec.capability.version == "capability-v2"
+                    ),
                 )
 
             receipt = checkpoint(key, SearchReceipt, retrieve)
@@ -444,7 +449,13 @@ class Discovery:
                             receipts.append(receipt)
                         staged.extend(receipts)
                         # Keep evidence from each domain and prior-art search in the model context.
-                        balanced = {s.source_id: s for r in receipts for s in r.evidence[:2]}
+                        balanced = {
+                            s.source_id: s
+                            for r in receipts
+                            for s in sorted(
+                                r.evidence, key=lambda item: item.scope == "title"
+                            )[:2]
+                        }
                         initial[i] = SearchReceipt(
                             direction=i,
                             stage="combined",
