@@ -7,7 +7,6 @@ from autodiscover.research.discovery_sources import _query_relevant
 from autodiscover.research.session import _research_memory
 from autodiscover.research.session_contracts import BranchOutcome, SessionProfile
 
-
 PROFILE = (
     Path(__file__).parents[2]
     / "config"
@@ -20,6 +19,7 @@ def test_forty_five_minute_profile_bounds() -> None:
     assert profile.duration_seconds == 2700
     assert profile.discovery.capability is not None
     assert profile.discovery.capability.version == "capability-v2"
+    assert profile.discovery.capability.relevance_screen is True
     assert profile.discovery.capability.stages["planning"].reasoning_effort == "low"
     assert profile.discovery.capability.stages["critique"].reasoning_effort == "medium"
     assert profile.max_model_calls == 13 * profile.max_branches
@@ -113,3 +113,21 @@ def test_repeated_questions_only_receive_one_memory_slot() -> None:
         BranchOutcome(number=1, child_id="discovery-last", direction_notes=[note]),
     ])
     assert len(memory) == 1
+
+
+def test_historical_capability_config_does_not_enable_optin_relevance() -> None:
+    from autodiscover.research.discovery_contracts import DiscoverySpec
+
+    previous = (
+        Path(__file__).parents[2]
+        / "config"
+        / "session-capability-qualification-evidence-v3.json"
+    )
+    legacy = SessionProfile.model_validate_json(previous.read_text())
+    assert legacy.discovery.capability is not None
+    assert legacy.discovery.capability.relevance_screen is False
+    assert "relevance_screen" not in legacy.discovery.model_dump(mode="json")["capability"]
+    assert (
+        DiscoverySpec.model_validate(legacy.discovery.model_dump(mode="json"))
+        == legacy.discovery
+    )
