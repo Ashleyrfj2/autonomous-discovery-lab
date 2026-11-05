@@ -72,6 +72,7 @@ class StageSettings(Record):
 
 class CapabilityPolicy(Record):
     version: Literal["capability-v1", "capability-v2"] = "capability-v1"
+    relevance_screen: bool = Field(default=False, exclude_if=lambda enabled: not enabled)
     tracks: list[Track] = Field(min_length=1, max_length=2)
     stages: dict[str, StageSettings]
 
