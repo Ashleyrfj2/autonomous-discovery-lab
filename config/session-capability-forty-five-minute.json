@@ -38,7 +38,8 @@
           "max_output_tokens": 8192,
           "timeout_seconds": 90
         }
-      }
+      },
+      "relevance_screen": true
     }
   },
   "concurrency": 1,
