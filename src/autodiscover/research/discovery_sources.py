@@ -82,6 +82,42 @@ def _excerpt(text: str, query: str) -> str:
     return text[offset : offset + 850]
 
 
+# Conservative lexical triage for billable capability sessions. This is NOT a
+# semantic relevance proof. Non-matches remain discoverable via new queries.
+_RELEVANCE_STOPWORDS = {
+    "about", "across", "against", "analysis", "application", "applications",
+    "approach", "approaches", "based", "comparative", "comparison",
+    "effects", "evidence", "evaluation", "existing", "framework",
+    "impact", "investigation", "methods", "models", "outcomes",
+    "research", "review", "studies", "study", "system", "systems",
+    "technology", "using", "verified", "with",
+}
+
+
+def _query_relevant(title: str, abstract: str, query: str) -> bool:
+    """Conservatively filter obvious off-topic bibliography hits.
+
+    Prefer precision to admitting papers with only an incidental shared word.
+    A single matching term in an abstract is insufficient. A title-only hit
+    needs two distinct query anchors; it can never establish an empirical fact.
+    """
+    def anchors(value: str) -> set[str]:
+        return {
+            word[:5] if len(word) >= 6 else word
+            for word in re.findall(r"[a-z]{4,}", value.casefold())
+            if word not in _RELEVANCE_STOPWORDS
+        }
+
+    query_terms = anchors(query)
+    if len(query_terms) < 2:
+        return True  # Insufficient anchors: do not accidentally suppress everything.
+    title_hits = len(query_terms & anchors(title))
+    combined_hits = len(query_terms & anchors(title + " " + abstract))
+    if not abstract.strip():
+        return title_hits >= 2
+    return title_hits >= 2 or (title_hits >= 1 and combined_hits >= 2)
+
+
 def _europe_pmc(fetcher: SourceFetcher, query: str) -> tuple[Fetched, list[dict[str, Any]]]:
     if not query.strip() or sanitize(query) != query or len(query) > 220:
         raise RetrievalError("UNSAFE_EUROPE_PMC_QUERY")
@@ -113,6 +149,7 @@ def acquire(
     *,
     require_live: bool,
     lease: tuple[str, int] | None = None,
+    relevance_gate: bool = False,
 ) -> SearchReceipt:
     evidence: dict[str, Evidence] = {}
     failures: list[str] = []
@@ -222,6 +259,10 @@ def acquire(
                 if not title:
                     failures.append("INVALID_BIBLIOGRAPHIC_ITEM")
                     continue
+                if relevance_gate and not _query_relevant(title, abstract, query):
+                    if "BIBLIOGRAPHIC_LOW_RELEVANCE" not in failures:
+                        failures.append("BIBLIOGRAPHIC_LOW_RELEVANCE")
+                    continue
                 # Archive an individual record to avoid changing the DOI snapshot
                 # when the same publication is returned by another search.
                 captured = replace(
@@ -301,6 +342,10 @@ def acquire(
                     continue
                 title = _extract(title[:2000], markup=True)
                 abstract = _extract(abstract[:16000], markup=True)
+                if relevance_gate and not _query_relevant(title, abstract, query):
+                    if "BIBLIOGRAPHIC_LOW_RELEVANCE" not in failures:
+                        failures.append("BIBLIOGRAPHIC_LOW_RELEVANCE")
+                    continue
                 origin, identifier, doi = item.get("source"), item.get("id"), item.get("doi")
                 if not title or not abstract:
                     continue
