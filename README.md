@@ -4,18 +4,26 @@
 
 Built for the **Meta Global AI Developer Hackathon 2026**.
 
-## For judges: start here
+## For judges: choose your setup
 
-**Fastest way to evaluate this project:** run the no-key research-session rehearsal in **Step 2**. If you have a Mac, also run the independently evaluated experiment in **Step 3**. Neither workflow sends requests to Meta, uses paid APIs, or requires a credential.
+**There are two ways to run the research system.** For the actual **Meta model-powered research workflow**, use **Option A (Live Meta API)**. For a reproducible scripted demonstration without live inference, use **Option B (Offline rehearsal)**. Both use the same research-session controller and evidence/reporting system, but they are **not equivalent**: the offline path does not make model calls or demonstrate live AI reasoning.
 
-This is a **local Python application with a command-line interface**, not a hosted website. The offline rehearsal demonstrates the workflow and evidence handling using scripted model outputs; it **does not** demonstrate live Meta reasoning. The reviewed experiment demonstrates real local execution and independent evaluation on a known benchmark; it **does not** establish that the system discovered a new scientific result.
+| | Option A — Live Meta API | Option B — Offline rehearsal |
+| --- | --- | --- |
+| Meta API key | **Required** | Not used |
+| Model inference | Real calls to configured Meta models | Scripted model responses |
+| Internet | Required for Meta calls and public research retrieval | Not required |
+| Potential API costs | **Yes**; review usage and your own account balance | No model API charges |
+| Main purpose | Evaluate the AI-driven research workflow | Verify the controller, outputs, saved state, and reporting |
+
+This is a **local Python command-line application**, not a hosted website. If you want to inspect independently evaluated technical experiments, see **Option C** below. Those locally executed experiments use reviewed benchmark workers rather than live Meta inference.
 
 ### Requirements
 
-- **Python 3.12** (the project currently requires `>=3.12,<3.13`).
-- [uv](https://docs.astral.sh/uv/getting-started/installation/) for dependency installation and commands.
-- A terminal. **macOS is required for the native sandboxed experiment demos** (they use macOS Seatbelt). The session preflight and scripted dry-run do not require a Meta key.
-- No API key, account, or paid inference for the recommended evaluation path.
+- **Python 3.12** (the project requires `>=3.12,<3.13`).
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) for installation and execution.
+- A terminal. The reviewed sandboxed experiment demos in Option C require **macOS Seatbelt**; the research-session commands use the project CLI.
+- **Option A:** your own Meta API key with access to the configured models and valid billing/credits. **Option B:** no provider credentials.
 
 ### Step 1 — Install
 
@@ -28,35 +36,95 @@ uv run autodiscover check
 
 If you are reviewing an archive instead of a GitHub clone, open its project directory before running `uv sync --locked`.
 
-### Step 2 — Run the AI research workflow without an API key (recommended)
+### Option A — Live Meta API research (real model calls)
 
-This uses the project's scripted providers to exercise the **planning → evidence processing → hypothesis → independent critique → durable report** workflow. It is an **offline simulation**, not a real Meta API call.
+Choose this to see Meta models perform research planning, evidence extraction, gap analysis, hypothesis development, and adversarial critique. The provider configuration routes work to **Muse Spark 1.3**, **Muse Spark 1.2**, and **Muse Wonder 1.0**. Access to all three models must be enabled on your Meta account. A research run may pause, reject hypotheses, or stop without a validated discovery.
+
+**1. Configure your own Meta key.** Set `META_API_KEY` in your local environment. For example, in a private terminal:
+
+```bash
+export META_API_KEY="PASTE_YOUR_META_API_KEY_HERE"
+```
+
+Alternatively, put `META_API_KEY=...` in a local, Git-ignored `.env` file and prefix the **commands that require credentials** with `uv run --env-file .env` instead of `uv run`. **Never commit or share credentials**. Do not use somebody else's API key.
+
+**2. Run the local preflight, then verify live model access (no inference).**
 
 ```bash
 PROFILE=config/session-capability-qualification-evidence-v3.json
 PROVIDERS=config/discovery-capability-meta-medium-v2.json
 
-# Check the exact research roles, bounds, model configuration and cost estimates.
 uv run autodiscover session preflight \
   --profile "$PROFILE" --providers "$PROVIDERS"
 
-# Use a new directory so the judge's run cannot overwrite existing evidence.
+uv run autodiscover session preflight \
+  --profile "$PROFILE" --providers "$PROVIDERS" \
+  --check-model-access --allow-network
+```
+
+The first command prints the admission limits, model routes, and estimated maximum gross usage; the second checks Meta model-catalog access. Neither runs the research models. If access fails, verify the key and model entitlements before attempting live inference.
+
+**3. Start a fresh, operator-authorized Meta qualification session (billable).**
+
+Only run this after reviewing the preflight cost estimate, available credit, and potential external billing. The included qualification profile can run **up to 3,000 seconds**, admits at most **2 research branches**, and has a **conservative gross estimate of $3.787648 at the rates recorded in the configuration**. **That estimate is not a hard provider billing cap or a guarantee of the final charge.** The session may pause or end early.
+
+```bash
+META_ROOT=$(mktemp -d)
+printf 'Saved evidence directory: %s\n' "$META_ROOT"
+
+uv run autodiscover --root "$META_ROOT" session start \
+  --profile "$PROFILE" --providers "$PROVIDERS" \
+  --authorize-live --allow-network
+```
+
+Save the **session ID** printed by the CLI. The first branch is configured to pause for a qualification checkpoint. Inspect the report **before** resuming or requesting more paid calls:
+
+```bash
+META_ID="PASTE_PRINTED_SESSION_ID_HERE"
+uv run autodiscover --root "$META_ROOT" session status "$META_ID"
+uv run autodiscover --root "$META_ROOT" session report "$META_ID"
+```
+
+If the session is legitimately paused, **only after checking** evidence integrity, the critique, usage, and that there are **no unresolved or uncertain requests**, you can continue the **same** session:
+
+```bash
+uv run autodiscover --root "$META_ROOT" session resume "$META_ID" \
+  --providers "$PROVIDERS" --authorize-live --allow-network
+```
+
+Do not start another session to resume an existing one. If provider activity times out or its billing status is uncertain, **do not blindly retry**; preserve the saved root for reconciliation. For pause, cancellation, replay, and detailed qualification gates, use the [operator runbook](docs/LONG_SESSION_RUNBOOK.md). Do not run the longer 45- or 90-minute experimental profiles as a replacement for this short qualification without their separate acceptance steps.
+
+**What to inspect:** source provenance and gaps, each Meta model's role, the generated candidates, the independent critic's objections, rejected/retained hypotheses, checkpoint/recovery state, usage ledger and evidence report. A Meta model's answer is never counted as independent technical proof.
+
+### Option B — Offline research rehearsal (scripted, no Meta calls)
+
+Use this when you cannot access the live Meta API, want to review the controller, or prefer a no-cost reproduction. This exercises the research workflow with **scripted** inputs and responses; it is **not** the full live AI functionality.
+
+```bash
+PROFILE=config/session-capability-qualification-evidence-v3.json
+PROVIDERS=config/discovery-capability-meta-medium-v2.json
+
+# Inspect research roles and limits, without a credential or inference.
+uv run autodiscover session preflight \
+  --profile "$PROFILE" --providers "$PROVIDERS"
+
+# Keep this run's reports and evidence in a new, isolated directory.
 SESSION_ROOT=$(mktemp -d)
 uv run autodiscover --root "$SESSION_ROOT" session dry-run \
   --profile "$PROFILE" --providers "$PROVIDERS"
 ```
 
-The dry-run prints a **session ID** and a JSON outcome. Copy that ID to inspect the saved result:
+Copy the **session ID** printed by the CLI to inspect its saved report:
 
 ```bash
-SESSION_ID="PASTE_SESSION_ID_HERE"
+SESSION_ID="PASTE_PRINTED_SESSION_ID_HERE"
 uv run autodiscover --root "$SESSION_ROOT" session status "$SESSION_ID"
 uv run autodiscover --root "$SESSION_ROOT" session report "$SESSION_ID"
 ```
 
-**What to inspect:** the research stages, sources and evidence limitations, candidate hypotheses, critique/rejection reasons, stopping conditions, and recorded usage. A rejected or unverified hypothesis is a valid outcome; a generated idea is not automatically marked as a discovery.
+**What to inspect:** the research stages, simulated evidence, candidate hypotheses, critique/rejection reasons, stopping conditions, and recorded usage. The scripted rehearsal is not evidence of live Meta quality or a new discovery.
 
-### Step 3 — Run a verified technical experiment (macOS)
+### Option C — Run a reviewed technical experiment (macOS)
 
 The project includes two *reviewed, preregistered* benchmark families: lossless encoding (`encoding-v1`) and constrained resource allocation (`allocation-v1`). The allocation worker is checked by a **separate evaluator** against an exact solution on held-out cases, with replication and durable evidence.
 
@@ -90,7 +158,7 @@ uv run autodiscover --root "$ALLOC_ROOT" integrity
 
 See [reviewed experiment protocol](docs/REGISTERED_EXPERIMENTS.md) and [local test and replay evidence](docs/phase_reports/pr-2-local-verification.md).
 
-### Step 4 — Run project checks (optional)
+### Optional — Run project checks
 
 ```bash
 uv run pytest -q
@@ -115,20 +183,9 @@ The engine then enforces deterministic rules for evidence ownership, provenance,
 
 The sample Meta manifest is [`config/discovery-capability-meta-medium-v2.json`](config/discovery-capability-meta-medium-v2.json).
 
-### Optional: check live model access
+### Live API configuration and authorization
 
-**Not necessary for judging the offline demo.** A live check requires your own Meta API credentials and network access:
-
-```bash
-export META_API_KEY="YOUR_OWN_KEY"
-
-uv run autodiscover session preflight \
-  --profile config/session-capability-qualification-evidence-v3.json \
-  --providers config/discovery-capability-meta-medium-v2.json \
-  --check-model-access --allow-network
-```
-
-This checks the model catalog, **not** whether a full live research session will succeed. Do not include or commit an API key. A real research session can generate charges; it must be explicitly authorized with live flags, a **fresh runtime root**, an operator-reviewed budget, and the controls in the [long-session runbook](docs/LONG_SESSION_RUNBOOK.md). Do not resume archived historical sessions. The experimental 45-minute launch configurations remain subject to their own acceptance gates; they are **not** the recommended judging path.
+**Live setup is Option A at the top of this README.** Meta API credentials are required for actual model-driven discovery. The offline rehearsal is a separate fallback, not a substitute for using Meta models. See the [live operator runbook](docs/LONG_SESSION_RUNBOOK.md) for permission, usage, recovery, and evidence-qualification checks.
 
 ## How the system works
 
