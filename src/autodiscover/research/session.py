@@ -706,7 +706,20 @@ class Session:
         number = len(intents)
         memory = [item.next_evidence for item in reversed(outcomes) if item.next_evidence][:3]
         if profile.discovery.capability:
-            memory = _research_memory(outcomes)
+            if profile.discovery.capability.version == "capability-v2":
+                memory = _research_memory(outcomes)
+            else:
+                # Preserve the v1 provenance/context contract and frozen rehearsals.
+                progress, _, _ = _progress(outcomes)
+                memory = [
+                    (
+                        f"Progress: reviewed findings={p['new_review_supported_findings']}, "
+                        f"new critiques={p['new_critique_outcomes']}, stagnant={p['stagnant']}. "
+                        + o.next_evidence
+                    )[:800]
+                    for o, p in reversed(list(zip(outcomes, progress, strict=True)))
+                    if o.next_evidence
+                ][:3]
         context = SessionContext(
             session_id=session_id,
             branch=number,
