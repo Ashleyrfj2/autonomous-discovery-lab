@@ -11,7 +11,7 @@ admission limits, operator cancellation or ambiguous provider dispatch.
 - New opt-in `config/session-capability-forty-five-minute.json` uses the
   evidence-v3/capability-v2 research contract. Earlier profiles and archived
   sessions must not be edited or resumed.
-- Real capability-v2 bibliography capture screens obvious off-topic titles
+- Only the NEW opt-in 45-minute capability-v2 profile enables lexical screening; all previous sessions and the frozen simulated Meta transport test preserve their original evidence contract. Real bibliography capture screens obvious off-topic titles
   before the extractor; when Crossref yields no relevant substantive abstract,
   Europe PMC can supply an alternative. This lexical triage is deliberately
   conservative, not proof of factual relevance. Title-only leads never count
