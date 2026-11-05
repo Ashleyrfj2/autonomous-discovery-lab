@@ -40,29 +40,66 @@ If you are reviewing an archive instead of a GitHub clone, open its project dire
 
 Choose this to see Meta models perform research planning, evidence extraction, gap analysis, hypothesis development, and adversarial critique. The provider configuration routes work to **Muse Spark 1.3**, **Muse Spark 1.2**, and **Muse Wonder 1.0**. Access to all three models must be enabled on your Meta account. A research run may pause, reject hypotheses, or stop without a validated discovery.
 
-**1. Configure your own Meta key.** Set `META_API_KEY` in your local environment. For example, in a private terminal:
+**1. Set up your own Meta API credential.** The live option **will not work without `META_API_KEY`**. Choose **one** method:
+
+**Method 1 — Export the key in the terminal you are using:**
 
 ```bash
-export META_API_KEY="PASTE_YOUR_META_API_KEY_HERE"
+export META_API_KEY="PASTE_YOUR_OWN_META_API_KEY_HERE"
 ```
 
-Alternatively, put `META_API_KEY=...` in a local, Git-ignored `.env` file and prefix the **commands that require credentials** with `uv run --env-file .env` instead of `uv run`. **Never commit or share credentials**. Do not use somebody else's API key.
+Replace the placeholder with an actual Meta key that has access to all three configured models. Do not leave the placeholder unchanged, and do not share your key in screenshots or logs.
 
-**2. Run the local preflight, then verify live model access (no inference).**
+**Method 2 — Use a private `.env` file:** Create a file named `.env` in this repository (or use your existing local credential file) containing:
+
+```dotenv
+META_API_KEY=YOUR_OWN_META_API_KEY
+```
+
+The project's `.gitignore` excludes `.env`. If using this method, **you must add `--env-file .env` to every `uv run` command requiring Meta credentials**; a regular `uv run` will not necessarily load it. Replace `.env` with the correct full path if the file is elsewhere. Do not commit credentials.
+
+**2. Preflight and verify model access before attempting a live run.**
 
 ```bash
 PROFILE=config/session-capability-qualification-evidence-v3.json
 PROVIDERS=config/discovery-capability-meta-medium-v2.json
 
+# Local configuration validation only; succeeds even if the key is missing.
 uv run autodiscover session preflight \
   --profile "$PROFILE" --providers "$PROVIDERS"
+```
 
+**Check which credential method you are using (this never displays the key):**
+
+```bash
+if [ -n "${META_API_KEY:-}" ]; then
+  echo "META_API_KEY is available in this terminal"
+elif [ -f .env ]; then
+  echo "Found .env — use the --env-file .env form below"
+else
+  echo "No exported META_API_KEY and no .env in this directory"
+fi
+```
+
+**Then run ONE authenticated model-access check:**
+
+With **Method 1** (exported key):
+
+```bash
 uv run autodiscover session preflight \
   --profile "$PROFILE" --providers "$PROVIDERS" \
   --check-model-access --allow-network
 ```
 
-The first command prints the admission limits, model routes, and estimated maximum gross usage; the second checks Meta model-catalog access. Neither runs the research models. If access fails, verify the key and model entitlements before attempting live inference.
+With **Method 2** (`.env` file):
+
+```bash
+uv run --env-file .env autodiscover session preflight \
+  --profile "$PROFILE" --providers "$PROVIDERS" \
+  --check-model-access --allow-network
+```
+
+The local preflight prints the configured model routes, admission limits, and estimated maximum costs. **It does not test credentials.** The authenticated command checks the model catalog and should return `model_access` results for all three roles. If you see `Invalid or inaccessible session profile, provider manifest or credentials.`, confirm the key was actually loaded first. If it was loaded, check the file path, Meta model entitlements and account access. This error is generic; it does not, on its own, prove which of those failed. The catalog check does not perform research inference.
 
 **3. Start a fresh, operator-authorized Meta qualification session (billable).**
 
@@ -76,6 +113,8 @@ uv run autodiscover --root "$META_ROOT" session start \
   --profile "$PROFILE" --providers "$PROVIDERS" \
   --authorize-live --allow-network
 ```
+
+**Using a `.env` file instead?** Replace `uv run autodiscover` with `uv run --env-file .env autodiscover` for the live `session start` command, and for any later live `session resume`. The `session status` and `session report` commands are local/read-only and do not need the key.
 
 Save the **session ID** printed by the CLI. The first branch is configured to pause for a qualification checkpoint. Inspect the report **before** resuming or requesting more paid calls:
 
