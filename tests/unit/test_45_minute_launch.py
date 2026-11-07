@@ -1,7 +1,10 @@
 """Launch candidate regression checks; no network or billable model calls."""
 
 import json
+from decimal import Decimal
 from pathlib import Path
+
+import pytest
 
 from autodiscover.research.discovery_sources import _query_relevant
 from autodiscover.research.session import _research_memory
@@ -131,3 +134,69 @@ def test_historical_capability_config_does_not_enable_optin_relevance() -> None:
         DiscoverySpec.model_validate(legacy.discovery.model_dump(mode="json"))
         == legacy.discovery
     )
+
+
+
+def test_eighty_dollar_profile_has_extended_hypothesis_output() -> None:
+    extended = (
+        Path(__file__).parents[2] / "config"
+        / "session-capability-forty-five-minute-80usd.json"
+    )
+    model = SessionProfile.model_validate_json(extended.read_text())
+    assert model.duration_seconds == 2700
+    assert model.aggregate_cost_ceiling_usd == Decimal("80.00")
+    assert model.max_branches == 256
+    assert model.max_consecutive_errors == 2
+    assert model.discovery.capability is not None
+    assert model.discovery.capability.relevance_screen
+    assert model.discovery.capability.stages["proposal"].max_output_tokens == 16384
+    assert model.discovery.capability.stages["proposal"].timeout_seconds == 110
+
+
+def test_budget_admission_rejects_request_before_dispatch(tmp_path) -> None:
+    from autodiscover.orchestrator.store import Store
+    from autodiscover.security.budget import Budget, BudgetError, nano
+
+    store = Store(tmp_path)
+    run_id = store.create_run("budget reservation test", {})
+    limit = nano(Decimal("0.06"))
+
+    def guard(db, child_id, projected_nano):
+        charged = db.execute(
+            "SELECT COALESCE(SUM(charged_nano), 0) FROM reservations "
+            "WHERE run_id=?", (child_id,)
+        ).fetchone()[0]
+        if charged + projected_nano > limit:
+            raise BudgetError("SESSION_SPEND_LIMIT")
+
+    ledger = Budget(store, admission=guard)
+    first = ledger.reserve(
+        run_id, "first", "digest-first", Decimal("0.04"), "mock", "fixture"
+    )
+    assert first
+    with pytest.raises(BudgetError, match="SESSION_SPEND_LIMIT"):
+        ledger.reserve(
+            run_id, "second", "digest-second", Decimal("0.03"), "mock", "fixture"
+        )
+    assert ledger.totals(run_id)["requests"] == 1
+
+
+def test_provider_manifest_matches_extended_profile() -> None:
+    from autodiscover.models.contracts import ProviderConfig
+    from autodiscover.research.session_cli import session_preflight
+
+    root = Path(__file__).parents[2] / "config"
+    profile = SessionProfile.model_validate_json(
+        (root / "session-capability-forty-five-minute-80usd.json").read_text()
+    )
+    providers = {
+        role: ProviderConfig.model_validate(item)
+        for role, item in json.loads(
+            (root / "discovery-capability-meta-extended-20261104.json").read_text()
+        ).items()
+    }
+    estimate = session_preflight(profile, providers)
+    assert estimate["max_calculated_gross_usd"]
+    assert float(estimate["max_calculated_gross_usd"]) <= 80
+    assert estimate["max_admitted_branches"] >= 1
+    assert estimate["max_parallel_requests"] == 1
