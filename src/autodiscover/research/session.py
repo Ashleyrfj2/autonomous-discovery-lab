@@ -28,7 +28,7 @@ from autodiscover.research.discovery_contracts import (
 )
 from autodiscover.research.opportunity import repeated_query
 from autodiscover.research.session_contracts import BranchIntent, BranchOutcome, SessionProfile
-from autodiscover.security.budget import BudgetError
+from autodiscover.security.budget import BudgetError, nano
 from autodiscover.security.processes import coordinator_alive, local_owner
 from autodiscover.security.redaction import contains_credential
 
@@ -480,7 +480,9 @@ class Session:
             ) -> tuple[BranchIntent, str | None, Report | None, str | None, bool]:
                 lab = self.factory(intent.number)
 
-                def reserve_guard(db: sqlite3.Connection, run_id: str) -> None:
+                def reserve_guard(
+                    db: sqlite3.Connection, run_id: str, request_max_nano: int
+                ) -> None:
                     guard(db, run_id)
                     if _provider_streak(db, session_id) >= profile.max_consecutive_errors:
                         raise ProviderError("SESSION_PROVIDER_ERROR_LIMIT", known_zero_cost=True)
@@ -489,6 +491,21 @@ class Session:
                     ).fetchone()[0]
                     if run_id != intent.child_id or attempts >= registered["admission"]["attempts"]:
                         raise BudgetError("Branch reservation bound reached")
+                    # Reserve using the maximum projected request cost, in the
+                    # same write transaction as the request reservation. This
+                    # covers all children of this session and retains holds for
+                    # unsettled/uncertain provider outcomes.
+                    if profile.aggregate_cost_ceiling_usd is not None:
+                        committed = db.execute(
+                            "SELECT COALESCE(SUM(charged_nano), 0) FROM reservations "
+                            "WHERE run_id IN (SELECT json_extract(payload_json, '$.child_id') "
+                            "FROM events WHERE run_id=? AND kind='session_branch_admitted')",
+                            (session_id,),
+                        ).fetchone()[0]
+                        if committed + request_max_nano > nano(
+                            profile.aggregate_cost_ceiling_usd
+                        ):
+                            raise BudgetError("SESSION_SPEND_LIMIT")
 
                 lab.router.budget.admission = reserve_guard
 
@@ -605,7 +622,9 @@ class Session:
                         else "PROVIDER_ERROR"
                     )
                     return intent, None, None, code, True
-                except BudgetError:
+                except BudgetError as exc:
+                    if str(exc) == "SESSION_SPEND_LIMIT":
+                        return intent, None, None, "SESSION_SPEND_LIMIT", False
                     unsafe.set()
                     return intent, None, None, "REQUEST_RECONCILIATION_REQUIRED", True
                 except StateError:
@@ -617,6 +636,11 @@ class Session:
                 while True:
                     history = _read(store, session_id)
                     intents, outcomes = _portfolio(history)
+                    if any(o.error == "SESSION_SPEND_LIMIT" for o in outcomes):
+                        self._finish(
+                            session_id, owner, fence, "COMPLETED", "AGGREGATE_COST_LIMIT"
+                        )
+                        break
                     _, pending = _aggregate(store, intents)
                     _, stagnant, errors = _progress(outcomes)
                     with store.connection() as db:

@@ -29,7 +29,7 @@ class Budget:
     def __init__(
         self,
         store: Store,
-        admission: Callable[[sqlite3.Connection, str], None] | None = None,
+        admission: Callable[[sqlite3.Connection, str, int], None] | None = None,
     ):
         self.store = store
         self.admission = admission
@@ -47,7 +47,7 @@ class Budget:
         day = datetime.fromtimestamp(self.store.clock(), UTC).date().isoformat()
         with self.store.connection(write=True) as db:
             if self.admission:
-                self.admission(db, run_id)
+                self.admission(db, run_id, reserved)
             row = db.execute("SELECT status FROM runs WHERE id=?", (run_id,)).fetchone()
             if row is None or row["status"] != "ACTIVE":
                 raise BudgetError("Run not active")

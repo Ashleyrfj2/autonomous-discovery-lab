@@ -66,7 +66,7 @@ Track = Literal["ai_native", "open_science"]
 
 class StageSettings(Record):
     reasoning_effort: Literal["minimal", "low", "medium", "high"]
-    max_output_tokens: int = Field(ge=256, le=8192)
+    max_output_tokens: int = Field(ge=256, le=16384)
     timeout_seconds: float = Field(gt=0, le=120, allow_inf_nan=False)
 
 
@@ -91,7 +91,7 @@ class DiscoverySpec(Record):
     sources: list[SourceSeed] = Field(default_factory=list, max_length=6)
     protocol: Literal["discovery-v1", "discovery-v2"] = "discovery-v1"
     seconds: int = Field(default=120, ge=10, le=1200)
-    max_output_tokens: int = Field(default=1536, ge=256, le=8192)
+    max_output_tokens: int = Field(default=1536, ge=256, le=16384)
     retry_limit: int = Field(default=1, ge=0, le=2)
     mode: Literal["reviewed", "single_model"] = "reviewed"
     session_context: SessionContext | None = Field(default=None, exclude_if=lambda v: v is None)
